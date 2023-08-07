@@ -1,0 +1,52 @@
+–– Pkl Error ––
+Illegal: Class `overrideerr#Child` overrides property `prop`. This is not supported when generating Go.
+
+file://<codegen_dir>/snippet-tests/input/IllegalOverride.err.pkl
+
+xxx | else throw("""
+           ^^^^^^^^^
+at pkl.golang.internal.ClassGen#getFields.<function#5> (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xxx | let (superProp = superProperties.findOrNull((it) -> it.name == prop.name))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.ClassGen#getFields.<function#4> (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xxx | clazz.properties
+      ^^^^^^^^^^^^^^^^
+at pkl.golang.internal.ClassGen#getFields.<function#3> (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xxx | let (superProperties = getAllProperties(clazz.superclass))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.ClassGen#getFields.<function#2> (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xxx | let (superFields: Map<String, GoStructField> =
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.ClassGen#getFields.<function#1> (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xxx | let (isSuperOpen: Boolean = clazz.superclass.modifiers.contains("open"))
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.ClassGen#getFields (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xx | local fields: Map<String, GoStructField> = getFields(clazz, mappings)
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.ClassGen#fields (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xx | fields.values
+     ^^^^^^
+at pkl.golang.internal.ClassGen#imports (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xx | when (!imports.isEmpty) {
+            ^^^^^^^
+at pkl.golang.internal.ClassGen#contents (file://<codegen_dir>/src/internal/ClassGen.pkl)
+
+xxx | text = gen.contents
+             ^^^^^^^^^^^^
+at pkl.golang.internal.Package#output.files[#1].text (file://<codegen_dir>/src/internal/Package.pkl)
+
+x | output.files.toMap().mapValues((_, it) -> it.text)
+                                              ^^^^^^^
+at repl:text.<function#1> (repl:text)
+
+x | output.files.toMap().mapValues((_, it) -> it.text)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at  (repl:text)

@@ -1,0 +1,83 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+/// Settings to configure Go code generation for Pkl files.
+@go.Package { name = "github.com/apple/pkl-go/cmd/pkl-gen-go/generatorsettings" }
+module pkl.golang.GeneratorSettings
+
+import "go.pkl"
+
+local version = read("resources/VERSION.txt").text.trim()
+
+/// Mapping of Pkl module names to their respective Go package name.
+///
+/// Example:
+///
+/// ```
+/// packageMappings {
+///   ["name.of.my.Module"] = "github.com/myteam/myorg/foo"
+/// }
+/// ```
+packageMappings: Mapping<String, String>
+
+/// The base path for module output.
+///
+/// This determines the relative path that generated Go source code will be written to.
+/// For example, a base path of `"github.com/foo/bar"` means that the Go files for package
+/// `github.com/foo/bar/baz` will be written into a `baz` directory, relative to the current
+/// working directory where codegen is executed.
+///
+/// Any Go packages that are not prefixed with [basePath] are skipped from code generation.
+///
+/// This is typically a Go module's name, i.e. the `module` clause within a `go.mod` file.
+///
+/// If empty, writes the full package path to the current directory.
+basePath: String = ""
+
+/// Additional struct tags to place on all properties.
+///
+/// In addition to these tags, every property implicitly receives a `pkl:` struct tag.
+///
+/// The placeholder `%{name}` gets substituted with the name of the Pkl property.
+///
+/// Struct tags can also be configured on a per-property basis using the [go.Field] annotation.
+///
+/// Example:
+///
+/// ```pkl
+/// structTags {
+///   ["json"] = "%{name},omitempty"
+/// }
+/// ```
+structTags: go.StructTags
+
+/// The path to the Pkl code generator script.
+///
+/// This is an internal setting that is used for testing purposes when developing the code
+/// generator.
+generatorScriptPath: String = "package://github.com/apple/pkl-go/releases/download/pkl/pkl.golang@\(version)#/Generator.pkl"
+
+/// URI patterns that determine which modules can be loaded and evaluated.
+///
+/// This corresponds to the `--allowed-modules` flag in the Pkl CLI.
+allowedModules: Listing<String>
+
+/// URI patterns that determine which external resources can be read.
+///
+/// This corresponds to the `--allowed-resources` flag in the Pkl CLI.
+allowedResources: Listing<String>
+
+/// Print out the names of the files that will be generated, but skip writing anything to disk.
+dryRun: Boolean = false

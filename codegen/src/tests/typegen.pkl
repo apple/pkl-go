@@ -1,0 +1,112 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+amends "pkl:test"
+
+import "pkl:reflect"
+
+import "../internal/typegen.pkl"
+
+local class Maps {
+  res1: Map<String, String>
+  res2: Map<String, Map<String, String>>
+  res3: Mapping<String, String>
+  res4: Mapping<String, Listing<Boolean>>
+  res5: Mapping
+  res6: Mapping
+}
+
+local reflectedMaps = reflect.Class(Maps)
+
+local class Slices {
+  res1: List<String>
+  res2: List<Map<String, String>>
+  res3: Listing<String>
+  res4: Listing<Mapping<String, String>>
+  res5: List
+  res6: Listing
+}
+
+local reflectedSlices = reflect.Class(Slices)
+
+local class Nullables {
+  res1: String?
+  res2: Boolean?
+  res3: Listing<String?>
+  res4: Listing<String>?
+  res5: Listing<String?>?
+  res6: Mapping<String?, String>
+  res7: Mapping<String, String>?
+  res8: Mapping<String?, String?>?
+}
+
+local reflectedNullables = reflect.Class(Nullables)
+
+local class Pairs {
+  res1: Pair<String, String>
+  res2: Pair<String, String?>
+}
+
+local reflectedPairs = reflect.Class(Pairs)
+
+local mod = reflect.Module(module).moduleClass
+
+local function generateType(typ: reflect.Type) = typegen.generateType(typ, mod, List()).render("")
+
+facts {
+  ["basic types"] {
+    generateType(reflect.stringType) == "string"
+    generateType(reflect.booleanType) == "bool"
+    generateType(reflect.int8Type) == "int8"
+    generateType(reflect.int16Type) == "int16"
+    generateType(reflect.int32Type) == "int32"
+    generateType(reflect.intType) == "int"
+    generateType(reflect.floatType) == "float64"
+    generateType(reflect.uint8Type) == "uint8"
+    generateType(reflect.uint16Type) == "uint16"
+    generateType(reflect.uint32Type) == "uint32"
+    generateType(reflect.uintType) == "uint"
+    generateType(reflect.anyType) == "any"
+    generateType(reflect.dynamicType) == "*pkl.Object"
+    generateType(reflect.dataSizeType) == "*pkl.DataSize"
+    generateType(reflect.durationType) == "*pkl.Duration"
+  }
+  ["maps"] {
+    generateType(reflectedMaps.properties["res1"].type) == "map[string]string"
+    generateType(reflectedMaps.properties["res2"].type) == "map[string]map[string]string"
+    generateType(reflectedMaps.properties["res3"].type) == "map[string]string"
+    generateType(reflectedMaps.properties["res4"].type) == "map[string][]bool"
+  }
+  ["slices"] {
+    generateType(reflectedSlices.properties["res1"].type) == "[]string"
+    generateType(reflectedSlices.properties["res2"].type) == "[]map[string]string"
+    generateType(reflectedSlices.properties["res3"].type) == "[]string"
+    generateType(reflectedSlices.properties["res4"].type) == "[]map[string]string"
+  }
+  ["pointers"] {
+    generateType(reflectedNullables.properties["res1"].type) == "*string"
+    generateType(reflectedNullables.properties["res2"].type) == "*bool"
+    generateType(reflectedNullables.properties["res3"].type) == "[]*string"
+    generateType(reflectedNullables.properties["res4"].type) == "*[]string"
+    generateType(reflectedNullables.properties["res5"].type) == "*[]*string"
+    generateType(reflectedNullables.properties["res6"].type) == "map[*string]string"
+    generateType(reflectedNullables.properties["res7"].type) == "*map[string]string"
+    generateType(reflectedNullables.properties["res8"].type) == "*map[*string]*string"
+  }
+  ["pairs"] {
+    generateType(reflectedPairs.properties["res1"].type) == "*pkl.Pair[string, string]"
+    generateType(reflectedPairs.properties["res2"].type) == "*pkl.Pair[string, *string]"
+  }
+}

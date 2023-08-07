@@ -1,0 +1,104 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+/// Generates Go sources from Pkl
+@ModuleInfo { minPklVersion = "0.20.0" }
+module pkl.golang.Generator
+
+import "pkl:reflect"
+import "internal/gatherer.pkl"
+import "internal/GoMapping.pkl"
+import "internal/Package.pkl"
+import "GeneratorSettings.pkl"
+import "internal/utils.pkl"
+
+/// Settings to control code generation.
+codegenSettings: GeneratorSettings
+
+/// The module that should be generated.
+moduleToGenerate: Module
+
+// noinspection UnresolvedElement
+function getPackageName(mod: reflect.Module) =
+  codegenSettings.packageMappings.getOrNull(mod.moduleClass.reflectee.toString())
+    // Compare string representation so this works both locally and against annotations from GH pages.
+    ?? (mod.annotations.findOrNull((it) -> it.getClass().toString() == "pkl.golang.go#Package"))?.name
+    ?? throw("""
+        No go package defined for module `\(mod.moduleClass.reflectee)` (\(mod.location.displayUri)).
+
+        One may be defined by either:
+          * Declaring a `@go.Package` annotation on the module.
+          * Adding a `--mapping` flag when using the pkl-gen-go command.
+          * Adding a `packageMappings` clause to generator settings.
+        """)
+
+typealias EnumMember = reflect.StringLiteralType|reflect.NothingType
+
+// noinspection TypeMismatch
+function isEnumLike(decl: reflect.TypeDeclaration) =
+  decl is reflect.TypeAlias
+    && let (referent = decl.referent)
+      referent is reflect.UnionType
+      && referent.members.every((t) -> t is EnumMember)
+      && referent.members.filter((t) -> t is reflect.StringLiteralType)
+        .every((it: reflect.StringLiteralType) -> utils.canBeNormalizedToEnumName(it.value))
+      && referent.members.filter((t) -> t is reflect.StringLiteralType)
+        .map((it: reflect.StringLiteralType) -> utils.normalizeEnumName(it.value))
+        .isDistinct
+
+function gatherEnums(decl: List<reflect.TypeDeclaration>): List<GoMapping> =
+  decl
+    .filter((it) -> isEnumLike(it))
+    .fold(List(), (acc, it) -> acc.add(new GoMapping.Enum {
+      goPackageShort = utils.normalizePackageName(name)
+      source = it
+      goPackage = "\(getPackageName(it.enclosingDeclaration))/\(goPackageShort)"
+      seenMappings = acc
+    }))
+
+function gatherClasses(decl: List<reflect.TypeDeclaration>): Mixin<List<GoMapping>> =
+  (acc) ->
+    decl
+      .filter((it) -> it is reflect.Class)
+      .fold(acc, (accum, it) -> accum.add(new GoMapping.Class {
+        source = it
+        goPackage = getPackageName(it.enclosingDeclaration)
+        seenMappings = accum
+      }))
+
+local allMappings: List<GoMapping> =
+  let (clazz = reflect.Module(moduleToGenerate).moduleClass)
+  let (declarations = gatherer.gatherTypeDeclarations(clazz, List()))
+    gatherEnums(declarations) |> gatherClasses(declarations)
+
+local packages = allMappings
+  .groupBy((it) -> it.goPackage)
+  .mapValues((_packageName, _mappings: List<GoMapping>) -> new Package {
+    packageName = _packageName
+    `module` = _mappings.first.source.enclosingDeclaration
+    mappings = allMappings
+    structTags = codegenSettings.structTags
+  })
+
+output {
+  files {
+    for (_, package in packages) {
+      for (filename, fileOutput in package.output.files!!) {
+        ["\(package.packageName)/\(filename)"] = fileOutput
+      }
+    }
+  }
+  text = throw("Generate.pkl only produces multiple-file output. Try running again with the -m flag.")
+}

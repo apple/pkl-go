@@ -1,0 +1,115 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@Unlisted
+module pkl.golang.internal.Package
+
+import "pkl:reflect"
+import "ClassGen.pkl"
+import "EnumGen.pkl"
+import "utils.pkl"
+import "GoMapping.pkl"
+import "Gen.pkl"
+
+`module`: reflect.Module
+
+/// All mappings
+mappings: List<GoMapping>
+
+packageName: String
+
+structTags: Mapping<String, String>
+
+local moduleMappings: List<GoMapping> =
+  mappings.filter((it) -> it.goPackage == packageName)
+
+local packageNameShort = moduleMappings[0].goPackageShort
+
+local function describeLocation(src: reflect.TypeDeclaration) =
+  let (memberType =
+    if (src is reflect.Class && src.enclosingDeclaration.moduleClass == src) "module"
+    else if (src is reflect.Class) "class"
+    else "typealias"
+  )
+    "* \(memberType) `\(src.reflectee)` (\(src.location.displayUri))"
+
+local function hasUniqueNames(): Boolean =
+  let (names = moduleMappings.map((it) -> it.name))
+    if (names.isDistinct) true
+    else
+      let (duplicateNames = moduleMappings.filter((it) -> moduleMappings.count((m) -> m.name == it.name) > 1))
+      let (locations = duplicateNames.map((it) -> describeLocation(it.source)).join("\n"))
+        throw("""
+          Conflict: multiple Pkl declarations compute to Go name `\(duplicateNames.first.name)`.
+
+          To resolve this conflict, add a `@go.Name` annotation to any of the following declarations:
+
+          \(locations)
+
+          For example:
+
+          ```
+          @go.Name { value = "CrabCakes" }
+          class Crab_Cakes
+          ```
+          """)
+
+local generated: List<Gen>(hasUniqueNames()) = moduleMappings.map((it) ->
+  if (it is GoMapping.Class)
+    new ClassGen {
+      structTags = module.structTags
+      mappings = module.mappings
+      mapping = it
+    }
+  else
+    new EnumGen {
+      mappings = module.mappings
+      mapping = it
+    }
+)
+
+local structs: List<GoMapping.Struct> = moduleMappings
+  .map((it) -> if (it is GoMapping.Class) it.struct else null)
+  .filterNonNull() as List<GoMapping.Struct>
+
+local initFile: String =
+  new Listing {
+    utils.renderHeaderComment(`module`)
+    "package \(packageNameShort)"
+    ""
+    utils.renderImports(List("github.com/apple/pkl-go/pkl"))
+    ""
+    "func init() {"
+    for (struct in structs) {
+        #"\#tpkl.RegisterMapping(\#(utils.toGoString(struct.clazz.reflectee.toString())), \#(struct.name){})"#
+    }
+    "}"
+    ""
+  }.join("\n")
+
+output {
+  files {
+    for (gen in generated) {
+      ["\(gen.mapping.name).pkl.go"] {
+        text = gen.contents
+      }
+    }
+    when (!structs.isEmpty) {
+      ["init.pkl.go"] {
+        text = initFile
+      }
+    }
+  }
+}

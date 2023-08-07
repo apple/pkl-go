@@ -1,0 +1,50 @@
+–– Pkl Error ––
+Conflict: multiple Pkl declarations compute to Go name `ClassOne`.
+
+To resolve this conflict, add a `@go.Name` annotation to any of the following declarations:
+
+* class `ConflictingNames#Class One` (file://<codegen_dir>/snippet-tests/input/ConflictingNames.err.pkl)
+* class `ConflictingNames#ClassOne` (file://<codegen_dir>/snippet-tests/input/ConflictingNames.err.pkl)
+
+For example:
+
+```
+@go.Name { value = "CrabCakes" }
+class Crab_Cakes
+```
+
+xx | throw("""
+     ^^^^^^^^^
+at pkl.golang.internal.Package#hasUniqueNames.<function#3> (file://<codegen_dir>/src/internal/Package.pkl)
+
+xx | let (locations = duplicateNames.map((it) -> describeLocation(it.source)).join("\n"))
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.Package#hasUniqueNames.<function#2> (file://<codegen_dir>/src/internal/Package.pkl)
+
+xx | let (duplicateNames = moduleMappings.filter((it) -> moduleMappings.count((m) -> m.name == it.name) > 1))
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.Package#hasUniqueNames.<function#1> (file://<codegen_dir>/src/internal/Package.pkl)
+
+xx | let (names = moduleMappings.map((it) -> it.name))
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.Package#hasUniqueNames (file://<codegen_dir>/src/internal/Package.pkl)
+
+xx | local generated: List<Gen>(hasUniqueNames()) = moduleMappings.map((it) ->
+                                ^^^^^^^^^^^^^^^^
+at pkl.golang.internal.Package#generated (file://<codegen_dir>/src/internal/Package.pkl)
+
+xx | local generated: List<Gen>(hasUniqueNames()) = moduleMappings.map((it) ->
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.internal.Package#generated (file://<codegen_dir>/src/internal/Package.pkl)
+
+xxx | for (gen in generated) {
+                  ^^^^^^^^^
+at pkl.golang.internal.Package#output.files (file://<codegen_dir>/src/internal/Package.pkl)
+
+xx | for (filename, fileOutput in package.output.files!!) {
+                                  ^^^^^^^^^^^^^^^^^^^^
+at pkl.golang.Generator#output.files (file://<codegen_dir>/src/Generator.pkl)
+
+x | output.files.toMap().mapValues((_, it) -> it.text)
+    ^^^^^^^^^^^^
+at  (repl:text)

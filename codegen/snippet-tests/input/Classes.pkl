@@ -1,0 +1,118 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/bugholder" }
+module org.foo.BugHolder
+
+import ".../src/go.pkl"
+
+bug: Bug
+
+蚊子: Bug
+
+thisPerson: ThisPerson
+
+d: D
+
+hidden myHiddenProp: String
+
+class Wheel {
+  hasSpokes: Boolean
+}
+
+class Bike {
+  isFixie: Boolean
+
+  /// Wheels are the front and back wheels.
+  ///
+  /// There are typically two of them.
+  wheels: List<Wheel>
+}
+
+abstract class Being {
+  isAlive: Boolean
+}
+
+/// A Person!
+open class Person extends Being {
+  isAlive = true
+
+  bike: Bike
+
+  /// The person's first name
+  firstName: UInt16?
+
+  /// The person's last name
+  lastName: Mapping<String, UInt32?>
+
+  things: Set<Int>
+}
+
+class ThisPerson extends Person {
+  myself: ThisPerson
+  someoneElse: Person
+}
+
+typealias BugKind = "butterfly"|"beetle\""|"beetle one"
+
+// `nothing` is allowed as a string literal
+typealias BugKindTwo = nothing|"butterfly"|"beetle\""|"beetle one"
+
+// should turn into just a string type because of a conflict; "bettle one" and "bettle_one" would
+// turn into the same Go identifier.
+typealias BugKindThree = "butterfly"|"beetle\""|"beetle one"|"beetle_one"
+
+// should also turn into just a string type because there no way to generate valid go symols; "*" and "!!" would
+// turn into invalid Go symbols.
+typealias BugKindFour = "*"|"!!"
+
+class Bug {
+  /// The owner of this bug.
+  owner: Person?
+
+  /// The age of this bug
+  age: Int?
+
+  /// How long the bug holds its breath for
+  holdsBreathFor: Duration
+
+  size: DataSize
+
+  kind: BugKind
+
+  kind2: BugKindTwo
+
+  kind3: BugKindThree
+
+  kind4: BugKindFour
+
+  bagOfStuff: Dynamic
+}
+
+abstract class A {
+  a: "a"
+}
+
+open class B extends A {
+  b: "b"
+}
+
+open class C extends B {
+  c: "c"
+}
+
+class D extends C {
+  d: "d"
+}

@@ -1,0 +1,6 @@
+= Changelog
+
+[[release-0.5.0]]
+== 0.5.0 (2024-02-02)
+
+Initial library release.

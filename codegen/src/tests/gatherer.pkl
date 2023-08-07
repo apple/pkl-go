@@ -1,0 +1,39 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+amends "pkl:test"
+
+import "pkl:reflect"
+import "fixtures/types.pkl"
+import "fixtures/types2.pkl"
+import "fixtures/types4.pkl"
+import "../internal/gatherer.pkl"
+
+// it's important that these classes are defined in another module because they gather the type
+// declarations of their enclosing module.
+facts {
+  ["gather type declarations"] {
+    gatherer.gatherTypeDeclarations(reflect.Class(types.Bug), List()).map((c) -> c.name)
+      == List("Bug", "Person", "Bike", "ModuleClass", "Being", "Cyclic", "BugKind", "SymbolKind")
+  }
+  ["gather type declarations - listing arguments"] {
+    gatherer.gatherTypeDeclarations(reflect.Class(types2.Person), List()).map((c) -> c.name)
+      == List("Person", "Bike", "ModuleClass", "ModuleClass")
+  }
+  ["gather type declarations - type params with unions"] {
+    gatherer.gatherTypeDeclarations(reflect.Class(types4.Foo), List()).map((c) -> c.name)
+      == List("Foo", "ModuleClass")
+  }
+}

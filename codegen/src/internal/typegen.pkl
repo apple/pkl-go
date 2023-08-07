@@ -1,0 +1,185 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+/// Utilities for generating Go types from Pkl.
+@Unlisted
+module pkl.golang.internal.typegen
+
+import "pkl:reflect"
+import "Type.pkl"
+import "GoMapping.pkl"
+
+function generateType(
+  type: reflect.Type,
+  enclosing: reflect.TypeDeclaration,
+  seenMappings: List<GoMapping>
+): Type =
+  if (type is reflect.DeclaredType)
+    generateDeclaredType(type, enclosing, seenMappings)
+  else if (type is reflect.ModuleType)
+    let (moduleClass = enclosing.enclosingDeclaration.moduleClass)
+      generateType(reflect.DeclaredType(moduleClass), moduleClass, seenMappings)
+  else if (type is reflect.UnionType) generateUnionType(type, seenMappings)
+  else if (type is reflect.NullableType)
+    let (_elem = generateType(type.member, enclosing, seenMappings))
+      // No double pointers
+      if (_elem is Type.Pointer) _elem
+      else new Type.Pointer { elem = _elem }
+  else if (type is reflect.UnknownType) anyType
+  else if (type is reflect.NothingType) throw("Unable to generate Go for the `nothing` type")
+  else if (type is reflect.StringLiteralType) new Type.Declared { typeName = "string" }
+  else throw("Unsure how to generate this type: \(type)")
+
+function generateUnionType(
+  type: reflect.UnionType,
+  seenMappings: List<GoMapping>
+): Type =
+  let (mappedType = seenMappings.findOrNull((c) -> c.source == type))
+    if (mappedType != null)
+      mappedType.type
+    else if (type.members.every((it) -> it is reflect.StringLiteralType || it == reflect.stringType))
+      new Type.Declared { typeName = "string" }
+    else
+      anyType
+
+function generateDeclaredType(
+  type: reflect.DeclaredType,
+  enclosing: reflect.TypeDeclaration,
+  seenMappings: List<GoMapping>
+): Type =
+  let (referent = type.referent)
+  let (reflectee = type.referent.reflectee)
+  let (mapped = seenMappings.findOrNull((it) -> it.source == referent))
+    if (mapped != null) mapped.type
+    else if (mappedTypes.containsKey(reflectee))
+      mappedTypes[reflectee]
+    else if (referent is reflect.TypeAlias)
+      generateType(referent.referent, enclosing, seenMappings)
+    else if (reflectee == List || reflectee == Listing)
+      generateListing(type, enclosing, seenMappings)
+    else if (reflectee == Map || reflectee == Mapping)
+      generateMapping(type, enclosing, seenMappings)
+    else if (reflectee == Set)
+      generateSet(type, enclosing, seenMappings)
+     else if (reflectee == Pair)
+       generatePair(type, enclosing, seenMappings)
+    else throw("Cannot generate type \(type.referent.name) as Go.")
+
+function generateListing(
+  type: reflect.DeclaredType,
+  enclosing: reflect.TypeDeclaration,
+  seenMappings: List<GoMapping>
+): Type =
+  let (typeArg = type.typeArguments.getOrNull(0))
+    new Type.Slice {
+      elem =
+        if (typeArg == null) anyType
+        else generateType(typeArg, enclosing, seenMappings)
+    }
+
+function generateMapping(
+  type: reflect.DeclaredType,
+  enclosing: reflect.TypeDeclaration,
+  seenMappings: List<GoMapping>
+): Type =
+  let (typeArgKey = type.typeArguments.getOrNull(0))
+  let (typeArgValue = type.typeArguments.getOrNull(1))
+    new Type.Map {
+      key =
+        if (typeArgKey == null) anyType
+        else generateType(typeArgKey, enclosing, seenMappings)
+      elem =
+        if (typeArgValue == null) anyType
+        else generateType(typeArgValue, enclosing, seenMappings)
+    }
+
+function generateSet(
+  type: reflect.DeclaredType,
+  enclosing: reflect.TypeDeclaration,
+  seenMappings: List<GoMapping>
+): Type =
+  let (typeArg = type.typeArguments.getOrNull(0))
+    new Type.Map {
+      key =
+        if (typeArg == null) anyType
+        else generateType(typeArg, enclosing, seenMappings)
+      elem = new Type.Declared { typeName = "struct{}" }
+    }
+
+function generatePair(
+  type: reflect.DeclaredType,
+  enclosing: reflect.TypeDeclaration,
+  seenMappings: List<GoMapping>
+): Type =
+  new Type.Pointer {
+    elem = new Type.Declared {
+      typeName = "Pair"
+      package = "pkl"
+      importPath = "github.com/apple/pkl-go/pkl"
+      typeArguments = type.typeArguments.map((t) -> generateType(t, enclosing, seenMappings))
+    }
+  }
+
+local function builtInType(typ: String): Type.Declared = new { typeName = typ }
+
+local anyType: Type.Declared = builtInType("any")
+
+mappedTypes: Mapping<Class|TypeAlias, Type> = new {
+  [Int] = new Type.Declared { typeName = "int" }
+  [Int8] = new Type.Declared { typeName = "int8" }
+  [Int16] = new Type.Declared { typeName = "int16" }
+  [Int32] = new Type.Declared { typeName = "int32" }
+  [UInt] = new Type.Declared { typeName = "uint" }
+  [UInt8] = new Type.Declared { typeName = "uint8" }
+  [UInt16] = new Type.Declared { typeName = "uint16" }
+  [UInt32] = new Type.Declared { typeName = "uint32" }
+  [Number] = new Type.Declared { typeName = "float64" }
+  [Float] = new Type.Declared { typeName = "float64" }
+  [String] = new Type.Declared { typeName = "string" }
+  [Boolean] = new Type.Declared { typeName = "bool" }
+  [Null] = anyType
+  [Any] = anyType
+  [Duration] = new Type.Pointer {
+    elem = new Type.Declared {
+      package = "pkl"
+      typeName = "Duration"
+      importPath = "github.com/apple/pkl-go/pkl"
+    }
+  }
+  [DurationUnit] = new Type.Declared {
+    package = "pkl"
+    typeName = "DurationUnit"
+    importPath = "github.com/apple/pkl-go/pkl"
+  }
+  [Dynamic] = new Type.Pointer {
+    elem = new Type.Declared {
+      package = "pkl"
+      typeName = "Object"
+      importPath = "github.com/apple/pkl-go/pkl"
+    }
+  }
+  [DataSize] = new Type.Pointer {
+    elem = new Type.Declared {
+      package = "pkl"
+      typeName = "DataSize"
+      importPath = "github.com/apple/pkl-go/pkl"
+    }
+  }
+  [DataSizeUnit] = new Type.Declared {
+    package = "pkl"
+    typeName = "DataSizeUnit"
+    importPath = "github.com/apple/pkl-go/pkl"
+  }
+}

@@ -1,0 +1,22 @@
+{{- /*gotype: github.com/apple/pkl-go/cmd/pkl-gen-go/pkg.TemplateValues*/ -}}
+import "{{.GeneratorScriptPath}}" as Generator
+import "{{.PklModulePath}}" as theModule
+
+output = new Generator {
+  codegenSettings {
+    packageMappings {
+{{range $key, $value := .PackageMappings}}
+  	  ["{{$key}}"] = "{{$value}}"
+{{end}}
+    }
+    {{if ne .BasePath ""}}
+    basePath = "{{.BasePath}}"
+    {{end}}
+    structTags {
+{{range $key, $value := .StructTags}}
+      ["{{$key}}"] = "{{$value}}"
+{{end}}
+    }
+  }
+  moduleToGenerate = theModule
+}.output

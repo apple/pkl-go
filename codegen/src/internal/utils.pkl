@@ -1,0 +1,147 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@Unlisted
+module pkl.golang.internal.utils
+
+import "pkl:reflect"
+
+local escaper = (c: Char) ->
+  if (c == "\n") #"\n"#
+  else if (c == "\"") #"\""#
+  else if (c == #"\"#) #"\\"#
+  else c
+
+/// Turn the Pkl string into a Go string literal.
+///
+/// Renders raw string literals if the incoming string is multiline, or contains quotes.
+///
+/// Only newlines, double quotes and backslash literals need to be escaped in Go strings.
+///
+/// Reference: <https://go.dev/ref/spec#String_literals>
+function toGoString(str: String): String =
+  if ((str.contains("\n") || str.contains("\"")) && !str.contains("`")) "`" + str + "`"
+  else "\"" + str.chars.map(escaper).join("") + "\""
+
+// noinspection UnresolvedElement
+/// Converts a Pkl declaration (class, property, typealias) into a Go name.
+/// If a member has an explicit `@go.Name` annotation, use it.
+///
+/// Otherwise, normalize the name and return it.
+///
+/// Normalization rules:
+///
+/// 1. Any non-letter and non-digit characters get stripped, and each proceding letter gets capitalized.
+/// 2. If a name does not start with a latin alphabet character, prefix with `N`.
+/// 3. Capitalize names so they get exported.
+function toGoName(source: reflect.Declaration): String =
+  source
+    .annotations
+    .findOrNull((it) -> it.getClass().toString() == "pkl.golang.go#Name")
+    ?.value
+  ??
+    // edge case: if the source is the module's companion class, use the module name and not the class name.
+    let (_name =
+      if (source is reflect.Class && source.enclosingDeclaration.moduleClass == source)
+        source.enclosingDeclaration.name.split(".").last
+      else source.name
+    )
+      normalizeName(_name)
+
+function normalizePackageName(name: String): String =
+  let (normalized = normalizeName(name.replaceAll(".", "_")).toLowerCase())
+    if (keywords.contains(normalized)) "_\(normalized)"
+    else normalized
+
+keywords: List<String> = List(
+  "break",
+  "default",
+  "func",
+  "interface",
+  "select",
+  "case",
+  "defer",
+  "go",
+  "map",
+  "struct",
+  "chan",
+  "else",
+  "goto",
+  "package",
+  "switch",
+  "const",
+  "fallthrough",
+  "if",
+  "range",
+  "type",
+  "continue",
+  "for",
+  "import",
+  "return",
+  "var"
+)
+
+function renderDocComment(docComment: String, indent: String) =
+  docComment
+    .split(Regex(#"\r?\n"#))
+    .map((it) ->
+      // gofmt doesn't like empty comment lines that have trailing whitespace.
+      if (it.trim().isBlank) "\(indent)//"
+      else "\(indent)// \(it)"
+    )
+    .join("\n")
+
+function renderHeaderComment(`module`: reflect.Module) =
+  "// Code generated from Pkl module `\(`module`.name)`. DO NOT EDIT."
+
+function canBeNormalizedToEnumName(name: String) =
+  name == "" || splitNameOnNonLettersOrDigits(name).length > 0
+
+function normalizeEnumName(name: String) =
+  if (name == "") "Empty"
+  else normalizeName(name)
+
+function splitNameOnNonLettersOrDigits(name: String) =
+  name.split(Regex(#"(?u)[^\p{L}\d]"#))
+
+function normalizeName(name: String) =
+  let (parts = splitNameOnNonLettersOrDigits(name))
+  let (pascaled = parts.map((p) -> p.capitalize()).join(""))
+    if (pascaled[0].matches(Regex(#"[^A-Z]"#)))
+      "N" + pascaled
+    else
+      pascaled
+
+function renderImports(imports: List<String>): String =
+  let (distinctImports = imports.distinct)
+    if (distinctImports.length == 1) "import \(toGoString(distinctImports.first))"
+    else
+      let (groupedImports = distinctImports
+        .sort()
+        .groupBy((it) -> if (it.contains("/")) "3rdparty" else "stdlib")
+      )
+        new Listing {
+          "import ("
+          for (_, pkg in groupedImports.getOrNull("stdlib") ?? List()) {
+            "\t" + toGoString(pkg)
+          }
+          when (groupedImports.containsKey("stdlib") && groupedImports.containsKey("3rdparty")) {
+            ""
+          }
+          for (_, pkg in groupedImports.getOrNull("3rdparty") ?? List()) {
+            "\t" + toGoString(pkg)
+          }
+          ")"
+        }.join("\n")

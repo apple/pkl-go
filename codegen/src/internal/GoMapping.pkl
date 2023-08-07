@@ -1,0 +1,139 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@Unlisted
+abstract module pkl.golang.internal.GoMapping
+
+import "GoMapping.pkl"
+import "Type.pkl"
+import "pkl:reflect"
+import "utils.pkl"
+
+/// The go package path, e.g. `github.com/myorg/myproj/appconfig`
+goPackage: String
+
+/// The short name of the go package, e.g. `appconfig`
+goPackageShort: String = utils.normalizePackageName(goPackage.split("/").last)
+
+/// The exposed simple name of this type (either the enum's name or the struct or interface name).
+name: String
+
+/// All names exposed by this mapping
+names: List<String>
+
+seenMappings: List<GoMapping>
+
+/// The source for this mapping
+source: reflect.TypeDeclaration
+
+/// The exposed Go type.
+type: Type
+
+/// The set of names already seen prior to creating mappings for this module.
+existingNames: List<String> = seenMappings.flatMap((it) ->
+  if (it.goPackage == module.goPackage) it.names
+  else List()
+)
+
+class Enum extends GoMapping {
+  local self = this
+
+  local union: reflect.UnionType = alias.referent as reflect.UnionType
+
+  alias: reflect.TypeAlias = self.source as reflect.TypeAlias
+
+  name = utils.toGoName(self.source)
+
+  names = members.map((it) -> it.goName).add(name)
+
+  type = new Type.Declared {
+    typeName = name
+    importPath = self.goPackage
+    package = self.goPackageShort
+  }
+
+  /// The member constituents of this enum
+  members: List<EnumMember> =
+    union.members
+      .filter((it) -> !(it is reflect.NothingType))
+      .fold(List(), (acc: List<EnumMember>, mem) ->
+        acc.add(new EnumMember {
+          pklName = (mem as reflect.StringLiteralType).value
+          goName = utils.normalizeEnumName(pklName)
+        })
+      )
+}
+
+class Class extends GoMapping {
+  local self = this
+
+  clazz: reflect.Class = self.source as reflect.Class
+
+  names = List(interface?.name, struct?.name).filterNonNull() as List<String>
+
+  type = if (interface != null) interface.type else struct.type
+
+  name = utils.toGoName(clazz)
+
+  interface: Interface? =
+    if (
+      clazz.modifiers.contains("abstract")
+      || clazz.modifiers.contains("open")
+      // inherits from another class
+      || clazz.superclass.reflectee != Typed && clazz.superclass.reflectee != Module
+    )
+      new Interface {
+        name = self.name
+        type = new Type.Declared {
+          typeName = self.name
+          importPath = self.goPackage
+          package = self.goPackageShort
+        }
+      }
+    else null
+
+  struct: Struct? =
+    if (clazz.modifiers.contains("abstract")) null
+    else
+      let (structName =  if (interface == null) name else "\(name)Impl")
+        new Struct {
+          name = structName
+          clazz = self.clazz
+          type = new Type.Pointer {
+            elem = new Type.Declared {
+              typeName = structName
+              importPath = self.goPackage
+              package = self.goPackageShort
+            }
+          }
+        }
+
+}
+
+class EnumMember {
+  pklName: String
+  goName: String
+}
+
+class Interface {
+  name: String
+  type: Type
+}
+
+class Struct {
+  name: String
+  clazz: reflect.Class
+  type: Type
+}

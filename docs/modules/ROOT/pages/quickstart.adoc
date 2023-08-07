@@ -1,0 +1,121 @@
+= Quickstart
+
+These steps will get you up and going with using Pkl and Go.
+
+== 1. Install dependencies
+
+Your project will need to include pkl-go as a dependency:
+
+[source,bash]
+----
+go get github.com/apple/pkl-go
+----
+
+If you are using xref:codegen.adoc[code generation], install the pkl-gen-go binary, either via `go install` or with a direct download.
+
+The binaries are available as assets on our link:https://github.com/apple/pkl-go/releases/tag/v{version}/[GitHub release].
+
+[source,bash,subs="+attributes"]
+----
+# via go install
+go install github.com/apple/pkl-go/cmd/pkl-gen-go@v{version}
+
+# via curl
+curl -o pkl-gen-go github.com/apple/pkl-go/releases/download/v{version}/pkl-gen-go-macos.bin
+chmod +x pkl-gen-go
+----
+
+Also, ensure that Pkl is xref:main:pkl-cli:index.adoc#installation[installed on your machine].
+
+== 2. Define a Pkl schema
+
+Create a new Pkl file in the directory of your choice, and annotate it with the `@go.Package` annotation.
+The `name` property in the annotation is the Go import path for the generated configuration file.
+
+In this example, the file is placed into `pkl/AppConfig.pkl`, and the Go package name for this Pkl module is
+`github.com/myorg/myteam/appconfig`.
+
+.pkl/AppConfig.pkl
+[source,pkl,subs="+attributes"]
+----
+@go.Package { name = "github.com/myorg/myteam/appconfig" }
+module myorg.myteam.AppConfig
+
+import "package://pkg.pkl-lang.org/pkl-go/pkl.golang@{version}#/go.pkl" // <1>
+
+/// The hostname of this application.
+host: String
+
+/// The port to listen on.
+port: UInt16
+----
+<1> Used for the `@go.Package` annotation.
+
+== 3. Generate Go source code
+
+With a schema defined, generate Go source code for it.
+
+Code generation is done via the `pkl-gen-go` CLI. To install:
+
+[source,bash]
+----
+go install github.com/apple/pkl-go/cmd/pkl-gen-go@latest
+----
+
+In our example, Go sources can be generated using the following command:
+
+[source,bash]
+----
+pkl-gen-go pkl/AppConfig.pkl --base-path github.com/myorg/myteam
+----
+
+The `--base-path` causes the code generator to place the Go source files in a relative path.
+
+If the `--base-path` argument is omitted, the code generator will also look for a `go.mod` file for the base path, as well as within the
+xref:codegen.adoc#settings-file[settings file].
+
+In this example, the Go package name of our Pkl module is `github.com/myorg/myteam/appconfig`, and the base path
+is `github.com/myorg/myteam`. Therefore, the generated Go files will be placed into the `appconfig` directory.
+
+For more details on how to control code generation, consult `pkl-gen-go --help`.
+
+== 4. Evaluate Pkl configuration data in Go
+
+With the above scaffolding set up, evaluate Pkl configuration data in Go.
+
+First, define some configuration that uses the Pkl schema.
+
+In our example, we create a file at path `pkl/local/appConfig.pkl`. We imagine that we are defining configuration for a server running in a local environment, and would likewise place other environments in sibling directorys; e.g. `pkl/int/appConfig.pkl` and `pkl/prod/appConfig.pkl`.
+
+.pkl/local/appConfig.pkl
+[source,pkl]
+----
+amends "../AppConfig.pkl"
+
+host = "localhost"
+
+port = 5939
+----
+
+Once defined, evaluate the Pkl module into Go.
+
+.cmd/main.go
+[source,go]
+----
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/myorg/myteam/appconfig"
+)
+
+func main() {
+	cfg, err := appconfig.LoadFromPath(context.Background(), "pkl/local/appConfig.pkl")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("I'm running on host %s\n", cfg.Host)
+}
+----

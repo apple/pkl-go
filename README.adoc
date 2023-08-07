@@ -1,0 +1,11 @@
+= pkl-go
+
+This library exposes Go bindings for the Pkl configuration language.
+
+It allows you to embed Pkl into your Go application, complete with code generation for full type safety and ease of use.
+
+The full documentation for this library can be found on our https://pkl-lang.org/go/current/index.html[documentation site].
+
+To get up and going, reference the https://pkl-lang.org/go/current/quickstart.html[quick start guide].
+
+When upgrading pkl-go, reference the https://pkl-lang.org/go/current/CHANGELOG.html[changelog] for details.

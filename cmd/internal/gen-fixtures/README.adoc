@@ -1,0 +1,10 @@
+= gen-fixtures
+
+This is a simple script that generates the fixtures in the pkl/test_fixtures/msgpack directory.
+
+== Usage
+
+[source,shell script]
+----
+go run cmd/gen-fixtures/gen-fixtures.go
+----

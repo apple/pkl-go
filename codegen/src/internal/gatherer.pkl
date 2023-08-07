@@ -1,0 +1,119 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@Unlisted
+module pkl.golang.internal.gatherer
+
+import "pkl:reflect"
+import "typegen.pkl"
+
+/// Given a [reflect.TypeDeclaration], collect all referenced classes or typealiases.
+///
+/// Looks in properties, super classes, class/typealias members of enclosing modules, and generic
+/// type arguments.
+///
+/// This omits core built-in types.
+function gatherTypeDeclarations(
+  decl: reflect.TypeDeclaration,
+  seen: List<reflect.TypeDeclaration>
+): List<reflect.TypeDeclaration> =
+  if (seen.contains(decl)) seen
+  else if (typegen.mappedTypes.containsKey(decl.reflectee)) seen
+  else if (decl is reflect.Class)
+    if (isAnnotationClass(decl) || isBuiltinClass(decl)) seen
+    else
+      seen.add(decl)
+        |> gatherPropertiesDeclarations(decl)
+        |> gatherSuperDeclarations(decl)
+        |> gatherModuleClasses(decl)
+        |> gatherModuleTypeAliases(decl)
+        |> gatherModule(decl)
+  else if (decl is reflect.TypeAlias)
+    seen.add(decl) |> gatherTypeArguments(decl)
+  else seen
+
+/// Tells if this class is part of the stdlib.
+function isBuiltinClass(clazz: reflect.Class): Boolean = clazz.enclosingDeclaration.uri.startsWith("pkl:")
+
+function gatherTypeDeclarationsFromType(
+  type: reflect.Type,
+  enclosingDeclaration: reflect.TypeDeclaration,
+  seen: List<reflect.TypeDeclaration>
+): List<reflect.TypeDeclaration> =
+  if (type is reflect.DeclaredType)
+    let (referent = type.referent)
+      if (referent is reflect.Class && isBuiltinClass(referent))
+        // TODO: why is this false?
+        // let (_ = trace(reflect.DeclaredType(type.referent) == type))
+        type.typeArguments.fold(seen, (acc, it) -> gatherTypeDeclarationsFromType(it, referent, acc))
+      else
+        gatherTypeDeclarations(referent, seen)
+  else if (type is reflect.NullableType)
+    gatherTypeDeclarationsFromType(type.member, enclosingDeclaration, seen)
+  else if (type is reflect.UnionType)
+    type.members.fold(seen, (acc, t) -> gatherTypeDeclarationsFromType(t, enclosingDeclaration, acc))
+  else
+    // Remaining types: ModuleType, StringLiteralType, FunctionType, TypeVariable, NothingType.
+    // None of these have a reference to a TypeDeclaration.
+    seen
+
+function gatherPropertiesDeclarations(clazz: reflect.Class) =
+  (seen: List<reflect.TypeDeclaration>) ->
+    clazz.properties.values.fold(
+      seen,
+      (acc, p) -> gatherTypeDeclarationsFromType(p.type, clazz, acc)
+    )
+
+function gatherSuperDeclarations(clazz: reflect.Class) =
+  (seen: List<reflect.TypeDeclaration>) ->
+    let (superclass = clazz.superclass)
+      if (superclass == null)
+        seen
+      else
+        gatherTypeDeclarations(superclass, seen)
+
+function gatherModuleClasses(clazz: reflect.Class) =
+  (seen: List<reflect.TypeDeclaration>) ->
+    if (clazz.superclass != reflect.Class(Module))
+      seen
+    else
+      clazz.enclosingDeclaration.classes.fold(
+        seen,
+        (acc, _, clazz) -> gatherTypeDeclarations(clazz, acc)
+      )
+
+function gatherModuleTypeAliases(clazz: reflect.Class) =
+  (seen: List<reflect.TypeDeclaration>) ->
+    if (clazz.superclass != reflect.Class(Module))
+      seen
+    else
+      clazz.enclosingDeclaration.typeAliases.fold(
+        seen,
+        (acc, _, alias) -> gatherTypeDeclarations(alias, acc)
+      )
+
+function gatherModule(decl: reflect.TypeDeclaration) =
+  (seen: List<reflect.TypeDeclaration>) ->
+    gatherTypeDeclarations(decl.enclosingDeclaration.moduleClass, seen)
+
+function gatherTypeArguments(clazz: reflect.TypeDeclaration) =
+  (seen: List<reflect.TypeDeclaration>) ->
+    reflect.DeclaredType(clazz).typeArguments
+      .fold(seen, (acc, it) -> gatherTypeDeclarationsFromType(it, clazz, acc))
+
+function isAnnotationClass(clazz: reflect.Class): Boolean =
+  if (clazz.reflectee == Annotation) true
+  else if (clazz.superclass != null) isAnnotationClass(clazz.superclass!!)
+    else false

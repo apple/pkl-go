@@ -1,0 +1,71 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@Unlisted
+module pkl.golang.internal.EnumGen
+
+extends "Gen.pkl"
+
+import "pkl:reflect"
+import "GoMapping.pkl"
+import "utils.pkl"
+
+alias: reflect.TypeAlias = mapping.source as reflect.TypeAlias
+
+enumMapping: GoMapping.Enum = mapping as GoMapping.Enum
+
+contents = new Listing {
+  utils.renderHeaderComment(alias.enclosingDeclaration)
+  "package \(enumMapping.goPackageShort)"
+  ""
+  utils.renderImports(List("encoding", "fmt"))
+  ""
+  when (alias.docComment != null) {
+    utils.renderDocComment(alias.docComment!!, "")
+  }
+  "type \(enumMapping.name) string"
+  ""
+  "const ("
+  for (member in enumMapping.members) {
+    renderEnumMember(member)
+  }
+  ")"
+  ""
+  "// String returns the string representation of \(enumMapping.name)"
+  "func (rcv \(enumMapping.name)) String() string {"
+  "\treturn string(rcv)"
+  "}"
+  ""
+  "var _ encoding.BinaryUnmarshaler = new(\(enumMapping.name))"
+  ""
+  "// UnmarshalBinary implements encoding.BinaryUnmarshaler for \(enumMapping.name)."
+  "func (rcv *\(enumMapping.name)) UnmarshalBinary(data []byte) error {"
+  "\tswitch str := string(data); str {"
+  for (member in enumMapping.members) {
+    "\tcase \(utils.toGoString(member.pklName)):"
+    "\t\t*rcv = \(member.goName)"
+  }
+  "\tdefault:"
+  "\t\treturn fmt.Errorf(`illegal: \"%s\" is not a valid \(enumMapping.name)`, str)"
+  "\t}"
+  "\treturn nil"
+  "}"
+  ""
+}.join("\n")
+
+local function renderEnumMember(member: GoMapping.EnumMember) =
+  let (maxMemberNameLen = enumMapping.members.map((m) -> m.goName.length).max)
+  let (spaces = " ".repeat(maxMemberNameLen - member.goName.length))
+    "\t\(member.goName) \(spaces)\(enumMapping.name) = \(utils.toGoString(member.pklName))"

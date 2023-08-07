@@ -1,0 +1,204 @@
+= Evaluator API
+
+pkl-go provides a rich API for evaluating Pkl files in Go via https://pkg.go.dev/github.com/apple/pkl-go/pkl#Evaluator[`pkl.Evaluator`]. It can be configured with xref:custom-readers[custom readers], have its own security settings, control
+external property inputs, and more.
+
+Evaluation occurs by spawning the `pkl` cli as a child process, and communicates via message passing.
+
+== Initializing an evaluator
+
+There are two methods for initializing a `pkl.Evaluator`:
+
+1. https://pkg.go.dev/github.com/apple/pkl-go/pkl#NewEvaluator[`pkl.NewEvaluator`]
+2. https://pkg.go.dev/github.com/apple/pkl-go/pkl#EvaluatorManager[`pkl.EvaluatorManager.NewEvaluator`]
+
+These two constructors are distinguished by how they manage the lifecycle of the underlying `pkl` child process.
+`pkl.NewEvaluator` will spawn a child process per-evaluator, whereas `pkl.EvaluatorManager.NewEvalutor` will spawn a
+child process for the lifetime of the evaluator manager.
+
+For most use-cases, it is sufficient to use the `pkl.NewEvaluator` constructor. If multiple evaluators are desired,
+for example, to maintain separate caches or to have different settings, the evaluator manager should be used.
+
+== Evaluating modules
+
+=== With code generation
+
+Go packages generated from Pkl modules may be evaluated simply through the generated `LoadFromPath` and
+`Load` methods.
+
+For example, a generated package `github.com/myapp/myteam/appconfig` can be used for evaluation like so:
+
+[source,go]
+----
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/apple/pkl-go/pkl"
+	"github.com/myapp/myteam/appconfig" // <1>
+)
+
+func main() {
+	cfg, err := appconfig.LoadFromPath(context.Background(), "myconfig.pkl")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Got config: %+v\n", cfg)
+}
+----
+<1> The generated package
+
+=== Without code generation
+
+Pkl modules may be evaluated directly into Go structs without using code generation.
+
+For example, given the Pkl module:
+
+.foo.pkl
+[source,pkl]
+----
+foo: String = "hello"
+
+bar: Int = 5
+----
+
+This may be evaluated into a Go struct via `pkl.Evaluator.EvaluateModule`.
+To run evaluation, pass a struct pointer that matches the structure of the module.
+
+If the Go property name doesn't match the Pkl name, the `pkl` struct tag should be used to identify the Pkl property name.
+
+Example Go:
+
+[source,go]
+----
+package main
+import (
+	"context"
+	"fmt"
+
+	"github.com/apple/pkl-go/pkl"
+)
+
+type MyConfig struct {
+	Foo string `pkl:"foo"`
+	Bar int    `pkl:"bar"`
+}
+
+func main() {
+	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+	if err != nil {
+		panic(err)
+	}
+	defer evaluator.Close()
+	var cfg MyConfig
+	if err = evaluator.EvaluateModule(context.Background(), pkl.FileSource("foo.pkl"), &cfg); err != nil {
+		panic(err)
+	}
+	fmt.Printf("Got module: %+v", cfg)
+}
+----
+
+== Alternative evaluation modes
+
+=== Textual and multiple file output
+
+In addition to modules, an evaluator may also evaluate a module's `output.text` and `output.files` properties. This mimick the behavior of the CLI.
+
+Take this Pkl module:
+
+.foo.pkl
+[source,pkl]
+----
+foo = "foo"
+
+bar = "bar"
+----
+
+The textual output of this module may be evaluated via `Evaluator.EvaluateOutputText`.
+
+.main.go
+[source,go]
+----
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/apple/pkl-go/pkl"
+)
+
+func main() {
+	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+	if err != nil {
+		panic(err)
+	}
+	defer evaluator.Close()
+	textOutput, err := evaluator.EvaluateOutputText(context.Background(), pkl.FileSource("foo.pkl"))
+	fmt.Println(textOutput)
+}
+----
+
+=== Expressions
+
+In addition to evaluating modules and textual/file output, _any_ arbitrary expression may be evaluated within a module. In fact, the textual and file output of a module are implemented in terms of evaluating an expression.
+
+.main.go
+[source,go]
+----
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/apple/pkl-go/pkl"
+)
+
+func main() {
+	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+	if err != nil {
+		panic(err)
+	}
+	defer evaluator.Close()
+	var res string
+	err = evaluator.EvaluateExpression(
+		context.Background(),
+		pkl.TextSource("foo = 5"), // <1>
+		`"foo is \(foo)"`, // <2>
+		&res,
+	)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(res) // prints "foo is 5"
+}
+----
+<1> `TextSource` causes Pkl to evaluate `foo = 5` as a module
+<2> The expression to be evaluated
+
+== Evaluator options
+
+pkl-go provides `pkl.PreconfiguredOptions`, which serves as a simple way to construct an evaluator with sensible defaults.
+
+Additional options may be provided via the functional options pattern:
+
+[source,go]
+----
+pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions, func(opts *EvaluatorOptions) {
+	opts.Logger = pkl.StderrLogger // <1>
+})
+----
+<1> Log warn/trace messages to stderr
+
+[#custom-readers]
+== Custom readers
+
+It is possible to use a custom reader for resources and modules by implementing the https://pkg.go.dev/github.com/apple/pkl-go/pkl#ResourceReader[`pkl.ResourceReader`] and https://pkg.go.dev/github.com/apple/pkl-go/pkl#ModuleReader[`pkl.ModuleReader`] interfaces.
+
+Custom readers must identify the scheme that they are responsible for reading via the `Scheme()` method. For example,
+a reader may be registered to resolve the Pkl expression `read("secret:FOO")` by registering `"secret"` as its scheme.
+
+If a resource matches a scheme identified by a custom reader, its `Read()` method will be called to retrieve the contents.

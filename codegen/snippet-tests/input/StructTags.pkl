@@ -1,0 +1,68 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/structtags" }
+module StructTags
+
+import ".../src/go.pkl"
+
+@go.Field { json { omitempty = true } }
+res: String
+
+@go.Field { json = true }
+res2: String
+
+@go.Field { json { name = "-" } }
+res3: String
+
+@go.Field { json { name = "myFoo5"; omitempty = true } }
+res5: String
+
+@go.Field { json { name = "myFoo6" } }
+res6: String
+
+@go.Field {
+  structTags {
+    ["yaml"] = ",omitempty"
+    ["bson"] = ",omitempty"
+  }
+}
+res7: String
+
+@go.Field {
+  structTags {
+    ["yaml"] = "%{name},omitempty"
+    ["bson"] = "%{name},omitempty"
+  }
+}
+res8: String
+
+@go.Field
+res9: String
+
+@go.Field { json = false }
+res10: String
+
+@go.Field { json { value = "-,omitempty" } }
+res11: String
+
+class TomlField extends go.Field {
+  structTags {
+    ["toml"] = "%{name},multiline"
+  }
+}
+
+@TomlField
+res12: String

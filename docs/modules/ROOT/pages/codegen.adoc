@@ -1,0 +1,277 @@
+= Code generation
+
+:fn-runtime-value: footnote:disclaimer[The runtime value, not an instance].
+
+Pkl code may turn into Go code by way of code generation.
+
+== Running code generation
+
+Code generation is done through the `pkl-gen-go` binary. To install:
+
+[source,bash]
+----
+go install github.com/apple/pkl-go/cmd/pkl-gen-go@latest
+----
+
+Once installed, Go may be generated from Pkl:
+
+[source,bash]
+----
+pkl-gen-go config/AppConfig.pkl
+----
+
+== Configuring the code generator
+
+Options may be provided to the code generator either using CLI flags, or using a settings file.
+
+[[settings-file]]
+=== Settings file
+
+The settings file is a Pkl file that amends module https://pkl-lang.org/package-docs/pkg.pkl-lang.org/pkl-go/pkl.golang/current/GeneratorSettings/index.html[`package://pkl.pkl-lang.org/pkl-go/pkl.golang@<VERSION>#/GeneratorSettings.pkl`].
+
+By default, the code generator will look for a `generator-settings.pkl` file residing in the current working directory.
+If found, it is used to configure the code generator.
+
+The settings file may also be set using the `--generator-settings` flag.
+
+=== Base path
+
+The base path setting determines the relative path in which files get written to the working directory. It also acts
+as a filter to skip codegen for any modules that are external to the project.
+
+For example, if a Pkl module corresponds to Go package `github.com/myorg/myproject/appconfig`, and the base path is `github.com/myorg/myproject`, the generated files are placed into output directory `appconfig/`.
+
+If a base path is not explicitly set, `pkl-gen-go` will also look for a `go.mod` file in the current working directory and use the Go module name as the base path.
+
+If the base path cannot be determined, the full package path is written to the current working directory.
+
+The base path may be set in the settings file, and also via the `--base-path` CLI flag.
+
+NOTE: If the determined package name is not prefixed by the base path, it is skipped from code generation.
+
+=== Package mappings
+
+During codegen, the generator requires a mapping from a Pkl module name to a Go package name.
+
+In normal cases, this should be provided using the `@go.Package` annotation. However, there are times when this is infeasible, for example, if the Pkl module is external to the project. For these situations, mappings can be provided using the https://github.com/apple/pkl-go/releases/download/v{version}/pkl.golang/current/GeneratorSettings/index.html#packageMappings[packageMappings] property in the settings file, or using the `--mapping` CLI flag.
+
+=== Struct tags
+
+By default, all struct fields receive a `pkl` tag. Additional tags can be configured either on a per-property basis, or globally for all properties.
+
+To configure tags on a per-property basis, use the https://pkl-lang.org/package-docs/pkg.pkl-lang.org/pkl-go/pkl.golang/current/go/Field.html[`@go.Field`] annotation on a property.
+
+To configure tags globally for all properties, use the https://pkl-lang.org/package-docs/pkg.pkl-lang.org/pkl-go/pkl.golang/current/GeneratorSettings/index.html#structTags[`structTags`] property the xref:settings-file[generator settings file].
+
+Here is an example for setting struct tags for a single property:
+
+[source,pkl]
+----
+@go.Field {
+  structTags {
+    ["toml"] = "%{name},omitempty" // <1>
+  }
+}
+firstName: String
+----
+<1> Add `toml:"firstName,omitempty"` as a struct tag
+
+To share struct tag settings across multiple properties, define a child class of `go.Field`.
+
+[source,pkl]
+----
+class TomlField extends go.Field {
+  structTags {
+    ["toml"] = "%{name},omitempty"
+  }
+}
+
+@TomlField
+firstName: String
+
+@TomlField
+lastName: String
+----
+
+== How Pkl is turned into Go
+
+=== Basic types
+
+The below table describes how Pkl types are mapped into Go types.
+
+[cols="1,1"]
+|===
+| Pkl type | Go type
+|`Null`
+|`nil`
+
+|`Boolean`
+|`bool`
+
+|`String`
+|`string`
+
+|`Int`
+|`int`
+
+|`Int8`
+|`int8`
+
+|`Int16`
+|`int16`
+
+|`Int32`
+|`int32`
+
+|`UInt`
+|`uint`
+
+|`UInt8`
+|`uint8`
+
+|`UInt16`
+|`uint16`
+
+|`UInt32`
+|`uint32`
+
+|`Float`
+|`float64`
+
+|`Number`
+|`float64`
+
+|`List<T>`
+|`[]T`
+
+|`Listing<T>`
+|`[]T`
+
+|`Map<K, V>`
+|`map[K]V`
+
+|`Mapping<K, V>`
+|`map[K]V`
+
+|`Set<T>`
+|`map[T]struct{}`
+
+|`Pair<A, B>`
+|`*pkl.Pair[A, B]`
+
+|`Dynamic`
+|`*pkl.Object`
+
+|`DataSize`
+|`*pkl.DataSize`
+
+|`Duration`
+|`*pkl.Duration`
+
+|`IntSeq`
+|`*pkl.IntSeq`
+
+|`Class` {fn-runtime-value}
+|`*pkl.Class`
+
+|`TypeAlias` {fn-runtime-value}
+|`*pkl.TypeAlias`
+
+|`Any`
+|`any`
+
+|`unknown`
+|`any`
+
+|Unions (`A\|B\|C`)
+|`any` footnote:[Unions of string literals turn into enums if defined via a `typealias`. For reference, see xref:enums[enums].]
+|===
+
+NOTE: `pkl.Class`, `pkl.TypeAlias`, `pkl.IntSeq` and `pkl.Pair` only exist for compatibilty purposes because they are possible Pkl runtime values.
+
+=== Classes
+
+Classes turn into a variation of structs and interfaces, depending on inheritance. Interfaces get generated because Go cannot model polymorphism with structs alone (e.g. a value that is a `Dog` struct is not assignable when an `Animal` struct is expected).
+
+When generating interfaces, a getter is generated for every property by prefixing `Get` to the property name.
+
+The below table describes how classes get generated.
+
+|===
+| Pkl class | Go interface | Go struct
+| `class Person`
+| <none>
+| `type Person struct`
+
+| `open class Person`
+| `type Person interface`
+| `type PersonImpl struct`
+
+| `abstract class Person`
+| `type Person interface`
+| <none>
+
+| `class Person extends Being`
+| `type Person interface` footnote:[interface `Being` is embedded]
+| `type PersonImpl struct` footnote:[struct `BeingImpl` is embedded]
+|===
+
+In the case of inheritance, the parent's struct and interface are embedded.
+
+[[enums]]
+=== Enums
+
+If a typealias is defined as a union of string literals, it is turned into a new type backed by `string`. Each member of the union is generated as its own constant.
+
+The new type is placed into a subpackage of the module's mapped Go package.
+
+For example, the following Pkl code:
+
+[source,pkl]
+----
+typealias City = "San Francisco"|"Cupertino"|"London"
+----
+
+Turns into something like this:
+
+[source,go]
+----
+package city
+
+type City string
+
+const (
+	SanFrancisco City = "San Francisco"
+	Cupertino City    = "Cupertino"
+	London City       = "London"
+)
+----
+
+If the names of the determined constants conflicts due to normalization rules, an enum is not generated, and a `string` type is instead inlined into the usage locations.
+
+If a typealias isn't a union of string literals, its resolved type is inlined into the usage locations.
+
+NOTE: The Pkl type `nothing` is ignored when a member of a union. Therefore, `typealias City = nothing|"San Francisco"|"Cupertino"|"London"` is still considered an enum.
+
+[[name-conflicts]]
+== Resolving name conflicts
+
+When turning Pkl names into Go names, the code generator follows these rules:
+
+1. Any non-letter and non-digit characters get stripped, and each proceding letter gets capitalized.
+2. If a name does not start with a latin alphabet character, prefix with `N`.
+3. Capitalize so they get exported.
+
+As a result, it is possible that two names collide and turn into the same Go name.
+To resolve these conflicts, the https://pkl-lang.org/package-docs/pkg.pkl-lang.org/pkl-go/pkl.golang/current/go/Name.html[`@go.Name`]
+annotation must be used on at least one of these declaractions so the resulting names are distinct.
+
+For example:
+
+[source,pkl]
+----
+@go.Name { value = "MyCoolApplication" }
+class My_Application
+
+class MyApplication
+----

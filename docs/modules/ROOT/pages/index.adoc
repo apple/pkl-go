@@ -1,0 +1,26 @@
+= Integration with Go
+
+Pkl provides a rich integration with Go. Our integration allows you to embed the Pkl runtime into your Go program, and also provides code generation from Pkl source code.
+
+To get started, reference the xref:quickstart.adoc[Quickstart guide].
+Alternatively, use our https://github.com/apple/pkl-go-examples[example project] as a way to get bootstrapped and on your way.
+
+[source,go]
+----
+package main
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/myteam/myapp/myconfig"
+)
+
+func main() {
+	cfg, err := myconfig.LoadFromPath(context.Background(), "config.pkl")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("I'm running on host %s\n", cfg.Host)
+}
+----

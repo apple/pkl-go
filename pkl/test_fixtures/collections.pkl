@@ -1,0 +1,55 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@go.Package { name = "github.com/apple/pkl-go/pkl/test_fixtures/gen/collections" }
+module collections
+
+import ".../codegen/src/go.pkl"
+
+res1: List<Int> = List(1, 2, 3)
+
+res2: Listing<Int> = new { 2; 3; 4; }
+
+res3: List<List<Int>> = List(List(1), List(2), List(3))
+
+res4: Listing<Listing<Int>> = new { new { 1 }; new { 2 }; new { 3 } }
+
+res5: Mapping<Int, Boolean> = new { [1] = true; [2] = false }
+
+res6: Mapping<Int, Mapping<Int, Boolean>> = new {
+  [1] {
+    [1] = true
+  }
+  [2] {
+    [2] = true
+  }
+  [3] {
+    [3] = true
+  }
+}
+
+res7: Map<Int, Boolean> = Map(1, true, 2, false)
+
+res8: Map<Int, Map<Int, Boolean>> = Map(1, Map(1, true), 2, Map(2, false))
+
+res9: Set<String> = Set("one", "two", "three")
+
+res10: Set<Int8> = Set(1, 2, 3)
+
+res11: Pair<Int, Float> = Pair(1, 5.0)
+
+res12: Pair = Pair("hello", "goodbye")
+
+res13: Pair<Int, Int?> = Pair(1, 2)

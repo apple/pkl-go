@@ -1,0 +1,108 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+module pkl.golang.go
+
+import "internal/utils.pkl"
+
+local const isValidPackageName = (it: String) ->
+  let (packageNameShort = it.substring(it.lastIndexOf("/") + 1, it.length))
+    if (utils.keywords.contains(packageNameShort))
+      throw("""
+        Package name `\(it)` is not valid because it clashes with keyword `\(packageNameShort)`.
+        """)
+    else true
+
+/// A name in Go; i.e., an identifier.
+typealias GoName = String(!utils.keywords.contains(this) && matches(Regex(#"(?u)\p{L}[\p{L}\d]+"#)))
+
+/// A structured representation of Go struct tags. Keys become struct tag keys, and values become
+/// struct tag values.
+typealias StructTags = Mapping<String(this != "pkl"), String>
+
+/// Metadata for the corresponding Go package for the annotated Pkl module.
+///
+/// The code generator will use the package name, along with the determined Go module name, to
+/// decide where to place the corresponding Go files.
+///
+/// If the package is not a member of the determined Go module name, it is omitted from codegen,
+/// and it is assumed that the Go package is published somewhere else.
+///
+/// Example:
+///
+/// ```
+/// @go.Package { name = "github.com/myteam/myproj/appconfig" }
+/// module myteam.myproj.AppConfig
+///
+/// import package://github.com/apple/pkl-go/releases/download/pkl/pkl.golang@<VERSION>#/go.pkl"
+/// ```
+class Package extends Annotation {
+  /// The full name of the package; i.e. its import path.
+  name: String(isValidPackageName)
+}
+
+/// Struct tag for JSON encoding.
+class JsonStructTag {
+  /// The name portion of the struct tag.
+  ///
+  /// If `null`, defaults to the name of the annotated Pkl property.
+  name: String = "%{name}"
+
+  /// Set the `omitempty` option on the struct tag.
+  omitempty: Boolean = false
+
+  /// The value of the tag.
+  value = "\(name)\(if (omitempty) ",omitempty" else "")"
+}
+
+/// The name for the annotated member when generated to Go.
+///
+/// This may be used to annotate modules, classes, typealiases, and properties.
+///
+/// Examples:
+///
+/// ```
+/// @go.Name { value = "ThePerson" }
+/// class Person
+/// ```
+class Name extends Annotation {
+  value: GoName
+}
+
+/// Metadata for code generation of Go struct fields associated with the annotated property.
+open class Field extends Annotation {
+  /// JSON struct tag for the annotated Pkl property.
+  ///
+  /// This is a convenience property for setting JSON struct tags.
+  ///
+  /// `true` is a shortcut for adding a `json` tag whose value is the name of the annotated Pkl
+  /// property.
+  json: (*JsonStructTag|Boolean)?
+
+  /// Additional struct tags for the annotated Pkl property.
+  ///
+  /// All properties also receive an implicit `pkl` struct tag.
+  ///
+  /// The mapping key becomes the struct tag's key.
+  /// The mapping value receives the Pkl property name as an argument, and the return value becomes
+  /// the struct tag's value.
+  structTags: StructTags = new {
+    when (json != null && json != false) {
+      ["json"] =
+        let (tag = if (json is Boolean) new JsonStructTag {} else json)
+          tag.value
+    }
+  }
+}
