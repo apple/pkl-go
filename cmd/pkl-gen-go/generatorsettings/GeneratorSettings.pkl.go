@@ -67,6 +67,11 @@ type GeneratorSettings struct {
 	// This corresponds to the `--allowed-resources` flag in the Pkl CLI.
 	AllowedResources []string `pkl:"allowedResources"`
 
+	// The project directory to control dependency and evaluator settings during codegen.
+	//
+	// This corresponds to the `--project-dir` flag in the Pkl CLI.
+	ProjctDir *string `pkl:"projctDir"`
+
 	// Print out the names of the files that will be generated, but skip writing anything to disk.
 	DryRun bool `pkl:"dryRun"`
 }

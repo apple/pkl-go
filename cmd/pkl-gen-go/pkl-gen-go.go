@@ -65,22 +65,10 @@ CONFIGURING OUTPUT PATH
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if printVersion {
-			print(Version)
+			fmt.Println(Version)
 			return nil
 		}
-		evaluator, err := pkl.NewEvaluator(
-			context.Background(),
-			pkl.PreconfiguredOptions,
-			func(options *pkl.EvaluatorOptions) {
-				options.Logger = pkl.StderrLogger
-				if len(settings.AllowedModules) > 0 {
-					options.AllowedModules = settings.AllowedModules
-				}
-				if len(settings.AllowedResources) > 0 {
-					options.AllowedResources = settings.AllowedResources
-				}
-			},
-		)
+		evaluator, err := newEvaluator()
 		if err != nil {
 			return err
 		}
@@ -102,6 +90,29 @@ CONFIGURING OUTPUT PATH
 		}
 		return cobra.ExactArgs(1)(cmd, args)
 	},
+}
+
+func newEvaluator() (pkl.Evaluator, error) {
+	projectDirFlag := ""
+	if settings.ProjctDir != nil {
+		projectDirFlag = *settings.ProjctDir
+	}
+	projectDir := findProjectDir(projectDirFlag)
+	if projectDir == "" {
+		return pkl.NewEvaluator(context.Background(), evaluatorOptions)
+	}
+	return pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions)
+}
+
+func evaluatorOptions(opts *pkl.EvaluatorOptions) {
+	pkl.MaybePreconfiguredOptions(opts)
+	opts.Logger = pkl.StderrLogger
+	if len(settings.AllowedModules) > 0 {
+		opts.AllowedModules = settings.AllowedModules
+	}
+	if len(settings.AllowedResources) > 0 {
+		opts.AllowedResources = settings.AllowedResources
+	}
 }
 
 var settings *generatorsettings.GeneratorSettings
@@ -146,6 +157,52 @@ func generatorSettingsSource() *pkl.ModuleSource {
 	return pkl.UriSource(fmt.Sprintf("package://pkg.pkl-lang.org/pkl-go/pkl.golang@%s#/GeneratorSettings.pkl", Version))
 }
 
+// mimick logic for finding project dir in the pkl CLI.
+func doFindProjectDir(dir string) string {
+	if fileExists(filepath.Join(dir, "PklProject")) {
+		return dir
+	}
+	parent := filepath.Dir(dir)
+	if parent == dir {
+		return ""
+	}
+	return doFindProjectDir(parent)
+}
+
+func findProjectDir(projectDirFlag string) string {
+	if projectDirFlag != "" {
+		return projectDirFlag
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	return doFindProjectDir(cwd)
+}
+
+func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string) (*generatorsettings.GeneratorSettings, error) {
+	projectDir := findProjectDir(projectDirFlag)
+	var evaluator pkl.Evaluator
+	var err error
+	if projectDir != "" {
+		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, pkl.PreconfiguredOptions)
+	} else {
+		evaluator, err = pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+	}
+	if err != nil {
+		panic(err)
+	}
+	var source *pkl.ModuleSource
+	if generatorSettingsPath != "" {
+		source = pkl.FileSource(generatorSettingsPath)
+	} else if fileExists("generator-settings.pkl") {
+		source = pkl.FileSource("generator-settings.pkl")
+	} else {
+		source = generatorSettingsSource()
+	}
+	return generatorsettings.Load(context.Background(), evaluator, source)
+}
+
 func init() {
 	flags := command.Flags()
 	var generatorSettingsPath string
@@ -155,6 +212,7 @@ func init() {
 	var allowedModules []string
 	var allowedResources []string
 	var dryRun bool
+	var projectDir string
 	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file")
 	flags.StringVar(&generateScript, "generate-script", "", "The Generate.pkl script to use")
 	flags.StringToStringVar(&mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
@@ -163,30 +221,14 @@ func init() {
 	flags.BoolVar(&suppressWarnings, "suppress-format-warning", false, "Suppress warnings around formatting issues")
 	flags.StringSliceVar(&allowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
 	flags.StringSliceVar(&allowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
+	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
 	flags.BoolVar(&dryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
 	flags.BoolVar(&printVersion, "version", false, "Print the version and exit")
-	if err := flags.Parse(os.Args); err != nil && !errors.Is(err, pflag.ErrHelp) {
+	var err error
+	if err = flags.Parse(os.Args); err != nil && !errors.Is(err, pflag.ErrHelp) {
 		panic(err)
 	}
-	var err error
-	if generatorSettingsPath != "" {
-		settings, err = generatorsettings.LoadFromPath(context.Background(), generatorSettingsPath)
-	} else if fileExists("generator-settings.pkl") {
-		settings, err = generatorsettings.LoadFromPath(context.Background(), "generator-settings.pkl")
-	} else {
-		var evaluator pkl.Evaluator
-		evaluator, err = pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
-		if err != nil {
-			panic(err)
-		}
-		//goland:noinspection GoUnhandledErrorResult
-		defer evaluator.Close()
-		settings, err = generatorsettings.Load(
-			context.Background(),
-			evaluator,
-			generatorSettingsSource(),
-		)
-	}
+	settings, err = loadGeneratorSettings(generatorSettingsPath, projectDir)
 	if err != nil {
 		panic(err)
 	}
@@ -204,6 +246,9 @@ func init() {
 	}
 	if len(allowedResources) > 0 {
 		settings.AllowedResources = allowedResources
+	}
+	if projectDir != "" {
+		settings.ProjctDir = &projectDir
 	}
 	settings.DryRun = dryRun
 }

@@ -79,5 +79,10 @@ allowedModules: Listing<String>
 /// This corresponds to the `--allowed-resources` flag in the Pkl CLI.
 allowedResources: Listing<String>
 
+/// The project directory to control dependency and evaluator settings during codegen.
+///
+/// This corresponds to the `--project-dir` flag in the Pkl CLI.
+projctDir: String?
+
 /// Print out the names of the files that will be generated, but skip writing anything to disk.
 dryRun: Boolean = false
