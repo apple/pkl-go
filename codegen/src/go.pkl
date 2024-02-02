@@ -46,7 +46,7 @@ typealias StructTags = Mapping<String(this != "pkl"), String>
 /// @go.Package { name = "github.com/myteam/myproj/appconfig" }
 /// module myteam.myproj.AppConfig
 ///
-/// import package://github.com/apple/pkl-go/releases/download/pkl/pkl.golang@<VERSION>#/go.pkl"
+/// import package://pkg.pkl-lang.org/pkl-go/pkl.golang@<VERSION>#/go.pkl"
 /// ```
 class Package extends Annotation {
   /// The full name of the package; i.e. its import path.

@@ -1,5 +1,10 @@
 = Changelog
 
+[[release-0.5.1]]
+== 0.5.1 (2024-02-02)
+
+* Fixes an issue where pkl-gen-go includes broken links
+
 [[release-0.5.0]]
 == 0.5.0 (2024-02-02)
 

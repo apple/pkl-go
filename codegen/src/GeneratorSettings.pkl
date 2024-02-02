@@ -67,7 +67,7 @@ structTags: go.StructTags
 ///
 /// This is an internal setting that is used for testing purposes when developing the code
 /// generator.
-generatorScriptPath: String = "package://github.com/apple/pkl-go/releases/download/pkl/pkl.golang@\(version)#/Generator.pkl"
+generatorScriptPath: String = "package://pkg.pkl-lang.org/pkl-go/pkl.golang@\(version)#/Generator.pkl"
 
 /// URI patterns that determine which modules can be loaded and evaluated.
 ///

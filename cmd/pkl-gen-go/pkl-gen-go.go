@@ -50,7 +50,7 @@ GENERATOR SETTINGS FILE
 	be configured using the --generator-settings flag.
 
 	The generator settings file should amend module 
-	package://github.com/apple/pkl-go/releases/download/pkl/pkl.golang@<VERSION>#/GeneratorSettings.pkl
+	package://pkg.pkl-lang.org/pkl-go/pkl.golang@<VERSION>#/GeneratorSettings.pkl
 
 CONFIGURING OUTPUT PATH
 	By default, the full path of each module is written as a relative path to the current working
@@ -130,7 +130,7 @@ func generatorSettingsSource() *pkl.ModuleSource {
 		}
 		return pkl.FileSource(filename, "../../codegen/src/GeneratorSettings.pkl")
 	}
-	return pkl.UriSource(fmt.Sprintf("package://github.com/apple/pkl-go/releases/download/pkl/pkl.golang@%s#/GeneratorSettings.pkl", Version))
+	return pkl.UriSource(fmt.Sprintf("package://pkg.pkl-lang.org/pkl-go/pkl.golang@%s#/GeneratorSettings.pkl", Version))
 }
 
 func init() {
