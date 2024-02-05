@@ -128,7 +128,7 @@ func generatorSettingsSource() *pkl.ModuleSource {
 		if !ok {
 			panic("Failed to get path to pkl-gen-go.go")
 		}
-		return pkl.FileSource(filename, "../../codegen/src/GeneratorSettings.pkl")
+		return pkl.FileSource(filename, "../../../codegen/src/GeneratorSettings.pkl")
 	}
 	return pkl.UriSource(fmt.Sprintf("package://pkg.pkl-lang.org/pkl-go/pkl.golang@%s#/GeneratorSettings.pkl", Version))
 }
