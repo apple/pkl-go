@@ -27,7 +27,7 @@ Options may be provided to the code generator either using CLI flags, or using a
 [[settings-file]]
 === Settings file
 
-The settings file is a Pkl file that amends module https://pkl-lang.org/package-docs/pkg.pkl-lang.org/pkl-go/pkl.golang/current/GeneratorSettings/index.html[`package://pkl.pkl-lang.org/pkl-go/pkl.golang@<VERSION>#/GeneratorSettings.pkl`].
+The settings file is a Pkl file that amends module https://pkl-lang.org/package-docs/pkg.pkl-lang.org/pkl-go/pkl.golang/current/GeneratorSettings/index.html[`package://pkg.pkl-lang.org/pkl-go/pkl.golang@<VERSION>#/GeneratorSettings.pkl`].
 
 By default, the code generator will look for a `generator-settings.pkl` file residing in the current working directory.
 If found, it is used to configure the code generator.
