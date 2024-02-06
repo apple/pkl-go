@@ -1,4 +1,4 @@
-// Code generated from Pkl module `temp.pkl.golang.GeneratorSettings`. DO NOT EDIT.
+// Code generated from Pkl module `pkl.golang.GeneratorSettings`. DO NOT EDIT.
 package generatorsettings
 
 import (
