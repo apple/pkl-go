@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/generatorsettings"
@@ -128,7 +129,8 @@ func generatorSettingsSource() *pkl.ModuleSource {
 		if !ok {
 			panic("Failed to get path to pkl-gen-go.go")
 		}
-		return pkl.FileSource(filename, "../../codegen/src/GeneratorSettings.pkl")
+		dirPath := filepath.Dir(filename)
+		return pkl.FileSource(dirPath, "../../codegen/src/GeneratorSettings.pkl")
 	}
 	return pkl.UriSource(fmt.Sprintf("package://pkg.pkl-lang.org/pkl-go/pkl.golang@%s#/GeneratorSettings.pkl", Version))
 }
