@@ -172,6 +172,7 @@ func (e *evaluator) handleReadResource(msg *msgapi.ReadResource) {
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
 		e.manager.impl.outChan() <- response
+		return
 	}
 	var reader ResourceReader
 	for _, r := range e.resourceReaders {
@@ -199,6 +200,7 @@ func (e *evaluator) handleReadModule(msg *msgapi.ReadModule) {
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
 		e.manager.impl.outChan() <- response
+		return
 	}
 	var reader ModuleReader
 	for _, r := range e.moduleReaders {
@@ -225,6 +227,7 @@ func (e *evaluator) handleListResources(msg *msgapi.ListResources) {
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
 		e.manager.impl.outChan() <- response
+		return
 	}
 	var reader ResourceReader
 	for _, r := range e.resourceReaders {
@@ -258,6 +261,7 @@ func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
 		e.manager.impl.outChan() <- response
+		return
 	}
 	var reader ModuleReader
 	for _, r := range e.moduleReaders {
