@@ -1,5 +1,13 @@
 = Changelog
 
+[[release-0.5.2]]
+== 0.5.2
+
+=== Fixes
+
+* Fixes an issue where `pkl-gen-go` can address an invalid path to GeneratorSettings.pkl (link:https://github.com/apple/pkl-go/pull/3[#3]) (thanks, link:https://github.com/kasugamirai[@kasugamirai]!)
+* Addresses possible nil panics if URLs from `pkl server` are invalid (link:https://github.com/apple/pkl-go/pull/5[#5])
+
 [[release-0.5.1]]
 == 0.5.1 (2024-02-02)
 
