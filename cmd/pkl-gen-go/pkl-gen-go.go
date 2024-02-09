@@ -24,6 +24,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
+	"strings"
 
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/generatorsettings"
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/pkg"
@@ -109,8 +111,17 @@ var printVersion bool
 
 // The version of pkl-gen-go.
 //
-// This gets replaced by ldflags during release build
+// This gets replaced by ldflags when built through CI,
+// or by init when installed via go install.
 var Version = "development"
+
+func init() {
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" || Version != "development" {
+		return
+	}
+	Version = strings.TrimPrefix(info.Main.Version, "v")
+}
 
 func fileExists(filepath string) bool {
 	_, err := os.Stat(filepath)
