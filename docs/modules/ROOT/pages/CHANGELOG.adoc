@@ -1,7 +1,14 @@
 = Changelog
 
+[[release-0.5.3]]
+== 0.5.3 (2024-02-09)
+
+=== Fixes
+
+* Fixes an issue where `pkl-gen-go` can address an invalid path if installed through `go install`.
+
 [[release-0.5.2]]
-== 0.5.2
+== 0.5.2 (2024-02-08)
 
 === Fixes
 
