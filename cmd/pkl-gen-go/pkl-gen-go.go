@@ -111,7 +111,8 @@ var printVersion bool
 
 // The version of pkl-gen-go.
 //
-// This gets replaced by ldflags during release build
+// This gets replaced by ldflags when built through CI,
+// or by init when installed via go install.
 var Version = "development"
 
 func init() {
