@@ -23,7 +23,7 @@ import (
 )
 
 type atomicBool struct {
-	*atomic.Bool
+	atomic.Bool
 }
 
 func (a *atomicBool) get() bool {
