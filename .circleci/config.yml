@@ -22,7 +22,7 @@ jobs:
     - store_test_results:
         path: test-results
     docker:
-    - image: cimg/go:1.19
+    - image: cimg/go:1.21
   build-pkl-gen-go:
     steps:
     - checkout
