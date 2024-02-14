@@ -83,7 +83,7 @@ jobs:
         paths:
         - out/
     docker:
-    - image: cimg/go:1.19
+    - image: cimg/go:1.21
   create-macos-universal-binary:
     steps:
     - attach_workspace:
