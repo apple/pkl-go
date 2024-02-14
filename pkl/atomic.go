@@ -18,24 +18,20 @@ package pkl
 import (
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
 type atomicBool struct {
-	mutex sync.Mutex
-	value bool
+	atomic.Bool
 }
 
 func (a *atomicBool) get() bool {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
-	return a.value
+	return a.Load()
 }
 
 func (a *atomicBool) set(value bool) {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
-	a.value = value
+	a.Store(value)
 }
 
 type atomicRandom struct {

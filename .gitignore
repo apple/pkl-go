@@ -1,6 +1,7 @@
 /antlr/gen
 /parser/antlr
 /.idea
+.run/
 *.pb.go
 .gradle/
 *.jar
