@@ -43,7 +43,7 @@ func (r *EvalError) Is(err error) bool {
 	return ok
 }
 
-// InternalError indicates that an unexpected error occured.
+// InternalError indicates that an unexpected error occurred.
 type InternalError struct {
 	err error
 }

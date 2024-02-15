@@ -41,12 +41,16 @@ const licenseHeader = `// ===---------------------------------------------------
 // ===----------------------------------------------------------------------===//
 `
 
-func main() {
+func getProjectRoot() string {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("can't find caller")
 	}
 	projectRoot := path.Join(path.Dir(filename), "../../../")
+	return projectRoot
+}
+
+func collectFiles(projectRoot string) []string {
 	projectRootFs := os.DirFS(projectRoot)
 	var files []string
 	err := fs.WalkDir(projectRootFs, ".", func(path string, d fs.DirEntry, err error) error {
@@ -61,6 +65,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	return files
+}
+
+func writeLicenseHeader(projectRoot string, files []string) {
 	for _, file := range files {
 		absolutePath := path.Join(projectRoot, file)
 		contents, err := os.ReadFile(absolutePath)
@@ -80,4 +88,10 @@ func main() {
 		}
 		fmt.Println("Wrote license header to " + file)
 	}
+}
+
+func main() {
+	projectRoot := getProjectRoot()
+	files := collectFiles(projectRoot)
+	writeLicenseHeader(projectRoot, files)
 }
