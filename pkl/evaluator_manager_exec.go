@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -205,6 +206,22 @@ func (e *execEvaluator) deinit() error {
 	close(e.in)
 	close(e.out)
 	close(e.closed)
-	// TODO: graceful shutdown
-	return e.cmd.Process.Kill()
+	// Graceful shutdown
+	if err := e.cmd.Process.Signal(os.Interrupt); err != nil {
+		return err
+	}
+	// Setting a timeout if the process doesn't finish in a reasonable time
+	timeout := time.After(5 * time.Second)
+	done := make(chan error, 1)
+	go func() {
+		_, err := e.cmd.Process.Wait()
+		done <- err
+	}()
+	// Await process to exit or timeout to expire
+	select {
+	case <-timeout:
+		return e.cmd.Process.Kill()
+	case err := <-done:
+		return err
+	}
 }
