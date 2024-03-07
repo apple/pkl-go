@@ -70,10 +70,14 @@ type GeneratorSettings struct {
 	// The project directory to control dependency and evaluator settings during codegen.
 	//
 	// This corresponds to the `--project-dir` flag in the Pkl CLI.
-	ProjctDir *string `pkl:"projctDir"`
+	// Relative paths are resolved against the enclosing file.
+	ProjectDir *string `pkl:"projectDir"`
 
 	// Print out the names of the files that will be generated, but skip writing anything to disk.
 	DryRun bool `pkl:"dryRun"`
+
+	// The URI of this module, used to resolve [projectDir].
+	Uri string `pkl:"uri"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a GeneratorSettings

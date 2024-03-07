@@ -18,6 +18,7 @@
 module pkl.golang.GeneratorSettings
 
 import "go.pkl"
+import "pkl:reflect"
 
 local version = read("resources/VERSION.txt").text.trim()
 
@@ -82,7 +83,13 @@ allowedResources: Listing<String>
 /// The project directory to control dependency and evaluator settings during codegen.
 ///
 /// This corresponds to the `--project-dir` flag in the Pkl CLI.
-projctDir: String?
+/// Relative paths are resolved against the enclosing file.
+///
+/// Paths must use `/` as the path separator.
+projectDir: String?
 
 /// Print out the names of the files that will be generated, but skip writing anything to disk.
 dryRun: Boolean = false
+
+/// The URI of this module, used to resolve [projectDir].
+fixed uri: String = reflect.Module(module).uri

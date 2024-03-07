@@ -21,7 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
@@ -70,7 +72,7 @@ CONFIGURING OUTPUT PATH
 		}
 		evaluator, err := newEvaluator()
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create evaluator: %w", err)
 		}
 		if outputPath == "" {
 			outputPath, err = os.Getwd()
@@ -94,8 +96,16 @@ CONFIGURING OUTPUT PATH
 
 func newEvaluator() (pkl.Evaluator, error) {
 	projectDirFlag := ""
-	if settings.ProjctDir != nil {
-		projectDirFlag = *settings.ProjctDir
+	if settings.ProjectDir != nil {
+		if filepath.IsAbs(*settings.ProjectDir) {
+			projectDirFlag = *settings.ProjectDir
+		} else {
+			settingsUri, err := url.Parse(settings.Uri)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse settings.pkl URI: %w", err)
+			}
+			projectDirFlag = path.Join(settingsUri.Path, "..", *settings.ProjectDir)
+		}
 	}
 	projectDir := findProjectDir(projectDirFlag)
 	if projectDir == "" {
@@ -180,6 +190,8 @@ func findProjectDir(projectDirFlag string) string {
 	return doFindProjectDir(cwd)
 }
 
+// Loads the settings for controlling codegen.
+// Uses a Pkl evaluator that is separate from what's used for actually running codegen.
 func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string) (*generatorsettings.GeneratorSettings, error) {
 	projectDir := findProjectDir(projectDirFlag)
 	var evaluator pkl.Evaluator
@@ -248,7 +260,7 @@ func init() {
 		settings.AllowedResources = allowedResources
 	}
 	if projectDir != "" {
-		settings.ProjctDir = &projectDir
+		settings.ProjectDir = &projectDir
 	}
 	settings.DryRun = dryRun
 }

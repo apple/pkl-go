@@ -84,7 +84,7 @@ type ProjectOrDependency struct {
 	Type           string                          `msgpack:"type"`
 	ProjectFileUri string                          `msgpack:"projectFileUri,omitempty"`
 	Checksums      *Checksums                      `msgpack:"checksums,omitempty"`
-	Dependencies   map[string]*ProjectOrDependency `msgpack:"dependencies,omitempty"`
+	Dependencies   map[string]*ProjectOrDependency `msgpack:"dependencies"`
 }
 
 type Checksums struct {
