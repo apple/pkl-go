@@ -349,3 +349,25 @@ var PreconfiguredOptions = func(opts *EvaluatorOptions) {
 	WithDefaultCacheDir(opts)
 	opts.Logger = NoopLogger
 }
+
+// MaybePreconfiguredOptions is like PreconfiguredOptions, except it only applies options
+// if they have not already been set.
+//
+// It panics if the home directory cannot be determined.
+var MaybePreconfiguredOptions = func(opts *EvaluatorOptions) {
+	if len(opts.AllowedResources) == 0 {
+		WithDefaultAllowedResources(opts)
+	}
+	if len(opts.Env) == 0 {
+		WithOsEnv(opts)
+	}
+	if len(opts.AllowedModules) == 0 {
+		WithDefaultAllowedModules(opts)
+	}
+	if opts.CacheDir == "" {
+		WithDefaultCacheDir(opts)
+	}
+	if opts.Logger == nil {
+		opts.Logger = NoopLogger
+	}
+}

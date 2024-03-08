@@ -19,3 +19,5 @@ amends "codegen/src/GeneratorSettings.pkl"
 basePath = "github.com/apple/pkl-go"
 
 generatorScriptPath = "codegen/src/Generator.pkl"
+
+projectDir = "codegen/src"
