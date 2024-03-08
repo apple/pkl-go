@@ -437,12 +437,12 @@ func TestUnmarshal_UnknownType(t *testing.T) {
 
 func TestUnmarshal_Custom(t *testing.T) {
 	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
-	require.NoError(t, err, "failed to create evaluator")
+	require.NoError(t, err, "failed to create pkl evaluator")
 	defer evaluator.Close()
 
 	var res custom.CustomClasses
 	err = evaluator.EvaluateModule(context.Background(), pkl.TextSource(string(customHousePkl)), &res)
-	require.NoError(t, err, "failed to evaluate moduler")
+	require.NoError(t, err, "failed to evaluate pkl module")
 
 	assert.Equal(t, custom.CustomClasses{
 		House: &custom.House{
