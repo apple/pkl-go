@@ -21,6 +21,7 @@ import (
 	_ "embed"
 	"github.com/apple/pkl-go/pkl/test_fixtures/custom"
 	"github.com/stretchr/testify/require"
+	"path/filepath"
 	"testing"
 
 	unknowntype "github.com/apple/pkl-go/pkl/test_fixtures/gen/unknown_type"
@@ -442,6 +443,26 @@ func TestUnmarshal_Custom(t *testing.T) {
 
 	var res custom.CustomClasses
 	err = evaluator.EvaluateModule(context.Background(), pkl.TextSource(string(customHousePkl)), &res)
+	require.NoError(t, err, "failed to evaluate pkl module")
+
+	assert.Equal(t, custom.CustomClasses{
+		House: &custom.House{
+			Shape: custom.Shape{
+				Area: 2000,
+			},
+			Bedrooms:  3,
+			Bathrooms: 2,
+		},
+	}, res)
+}
+
+func TestUnmarshal_GeneratedCustom(t *testing.T) {
+	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+	require.NoError(t, err, "failed to create pkl evaluator")
+	defer evaluator.Close()
+
+	var res custom.CustomClasses
+	err = evaluator.EvaluateModule(context.Background(), pkl.FileSource(filepath.Join("test_fixtures", "custom", "generated", "house.pkl")), &res)
 	require.NoError(t, err, "failed to evaluate pkl module")
 
 	assert.Equal(t, custom.CustomClasses{
