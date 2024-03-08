@@ -21,7 +21,7 @@ The binaries are available as assets on our link:https://github.com/apple/pkl-go
 go install github.com/apple/pkl-go/cmd/pkl-gen-go@v{version}
 
 # via curl
-curl -o pkl-gen-go github.com/apple/pkl-go/releases/download/v{version}/pkl-gen-go-macos.bin
+curl -L -o pkl-gen-go github.com/apple/pkl-go/releases/download/v{version}/pkl-gen-go-macos.bin
 chmod +x pkl-gen-go
 ----
 
