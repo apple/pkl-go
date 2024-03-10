@@ -17,6 +17,9 @@ package pkl
 
 import (
 	"fmt"
+	"github.com/apple/pkl-go/pkl/internal"
+	"github.com/apple/pkl-go/pkl/internal/msgapi"
+	"github.com/vmihailenco/msgpack/v5"
 	"io"
 	"os"
 	"os/exec"
@@ -24,10 +27,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/apple/pkl-go/pkl/internal"
-	"github.com/apple/pkl-go/pkl/internal/msgapi"
-	"github.com/vmihailenco/msgpack/v5"
 )
 
 // NewEvaluatorManager creates a new EvaluatorManager.
@@ -206,22 +205,27 @@ func (e *execEvaluator) deinit() error {
 	close(e.in)
 	close(e.out)
 	close(e.closed)
-	// Graceful shutdown
+	// TODO: graceful shutdown
 	if err := e.cmd.Process.Signal(os.Interrupt); err != nil {
-		return err
-	}
-	// Setting a timeout if the process doesn't finish in a reasonable time
-	timeout := time.After(5 * time.Second)
-	done := make(chan error, 1)
-	go func() {
-		_, err := e.cmd.Process.Wait()
-		done <- err
-	}()
-	// Await process to exit or timeout to expire
-	select {
-	case <-timeout:
+		internal.Debug("Failed to interrupt process: %v", err)
 		return e.cmd.Process.Kill()
-	case err := <-done:
-		return err
 	}
+	select {
+	case <-time.After(5 * time.Second):
+		// If the process does not exit within the timeout, kill it.
+		if killErr := e.cmd.Process.Kill(); killErr != nil {
+			internal.Debug("Failed to kill process after timeout: %v", killErr)
+			return killErr
+		}
+	case err := <-e.closed:
+		if err != nil {
+			internal.Debug("Process exited with error: %v", err)
+			// Forcefully kill the process if it exited with an error.
+			if killErr := e.cmd.Process.Kill(); killErr != nil {
+				internal.Debug("Failed to kill process after error: %v", killErr)
+				return killErr
+			}
+		}
+	}
+	return nil
 }

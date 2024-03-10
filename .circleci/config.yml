@@ -22,7 +22,7 @@ jobs:
     - store_test_results:
         path: test-results
     docker:
-    - image: cimg/go:1.22
+    - image: cimg/go:1.21
   build-pkl-gen-go:
     steps:
     - checkout
@@ -83,7 +83,7 @@ jobs:
         paths:
         - out/
     docker:
-    - image: cimg/go:1.22
+    - image: cimg/go:1.21
   create-macos-universal-binary:
     steps:
     - attach_workspace:
