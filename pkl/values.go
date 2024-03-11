@@ -101,7 +101,7 @@ func (d *Duration) GoDuration() time.Duration {
 }
 
 // DurationUnit represents unit of a Duration.
-type DurationUnit int
+type DurationUnit int64
 
 const (
 	Nanosecond  DurationUnit = 1
@@ -198,7 +198,7 @@ func (d *DataSize) ToUnit(unit DataSizeUnit) DataSize {
 }
 
 // DataSizeUnit represents unit of a DataSize.
-type DataSizeUnit int
+type DataSizeUnit int64
 
 var _ encoding.BinaryUnmarshaler = new(DataSizeUnit)
 
