@@ -1,5 +1,8 @@
 = Changelog
 
+[[release-0.7.0]]
+== 0.7.0 (UNRELEASED)
+
 [[release-0.6.0]]
 == 0.6.0 (2024-03-11)
 
