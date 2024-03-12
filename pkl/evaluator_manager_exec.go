@@ -64,7 +64,7 @@ type execEvaluator struct {
 	in     chan msgapi.IncomingMessage
 	out    chan msgapi.OutgoingMessage
 	closed chan error
-	// exited is a flag that indicates evaluator was closed explicity
+	// exited is a flag that indicates evaluator was closed explicitly
 	exited     atomicBool
 	version    string
 	pklCommand []string

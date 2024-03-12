@@ -261,7 +261,7 @@ var WithResourceReader = func(reader ResourceReader) func(opts *EvaluatorOptions
 	}
 }
 
-// WithModuleReader sets up the given module reader, and also adds the reader's scheme to the]
+// WithModuleReader sets up the given module reader, and also adds the reader's scheme to the
 // evaluator's allowed modules list.
 var WithModuleReader = func(reader ModuleReader) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
