@@ -201,30 +201,31 @@ func (e *execEvaluator) deinit() error {
 	if e.cmd == nil {
 		return nil
 	}
+	pid := e.cmd.Process.Pid
 	e.exited.set(true)
 	close(e.in)
 	close(e.out)
 	close(e.closed)
-	// TODO: graceful shutdown
 	if err := e.cmd.Process.Signal(os.Interrupt); err != nil {
-		internal.Debug("Failed to interrupt process: %v", err)
-		return e.cmd.Process.Kill()
+		internal.Debug("Failed to interrupt process (PID: %d): %v", pid, err)
+		if killErr := e.cmd.Process.Kill(); killErr != nil {
+			internal.Debug("Failed to kill process after interrupt failure (PID: %d): %v", pid, killErr)
+			return killErr
+		}
+		internal.Debug("Process killed successfully after interrupt failure (PID: %d)", pid)
 	}
 	select {
 	case <-time.After(5 * time.Second):
 		// If the process does not exit within the timeout, kill it.
 		if killErr := e.cmd.Process.Kill(); killErr != nil {
-			internal.Debug("Failed to kill process after timeout: %v", killErr)
+			internal.Debug("Failed to kill process after timeout (PID: %d): %v", pid, killErr)
 			return killErr
 		}
+		internal.Debug("Process killed successfully after timeout (PID: %d)", pid)
 	case err := <-e.closed:
 		if err != nil {
-			internal.Debug("Process exited with error: %v", err)
-			// Forcefully kill the process if it exited with an error.
-			if killErr := e.cmd.Process.Kill(); killErr != nil {
-				internal.Debug("Failed to kill process after error: %v", killErr)
-				return killErr
-			}
+			internal.Debug("Process exited with error (PID: %d): %v", pid, err)
+			return err
 		}
 	}
 	return nil
