@@ -156,7 +156,9 @@ func (e *execEvaluator) listenForProcessClose() {
 	if e.exited.get() {
 		return
 	}
-	e.closed <- err
+	if err != nil {
+		e.closed <- err
+	}
 }
 
 func (e *execEvaluator) readIncomingMessages(stdout io.Reader) {
@@ -205,7 +207,10 @@ func (e *execEvaluator) deinit() error {
 	e.exited.set(true)
 	close(e.in)
 	close(e.out)
-	e.closed <- e.cmd.Process.Signal(os.Interrupt)
+	err := e.cmd.Process.Signal(os.Interrupt)
+	if err != nil {
+		e.closed <- err
+	}
 	close(e.closed)
 	select {
 	case <-time.After(5 * time.Second):
