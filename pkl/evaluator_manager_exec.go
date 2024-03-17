@@ -205,28 +205,21 @@ func (e *execEvaluator) deinit() error {
 	e.exited.set(true)
 	close(e.in)
 	close(e.out)
+	e.closed <- e.cmd.Process.Signal(os.Interrupt)
 	close(e.closed)
-	if err := e.cmd.Process.Signal(os.Interrupt); err != nil {
-		internal.Debug("Failed to interrupt process (PID: %d): %v", pid, err)
-		if killErr := e.cmd.Process.Kill(); killErr != nil {
-			internal.Debug("Failed to kill process after interrupt failure (PID: %d): %v", pid, killErr)
-			return killErr
-		}
-		internal.Debug("Process killed successfully after interrupt failure (PID: %d)", pid)
-	}
 	select {
 	case <-time.After(5 * time.Second):
-		// If the process does not exit within the timeout, kill it.
 		if killErr := e.cmd.Process.Kill(); killErr != nil {
 			internal.Debug("Failed to kill process after timeout (PID: %d): %v", pid, killErr)
 			return killErr
 		}
 		internal.Debug("Process killed successfully after timeout (PID: %d)", pid)
 	case err := <-e.closed:
-		if err != nil {
-			internal.Debug("Process exited with error (PID: %d): %v", pid, err)
-			return err
+		internal.Debug("Process exited with error (PID: %d): %v", pid, err)
+		if killErr := e.cmd.Process.Kill(); err != nil {
+			internal.Debug("Failed to kill process after receiving close signal (PID: %d): %v", pid, killErr)
 		}
+		internal.Debug("Process killed successfully after receiving close signal (PID: %d)", pid)
 	}
 	return nil
 }
