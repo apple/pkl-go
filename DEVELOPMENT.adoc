@@ -1,0 +1,43 @@
+:uri-pkl-repo: https://github.com/apple/pkl
+
+= Pkl Go Development Guide
+
+== Debugging the Pkl Server
+
+The pkl-go evaluator API runs `pkl server` as a subprocess, which presents obstacles for directly debugging the server process.
+It is possible to
+
+*Debug Stub Setup*
+
+. Create a file named `debugpkl`
+. Mark the file executable with `chmod +x debugpkl`
+. Populate the file with this content (note: the path to the executable will depend on where the Pkl repo is cloned):
+
+[,shell]
+----
+#!/bin/sh
+
+exec java -agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005,suspend=y -jar /path/to/pkl/pkl-cli/build/executable/jpkl "$@"
+----
+
+
+*IntelliJ IDEA Setup:*
+
+. Open the {uri-pkl-repo}[pkl] project
+. Build `jpkl` by running `./gradlew javaExecutable` so it is available to the script defined above
+. Run > Edit Configurations...
+. Add a new "Remote JVM Debug" configuration
+. Provide a name, eg. `debugpkl`
+. Under "Configuration", select the "Listen to remote JVM" debugger mode
+. Enable "Auto restart"
+. Ensure Host is "localhost" and Port is "5005"
+
+*Usage*
+
+. Configure pkl-go to use `debugpkl` as the server executable: `export PKL_EXEC=./debugpkl`
+. Optionally, turn on extra debug output: `export PKL_DEBUG=1`
+. Define breakpoints as desired in the Pkl codebase using IntelliJ
+. In IntelliJ, start debugging the "Remote JVM Debug" configuration defined above
+. Execute the process using pkl-go
+
+When the Pkl server execution reaches a defined breakpoint, it will pause and activate the debugger in IntelliJ.
