@@ -81,7 +81,7 @@ type evaluatorManagerImpl interface {
 var _ EvaluatorManager = (*evaluatorManager)(nil)
 
 func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	// Prevent concurrent calls to NewEvalautor because only the first call should call the `init` routine.
+	// Prevent concurrent calls to NewEvaluator because only the first call should call the `init` routine.
 	m.newEvaluatorMutex.Lock()
 	defer m.newEvaluatorMutex.Unlock()
 	if m.closed.get() {

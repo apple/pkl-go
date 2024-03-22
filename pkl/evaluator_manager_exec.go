@@ -17,16 +17,16 @@ package pkl
 
 import (
 	"fmt"
+	"github.com/apple/pkl-go/pkl/internal"
+	"github.com/apple/pkl-go/pkl/internal/msgapi"
+	"github.com/vmihailenco/msgpack/v5"
 	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
-
-	"github.com/apple/pkl-go/pkl/internal"
-	"github.com/apple/pkl-go/pkl/internal/msgapi"
-	"github.com/vmihailenco/msgpack/v5"
+	"time"
 )
 
 // NewEvaluatorManager creates a new EvaluatorManager.
@@ -156,7 +156,9 @@ func (e *execEvaluator) listenForProcessClose() {
 	if e.exited.get() {
 		return
 	}
-	e.closed <- err
+	if err != nil {
+		e.closed <- err
+	}
 }
 
 func (e *execEvaluator) readIncomingMessages(stdout io.Reader) {
@@ -201,10 +203,28 @@ func (e *execEvaluator) deinit() error {
 	if e.cmd == nil {
 		return nil
 	}
+	pid := e.cmd.Process.Pid
 	e.exited.set(true)
 	close(e.in)
 	close(e.out)
+	err := e.cmd.Process.Signal(os.Interrupt)
+	if err != nil {
+		e.closed <- err
+	}
 	close(e.closed)
-	// TODO: graceful shutdown
-	return e.cmd.Process.Kill()
+	select {
+	case <-time.After(5 * time.Second):
+		if killErr := e.cmd.Process.Kill(); killErr != nil {
+			internal.Debug("Failed to kill process after timeout (PID: %d): %v", pid, killErr)
+			return killErr
+		}
+		internal.Debug("Process killed successfully after timeout (PID: %d)", pid)
+	case err := <-e.closed:
+		internal.Debug("Process exited with error (PID: %d): %v", pid, err)
+		if killErr := e.cmd.Process.Kill(); err != nil {
+			internal.Debug("Failed to kill process after receiving close signal (PID: %d): %v", pid, killErr)
+		}
+		internal.Debug("Process killed successfully after receiving close signal (PID: %d)", pid)
+	}
+	return nil
 }
