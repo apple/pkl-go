@@ -8,7 +8,7 @@ prb {
 
 main = buildWorkflow
 
-local pklVersion = "0.25.2"
+local pklVersion = "0.25.3"
 local pklBinary = "https://github.com/apple/pkl/releases/download/\(pklVersion)/pkl-linux-amd64"
 
 release = (buildWorkflow) {
