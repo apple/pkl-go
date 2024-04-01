@@ -34,7 +34,7 @@ type fakeEvaluatorImpl struct {
 
 func (f *fakeEvaluatorImpl) getVersion() (string, error) {
 	if f.version == "" {
-		return "0.23.2", nil
+		return "0.25.3", nil
 	}
 	return f.version, nil
 }

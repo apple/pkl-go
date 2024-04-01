@@ -8,7 +8,7 @@ jobs:
     - checkout
     - run:
         command: |-
-          curl -L -o pkl.bin https://github.com/apple/pkl/releases/download/0.25.2/pkl-linux-amd64
+          curl -L -o pkl.bin https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64
           chmod +x pkl.bin
           export PKL_EXEC=$(pwd)/pkl.bin
           go install github.com/jstemmer/go-junit-report/v2@latest
@@ -109,7 +109,7 @@ jobs:
     - checkout
     - run:
         command: |-
-          curl -L -o pkl.bin https://github.com/apple/pkl/releases/download/0.25.2/pkl-linux-amd64
+          curl -L -o pkl.bin https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64
           chmod +x pkl.bin
           ./pkl.bin project package codegen/src/ --output-path out/pkl-package/
         name: Creating Pkl package
