@@ -247,6 +247,10 @@ func (m *evaluatorManager) interrupted(evaluatorId int64) (chan error, func()) {
 
 // closeEvaluator closes the provided evaluator.
 func (m *evaluatorManager) closeEvaluator(ev *evaluator) {
+	// if the manager itself is closed, there's nothing to do.
+	if m.closed.get() {
+		return
+	}
 	m.impl.outChan() <- &msgapi.CloseEvaluator{EvaluatorId: ev.evaluatorId}
 	m.evaluators.Delete(ev.evaluatorId)
 	ev.closed = true

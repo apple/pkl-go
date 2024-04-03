@@ -31,7 +31,7 @@ type Reader interface {
 	// Hierarchical URIs are URIs that have hierarchy elements like host, origin, query, and
 	// fragment.
 	//
-	// A hierarchical URI must start with a "/" in its scheme specific part. For example,  consider
+	// A hierarchical URI must start with a "/" in its scheme specific part. For example, consider
 	// the following two URIS:
 	//
 	//   flintstone:/persons/fred.pkl

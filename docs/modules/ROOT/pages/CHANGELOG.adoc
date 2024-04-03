@@ -1,5 +1,32 @@
 = Changelog
 
+[[release-0.7.0]]
+== 0.7.0 (UNRELEASED)
+
+[[release-0.6.0]]
+== 0.6.0 (2024-03-11)
+
+=== Additions
+
+* Add support for using `pkl-gen-go` with projects (link:https://github.com/apple/pkl-go/pull/22[#22])
+** Add `--project-dir` flag to `pkl-gen-go` command.
+** Add `uri` and `projectDir` setting to `GeneratorSettings.pkl`.
+
+=== Changes
+
+* Bump Go to 1.21 (link:https://github.com/apple/pkl-go/pull/13[#13])
+
+=== Micellaneous
+
+* Documentation fixes (link:https://github.com/apple/pkl-go/pull/19[#19])
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* xref:https://github.com/Nasfame[@Nasfame]
+* xref:https://github.com/vincentvdk[@vince]
+
 [[release-0.5.3]]
 == 0.5.3 (2024-02-09)
 

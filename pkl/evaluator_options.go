@@ -261,7 +261,7 @@ var WithResourceReader = func(reader ResourceReader) func(opts *EvaluatorOptions
 	}
 }
 
-// WithModuleReader sets up the given module reader, and also adds the reader's scheme to the]
+// WithModuleReader sets up the given module reader, and also adds the reader's scheme to the
 // evaluator's allowed modules list.
 var WithModuleReader = func(reader ModuleReader) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
@@ -348,4 +348,26 @@ var PreconfiguredOptions = func(opts *EvaluatorOptions) {
 	WithDefaultAllowedModules(opts)
 	WithDefaultCacheDir(opts)
 	opts.Logger = NoopLogger
+}
+
+// MaybePreconfiguredOptions is like PreconfiguredOptions, except it only applies options
+// if they have not already been set.
+//
+// It panics if the home directory cannot be determined.
+var MaybePreconfiguredOptions = func(opts *EvaluatorOptions) {
+	if len(opts.AllowedResources) == 0 {
+		WithDefaultAllowedResources(opts)
+	}
+	if len(opts.Env) == 0 {
+		WithOsEnv(opts)
+	}
+	if len(opts.AllowedModules) == 0 {
+		WithDefaultAllowedModules(opts)
+	}
+	if opts.CacheDir == "" {
+		WithDefaultCacheDir(opts)
+	}
+	if opts.Logger == nil {
+		opts.Logger = NoopLogger
+	}
 }

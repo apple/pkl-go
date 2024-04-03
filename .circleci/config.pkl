@@ -1,4 +1,4 @@
-amends ".../pkl-project-commons/packages/pkl.impl.circleci/PklCI.pkl"
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.2#/PklCI.pkl"
 
 prb {
   jobs {
@@ -8,8 +8,8 @@ prb {
 
 main = buildWorkflow
 
-local pklVersion = "0.25.1"
-local pklBinary = "https://repo1.maven.org/maven2/org/pkl-lang/pkl-cli-linux-amd64/\(pklVersion)/pkl-cli-linux-amd64-\(pklVersion).bin"
+local pklVersion = "0.25.3"
+local pklBinary = "https://github.com/apple/pkl/releases/download/\(pklVersion)/pkl-linux-amd64"
 
 release = (buildWorkflow) {
   jobs {
@@ -186,7 +186,7 @@ jobs {
 local goJob: Job = new {
   docker {
     new {
-      image = "cimg/go:1.19"
+      image = "cimg/go:1.21"
     }
   }
   steps {
@@ -196,7 +196,7 @@ local goJob: Job = new {
 
 local buildJobs = jobs.keys.filter((it) -> it.startsWith("build-"))
 
-local buildWorkflow = new Workflow {
+local buildWorkflow: Workflow = new {
   jobs {
     "test"
     for (jobName in buildJobs) {
