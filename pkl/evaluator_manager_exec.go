@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -45,10 +46,11 @@ func NewEvaluatorManager() EvaluatorManager {
 func NewEvaluatorManagerWithCommand(pklCommand []string) EvaluatorManager {
 	m := &evaluatorManager{
 		impl: &execEvaluator{
-			in:         make(chan msgapi.IncomingMessage),
-			out:        make(chan msgapi.OutgoingMessage),
-			closed:     make(chan error),
-			pklCommand: pklCommand,
+			in:          make(chan msgapi.IncomingMessage),
+			out:         make(chan msgapi.OutgoingMessage),
+			closed:      make(chan error),
+			pklCommand:  pklCommand,
+			processDone: make(chan struct{}),
 		},
 		interrupts:        &sync.Map{},
 		evaluators:        &sync.Map{},
@@ -65,9 +67,10 @@ type execEvaluator struct {
 	out    chan msgapi.OutgoingMessage
 	closed chan error
 	// exited is a flag that indicates evaluator was closed explicitly
-	exited     atomicBool
-	version    string
-	pklCommand []string
+	exited      atomicBool
+	version     string
+	pklCommand  []string
+  processDone chan struct{}
 }
 
 func (e *execEvaluator) inChan() chan msgapi.IncomingMessage {
@@ -151,6 +154,7 @@ func (e *execEvaluator) init() error {
 
 // listenForProcessClose notifies the evaluator manager when the process quits.
 func (e *execEvaluator) listenForProcessClose() {
+	defer close(e.processDone)
 	err := e.cmd.Wait()
 	// e.exited gets set if closed explicitly.
 	if e.exited.get() {
@@ -196,8 +200,6 @@ func (e *execEvaluator) handleSendMessages(stdin io.Writer) {
 }
 
 func (e *execEvaluator) deinit() error {
-	// `cmd` is nil until an evaluator is initialized through NewEvaluator. If the manager is closed without any
-	// evaluators being initialized, `e.cmd` will be nil.
 	if e.cmd == nil {
 		return nil
 	}
@@ -205,6 +207,26 @@ func (e *execEvaluator) deinit() error {
 	close(e.in)
 	close(e.out)
 	close(e.closed)
-	// TODO: graceful shutdown
-	return e.cmd.Process.Kill()
+
+	pid := e.cmd.Process.Pid
+	if err := e.interruptProcess(); err != nil {
+		internal.Debug("Failed to interrupt process %d: %v", pid, err)
+	}
+	return e.enforceKillOnTimeout(pid)
+}
+
+func (e *execEvaluator) interruptProcess() error {
+	return e.cmd.Process.Signal(os.Interrupt)
+}
+
+func (e *execEvaluator) enforceKillOnTimeout(pid int) error {
+	select {
+	case <-time.After(5 * time.Second):
+		if err := e.cmd.Process.Kill(); err != nil {
+			return fmt.Errorf("failed to kill process %d: %v", pid, err)
+		}
+	case <-e.processDone:
+		// The process has finished
+	}
+	return nil
 }
