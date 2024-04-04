@@ -37,8 +37,10 @@ type structField struct {
 
 var objectType = reflect.TypeOf(Object{})
 
-var sliceOfEmptyInterface []interface{}
-var emptyInterfaceType = reflect.TypeOf(sliceOfEmptyInterface).Elem()
+var (
+	sliceOfEmptyInterface []interface{}
+	emptyInterfaceType    = reflect.TypeOf(sliceOfEmptyInterface).Elem()
+)
 
 // decodeStruct decodes into an object represented by typ.
 // If outValue is not nil, writes fields onto outValue.

@@ -70,7 +70,7 @@ type execEvaluator struct {
 	exited      atomicBool
 	version     string
 	pklCommand  []string
-  processDone chan struct{}
+	processDone chan struct{}
 }
 
 func (e *execEvaluator) inChan() chan msgapi.IncomingMessage {

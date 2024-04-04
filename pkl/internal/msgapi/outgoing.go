@@ -25,13 +25,15 @@ type OutgoingMessage interface {
 	ToMsgPack() ([]byte, error)
 }
 
-var _ OutgoingMessage = (*CreateEvaluator)(nil)
-var _ OutgoingMessage = (*CloseEvaluator)(nil)
-var _ OutgoingMessage = (*Evaluate)(nil)
-var _ OutgoingMessage = (*ReadResourceResponse)(nil)
-var _ OutgoingMessage = (*ReadModuleResponse)(nil)
-var _ OutgoingMessage = (*ListResourcesResponse)(nil)
-var _ OutgoingMessage = (*ListModulesResponse)(nil)
+var (
+	_ OutgoingMessage = (*CreateEvaluator)(nil)
+	_ OutgoingMessage = (*CloseEvaluator)(nil)
+	_ OutgoingMessage = (*Evaluate)(nil)
+	_ OutgoingMessage = (*ReadResourceResponse)(nil)
+	_ OutgoingMessage = (*ReadModuleResponse)(nil)
+	_ OutgoingMessage = (*ListResourcesResponse)(nil)
+	_ OutgoingMessage = (*ListModulesResponse)(nil)
+)
 
 func packMessage(msg OutgoingMessage, code int) ([]byte, error) {
 	enc := msgpack.NewEncoder(nil)

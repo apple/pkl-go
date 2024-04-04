@@ -171,10 +171,10 @@ func GenerateGo(
 			diffs[filename] = diff
 		}
 		out := path.Join(outputPath, filename)
-		if err = os.MkdirAll(path.Dir(out), 0777); err != nil {
+		if err = os.MkdirAll(path.Dir(out), 0o777); err != nil {
 			return err
 		}
-		if err = os.WriteFile(out, formatted, 0666); err != nil {
+		if err = os.WriteFile(out, formatted, 0o666); err != nil {
 			return err
 		}
 		fmt.Println(out)

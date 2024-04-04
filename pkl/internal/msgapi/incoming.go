@@ -29,13 +29,15 @@ type incomingMessageImpl struct{}
 
 func (r incomingMessageImpl) incomingMessage() {}
 
-var _ IncomingMessage = (*CreateEvaluatorResponse)(nil)
-var _ IncomingMessage = (*EvaluateResponse)(nil)
-var _ IncomingMessage = (*ReadResource)(nil)
-var _ IncomingMessage = (*ReadModule)(nil)
-var _ IncomingMessage = (*Log)(nil)
-var _ IncomingMessage = (*ListResources)(nil)
-var _ IncomingMessage = (*ListModules)(nil)
+var (
+	_ IncomingMessage = (*CreateEvaluatorResponse)(nil)
+	_ IncomingMessage = (*EvaluateResponse)(nil)
+	_ IncomingMessage = (*ReadResource)(nil)
+	_ IncomingMessage = (*ReadModule)(nil)
+	_ IncomingMessage = (*Log)(nil)
+	_ IncomingMessage = (*ListResources)(nil)
+	_ IncomingMessage = (*ListModules)(nil)
+)
 
 type CreateEvaluatorResponse struct {
 	incomingMessageImpl
