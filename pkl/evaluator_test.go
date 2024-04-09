@@ -39,7 +39,7 @@ amends "pkl:Project"
 dependencies {
   ["uri"] { uri = "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.0" }
 }
-`), 0644)
+`), 0o644)
 	_ = os.WriteFile(tempDir+"/PklProject.deps.json", []byte(`
 {
   "schemaVersion": 1,
@@ -53,12 +53,12 @@ dependencies {
     }
   }
 }
-`), 0644)
+`), 0o644)
 	_ = os.WriteFile(tempDir+"/main.pkl", []byte(`
 import "@uri/URI.pkl"
 
 uri = URI.parse("https://www.example.com").toString()
-`), 0644)
+`), 0o644)
 	return tempDir
 }
 

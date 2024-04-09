@@ -125,10 +125,12 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 	}
 }
 
-var settings *generatorsettings.GeneratorSettings
-var suppressWarnings bool
-var outputPath string
-var printVersion bool
+var (
+	settings         *generatorsettings.GeneratorSettings
+	suppressWarnings bool
+	outputPath       string
+	printVersion     bool
+)
 
 // The version of pkl-gen-go.
 //

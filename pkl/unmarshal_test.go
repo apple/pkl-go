@@ -85,7 +85,7 @@ var unknownType []byte
 
 func TestUnmarshall_Primitives(t *testing.T) {
 	var res primitives.Primitives
-	var expected = primitives.Primitives{
+	expected := primitives.Primitives{
 		Res0:  "bar",
 		Res1:  1,
 		Res2:  2,

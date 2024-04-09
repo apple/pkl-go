@@ -157,7 +157,7 @@ func (p *ProjectDependencies) toMessage() map[string]*msgapi.ProjectOrDependency
 	if p == nil {
 		return nil
 	}
-	var ret = make(map[string]*msgapi.ProjectOrDependency, len(p.LocalDependencies)+len(p.RemoteDependencies))
+	ret := make(map[string]*msgapi.ProjectOrDependency, len(p.LocalDependencies)+len(p.RemoteDependencies))
 	for name, dep := range p.LocalDependencies {
 		ret[name] = dep.toMessage()
 	}

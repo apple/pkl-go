@@ -88,7 +88,7 @@ package {
 `
 
 func writeFile(t *testing.T, filename string, contents string) {
-	if err := os.WriteFile(filename, []byte(contents), 0777); err != nil {
+	if err := os.WriteFile(filename, []byte(contents), 0o777); err != nil {
 		t.Logf("Failed to write file %s: %s", filename, err)
 		t.FailNow()
 	}
@@ -96,8 +96,8 @@ func writeFile(t *testing.T, filename string, contents string) {
 
 func TestLoadProject(t *testing.T) {
 	tempDir := t.TempDir()
-	_ = os.Mkdir(tempDir+"/hawks", 0777)
-	_ = os.Mkdir(tempDir+"/storks", 0777)
+	_ = os.Mkdir(tempDir+"/hawks", 0o777)
+	_ = os.Mkdir(tempDir+"/storks", 0o777)
 	writeFile(t, tempDir+"/hawks/PklProject", project1Contents)
 	writeFile(t, tempDir+"/storks/PklProject", project2Contents)
 	project, err := pkl.LoadProject(context.Background(), tempDir+"/hawks/PklProject")

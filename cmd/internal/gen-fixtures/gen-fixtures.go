@@ -44,7 +44,7 @@ func evaluateCollections(evaluator pkl.Evaluator, fixturesDir string) {
 			panic(err)
 		}
 		outPath := path.Join(fixturesDir, "msgpack", fmt.Sprintf("collections.%s.msgpack", expr))
-		if err = os.WriteFile(outPath, outBytes, 0666); err != nil {
+		if err = os.WriteFile(outPath, outBytes, 0o666); err != nil {
 			panic(err)
 		}
 		fmt.Printf("Wrote file %s\n", outPath)
@@ -65,10 +65,10 @@ func makeMsgpack(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntr
 			panic(err)
 		}
 		outPath := path.Join(fixturesDir, "msgpack", file.Name()+".msgpack")
-		if err = os.MkdirAll(path.Dir(outPath), 0750); err != nil {
+		if err = os.MkdirAll(path.Dir(outPath), 0o750); err != nil {
 			panic(err)
 		}
-		if err = os.WriteFile(outPath, outBytes, 0600); err != nil {
+		if err = os.WriteFile(outPath, outBytes, 0o600); err != nil {
 			panic(err)
 		}
 		fmt.Printf("Wrote file %s\n", outPath)

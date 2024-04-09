@@ -75,7 +75,7 @@ func main() {
 			continue
 		}
 		newContents := licenseHeader + contentsStr
-		if err = os.WriteFile(absolutePath, []byte(newContents), 0644); err != nil {
+		if err = os.WriteFile(absolutePath, []byte(newContents), 0o644); err != nil {
 			panic(err)
 		}
 		fmt.Println("Wrote license header to " + file)
