@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===----------------------------------------------------------------------===//
+
 package main
 
 import (
@@ -74,7 +75,12 @@ func main() {
 		if strings.HasPrefix(contentsStr, "// Code generated from") {
 			continue
 		}
-		newContents := licenseHeader + contentsStr
+		var newContents string
+		if strings.HasSuffix(file, ".go") {
+			newContents = licenseHeader + "\n" + contentsStr
+		} else {
+			newContents = licenseHeader + contentsStr
+		}
 		if err = os.WriteFile(absolutePath, []byte(newContents), 0o644); err != nil {
 			panic(err)
 		}
