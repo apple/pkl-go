@@ -78,6 +78,12 @@ type GeneratorSettings struct {
 
 	// The URI of this module, used to resolve [projectDir].
 	Uri string `pkl:"uri"`
+
+	// Generator settings path
+	GeneratorSettingsPath *string `pkl:"settingsPath"`
+
+	// The current working directory.
+	Cwd string `pkl:"cwd"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a GeneratorSettings

@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -29,11 +28,12 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/generatorsettings"
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/pkg"
 	"github.com/apple/pkl-go/pkl"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 var command = cobra.Command{
@@ -94,24 +94,35 @@ CONFIGURING OUTPUT PATH
 	},
 }
 
-func newEvaluator() (pkl.Evaluator, error) {
-	projectDirFlag := ""
+func determineProjectDir() string {
+	projectDir := ""
 	if settings.ProjectDir != nil {
 		if filepath.IsAbs(*settings.ProjectDir) {
-			projectDirFlag = *settings.ProjectDir
+			projectDir = *settings.ProjectDir
 		} else {
-			settingsUri, err := url.Parse(settings.Uri)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse settings.pkl URI: %w", err)
+			// If settings are not overriden - it was taken from CWD
+			if settings.GeneratorSettingsPath == nil {
+				projectDir = path.Join(settings.Cwd, *settings.ProjectDir)
+			} else { // If settings are somewhere else, we shall build project relative path from settings file
+				settingPath := *settings.GeneratorSettingsPath
+				if filepath.IsAbs(settingPath) { // we shall not use CWD for absolute path
+					projectDir = path.Join(path.Dir(settingPath), *settings.ProjectDir)
+				} else { // for relative settings path we shall adjust project dir to settings file location, rather than CWD
+					projectDir = path.Join(settings.Cwd, path.Dir(settingPath), *settings.ProjectDir)
+				}
 			}
-			projectDirFlag = path.Join(settingsUri.Path, "..", *settings.ProjectDir)
 		}
 	}
-	projectDir := findProjectDir(projectDirFlag)
-	if projectDir == "" {
+
+	return projectDir
+}
+
+func newEvaluator() (pkl.Evaluator, error) {
+	projectDirFound := findProjectDir(determineProjectDir())
+	if projectDirFound == "" {
 		return pkl.NewEvaluator(context.Background(), evaluatorOptions)
 	}
-	return pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions)
+	return pkl.NewProjectEvaluator(context.Background(), projectDirFound, evaluatorOptions)
 }
 
 func evaluatorOptions(opts *pkl.EvaluatorOptions) {
@@ -158,7 +169,8 @@ func fileExists(filepath string) bool {
 
 //goland:noinspection GoBoolExpressions
 func generatorSettingsSource() *pkl.ModuleSource {
-	if Version == "development" {
+	// (devel) may be returned from init()
+	if Version == "development" || Version == "(devel)" {
 		_, filename, _, ok := runtime.Caller(1)
 		if !ok {
 			panic("Failed to get path to pkl-gen-go.go")
@@ -227,7 +239,7 @@ func init() {
 	var allowedResources []string
 	var dryRun bool
 	var projectDir string
-	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file")
+	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file. Default: current working directory.")
 	flags.StringVar(&generateScript, "generate-script", "", "The Generate.pkl script to use")
 	flags.StringToStringVar(&mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
 	flags.StringVar(&basePath, "base-path", "", "The base path used to determine relative output")
@@ -235,7 +247,7 @@ func init() {
 	flags.BoolVar(&suppressWarnings, "suppress-format-warning", false, "Suppress warnings around formatting issues")
 	flags.StringSliceVar(&allowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
 	flags.StringSliceVar(&allowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
-	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
+	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from. For relative paths workdir is determined based on --generator-settings.")
 	flags.BoolVar(&dryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
 	flags.BoolVar(&printVersion, "version", false, "Print the version and exit")
 	var err error
@@ -265,6 +277,16 @@ func init() {
 		settings.ProjectDir = &projectDir
 	}
 	settings.DryRun = dryRun
+
+	if generatorSettingsPath != "" {
+		settings.GeneratorSettingsPath = &generatorSettingsPath
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	settings.Cwd = cwd
 }
 
 func main() {
