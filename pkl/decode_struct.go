@@ -228,10 +228,8 @@ func (d *decoder) decodePair(typ reflect.Type) (*reflect.Value, error) {
 	}
 	secondField, exists := typ.FieldByName("Second")
 	if !exists {
-		if !exists {
-			return nil, &InternalError{
-				err: errors.New("unable to find field `Second` on pkl.Pair"),
-			}
+		return nil, &InternalError{
+			err: errors.New("unable to find field `Second` on pkl.Pair"),
 		}
 	}
 	second, err := d.Decode(secondField.Type)
