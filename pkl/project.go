@@ -14,10 +14,10 @@ func init() {
 
 // Project is the go representation of pkl.Project.
 type Project struct {
-	ProjectFileUri   string                    `pkl:"projectFileUri"`
-	Package          *ProjectPackage           `pkl:"package"`
-	EvaluatorSetings *ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
-	Tests            []string                  `pkl:"tests"`
+	ProjectFileUri    string                    `pkl:"projectFileUri"`
+	Package           *ProjectPackage           `pkl:"package"`
+	EvaluatorSettings *ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
+	Tests             []string                  `pkl:"tests"`
 
 	// internal field; use Project.Dependencies instead.
 	// values are either *Project or *ProjectRemoteDependency
