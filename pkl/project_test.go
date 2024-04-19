@@ -122,7 +122,7 @@ func TestLoadProject(t *testing.T) {
 				AllowedModules:     []string{"foo:", "bar:"},
 				AllowedResources:   []string{"baz:", "biz:"},
 			}
-			assert.Equal(t, expectedSettings, project.EvaluatorSetings)
+			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
 		})
 
 		t.Run("package", func(t *testing.T) {

@@ -301,7 +301,7 @@ var WithFs = func(fs fs.FS, scheme string) func(opts *EvaluatorOptions) {
 // ProjectEvaluatorSettings.
 var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
-		evaluatorSettings := project.EvaluatorSetings
+		evaluatorSettings := project.EvaluatorSettings
 		if evaluatorSettings == nil {
 			return
 		}
