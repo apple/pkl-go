@@ -218,54 +218,73 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string) 
 	return generatorsettings.Load(context.Background(), evaluator, source)
 }
 
+type CLIFlags struct {
+	GeneratorSettingsPath string
+	GenerateScript        string
+	Mappings              map[string]string
+	BasePath              string
+	AllowedModules        []string
+	AllowedResources      []string
+	DryRun                bool
+	ProjectDir            string
+	OutputPath            string
+	SuppressWarnings      bool
+	PrintVersion          bool
+}
+
+func (cli *CLIFlags) ParseFlags(flags *pflag.FlagSet) error {
+	flags.StringVar(&cli.GeneratorSettingsPath, "generator-settings", "", "The path to a generator settings file")
+	flags.StringVar(&cli.GenerateScript, "generate-script", "", "The Generate.pkl script to use")
+	flags.StringToStringVar(&cli.Mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
+	flags.StringVar(&cli.BasePath, "base-path", "", "The base path used to determine relative output")
+	flags.StringVar(&cli.OutputPath, "output-path", "", "The output directory to write generated sources into")
+	flags.BoolVar(&cli.SuppressWarnings, "suppress-format-warning", false, "Suppress warnings around formatting issues")
+	flags.StringSliceVar(&cli.AllowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
+	flags.StringSliceVar(&cli.AllowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
+	flags.StringVar(&cli.ProjectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
+	flags.BoolVar(&cli.DryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
+	flags.BoolVar(&cli.PrintVersion, "version", false, "Print the version and exit")
+	return flags.Parse(os.Args)
+}
+
+func (cli *CLIFlags) LoadSettings() (*generatorsettings.GeneratorSettings, error) {
+	settings, err := loadGeneratorSettings(cli.GeneratorSettingsPath, cli.ProjectDir)
+	if err != nil {
+		return nil, err
+	}
+	if cli.GenerateScript != "" {
+		settings.GeneratorScriptPath = cli.GenerateScript
+	}
+	if len(cli.Mappings) != 0 {
+		settings.PackageMappings = cli.Mappings
+	}
+	if cli.BasePath != "" {
+		settings.BasePath = cli.BasePath
+	}
+	if len(cli.AllowedModules) > 0 {
+		settings.AllowedModules = cli.AllowedModules
+	}
+	if len(cli.AllowedResources) > 0 {
+		settings.AllowedResources = cli.AllowedResources
+	}
+	if cli.ProjectDir != "" {
+		settings.ProjectDir = &cli.ProjectDir
+	}
+	settings.DryRun = cli.DryRun
+	return settings, nil
+}
+
 func init() {
 	flags := command.Flags()
-	var generatorSettingsPath string
-	var generateScript string
-	var mappings map[string]string
-	var basePath string
-	var allowedModules []string
-	var allowedResources []string
-	var dryRun bool
-	var projectDir string
-	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file")
-	flags.StringVar(&generateScript, "generate-script", "", "The Generate.pkl script to use")
-	flags.StringToStringVar(&mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
-	flags.StringVar(&basePath, "base-path", "", "The base path used to determine relative output")
-	flags.StringVar(&outputPath, "output-path", "", "The output directory to write generated sources into")
-	flags.BoolVar(&suppressWarnings, "suppress-format-warning", false, "Suppress warnings around formatting issues")
-	flags.StringSliceVar(&allowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
-	flags.StringSliceVar(&allowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
-	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
-	flags.BoolVar(&dryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
-	flags.BoolVar(&printVersion, "version", false, "Print the version and exit")
-	var err error
-	if err = flags.Parse(os.Args); err != nil && !errors.Is(err, pflag.ErrHelp) {
+	cliFlags := &CLIFlags{}
+	err := cliFlags.ParseFlags(flags)
+	if err != nil && !errors.Is(err, pflag.ErrHelp) {
 		panic(err)
 	}
-	settings, err = loadGeneratorSettings(generatorSettingsPath, projectDir)
+	settings, err = cliFlags.LoadSettings()
 	if err != nil {
 		panic(err)
 	}
-	if generateScript != "" {
-		settings.GeneratorScriptPath = generateScript
-	}
-	if len(mappings) != 0 {
-		settings.PackageMappings = mappings
-	}
-	if basePath != "" {
-		settings.BasePath = basePath
-	}
-	if len(allowedModules) > 0 {
-		settings.AllowedModules = allowedModules
-	}
-	if len(allowedResources) > 0 {
-		settings.AllowedResources = allowedResources
-	}
-	if projectDir != "" {
-		settings.ProjectDir = &projectDir
-	}
-	settings.DryRun = dryRun
 }
 
 func main() {
