@@ -57,11 +57,11 @@ func (s stringErr) Error() string {
 }
 
 const (
-	// ErrMalformedArgs is returned when the user provides CLI arguments that are badly formed in some way.
-	ErrMalformedArgs = stringErr("malformed arguments")
+	// errMalformedArgs is returned when the user provides CLI arguments that are badly formed in some way.
+	errMalformedArgs = stringErr("malformed arguments")
 
-	// ErrRuntimeCallerFailure is returned when there is a problem using Go's runtime caller functionality.
-	ErrRuntimeCallerFailure = stringErr("runtime caller failure")
+	// errRuntimeCallerFailure is returned when there is a problem using Go's runtime caller functionality.
+	errRuntimeCallerFailure = stringErr("runtime caller failure")
 )
 
 // long command description
@@ -168,7 +168,7 @@ func commandPreRunE(cmd *cobra.Command, args []string) error {
 
 	// expect at exactly one argument
 	if l := len(args); l != 1 {
-		return fmt.Errorf("%w: must provide exactly one argument", ErrMalformedArgs)
+		return fmt.Errorf("%w: must provide exactly one argument", errMalformedArgs)
 	}
 
 	// initialize generator settings
@@ -301,7 +301,7 @@ func generatorSettingsSource() (*pkl.ModuleSource, error) {
 	if Version == "development" {
 		_, filename, _, ok := runtime.Caller(1)
 		if !ok {
-			return nil, fmt.Errorf("%w: could not get path to main Go source file", ErrRuntimeCallerFailure)
+			return nil, fmt.Errorf("%w: could not get path to main Go source file", errRuntimeCallerFailure)
 		}
 		dirPath := filepath.Dir(filename)
 		return pkl.FileSource(dirPath, "../../codegen/src/GeneratorSettings.pkl"), nil
