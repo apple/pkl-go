@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"go/format"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -92,7 +91,7 @@ func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string
 				continue
 			}
 		}
-		out := path.Join(outputPath, filename)
+		out := filepath.Join(outputPath, filename)
 		fmt.Println(out)
 	}
 	return nil
@@ -171,8 +170,8 @@ func GenerateGo(
 		if len(diff) > 0 {
 			diffs[filename] = diff
 		}
-		out := path.Join(outputPath, filename)
-		if err = os.MkdirAll(path.Dir(out), 0o777); err != nil {
+		out := filepath.Join(outputPath, filename)
+		if err = os.MkdirAll(filepath.Dir(out), 0o777); err != nil {
 			return err
 		}
 		if err = os.WriteFile(out, formatted, 0o666); err != nil {

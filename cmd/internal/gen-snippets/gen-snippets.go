@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -42,11 +41,11 @@ func stripLineNumbers(output string) string {
 }
 
 func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
-	outputDir := path.Join(snippetsDir, "output")
+	outputDir := filepath.Join(snippetsDir, "output")
 	if err := os.RemoveAll(outputDir); err != nil {
 		panic(err)
 	}
-	inputDir := path.Join(snippetsDir, "input")
+	inputDir := filepath.Join(snippetsDir, "input")
 	files, err := os.ReadDir(inputDir)
 	if err != nil {
 		panic(err)
@@ -55,7 +54,7 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 	if err != nil {
 		panic(err)
 	}
-	codegenDir := path.Join(snippetsDir, "..")
+	codegenDir := filepath.Join(snippetsDir, "..")
 	settings, err := generatorsettings.LoadFromPath(context.Background(), "codegen/snippet-tests/generator-settings.pkl")
 	if err != nil {
 		panic(err)
@@ -64,7 +63,7 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 		if file.IsDir() {
 			continue
 		}
-		err := pkg.GenerateGo(evaluator, path.Join(inputDir, file.Name()), settings, false, cwd)
+		err := pkg.GenerateGo(evaluator, filepath.Join(inputDir, file.Name()), settings, false, cwd)
 		if strings.Contains(file.Name(), "err.pkl") {
 			if err == nil {
 				fmt.Printf("ERROR: Expected %s to error, but it did not\n", file.Name())
@@ -73,7 +72,7 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 			basename := strings.TrimSuffix(filepath.Base(file.Name()), ".pkl")
 			errContents := strings.ReplaceAll(err.Error(), codegenDir, "<codegen_dir>")
 			errContents = stripLineNumbers(errContents)
-			if err = os.WriteFile(path.Join(outputDir, basename), []byte(errContents), 0o666); err != nil {
+			if err = os.WriteFile(filepath.Join(outputDir, basename), []byte(errContents), 0o666); err != nil {
 				panic(err)
 			}
 		} else if err != nil {
@@ -87,7 +86,7 @@ func main() {
 	if !ok {
 		panic("can't find caller")
 	}
-	snippetsDir := path.Join(path.Dir(filename), "../../../codegen/snippet-tests")
+	snippetsDir := filepath.Join(filepath.Dir(filename), "../../../codegen/snippet-tests")
 	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
 	if err != nil {
 		panic(err)

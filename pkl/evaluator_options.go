@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -250,7 +250,7 @@ var WithDefaultCacheDir = func(opts *EvaluatorOptions) {
 	if err != nil {
 		panic(err)
 	}
-	opts.CacheDir = path.Join(dirname, ".pkl/cache")
+	opts.CacheDir = filepath.Join(dirname, ".pkl/cache")
 }
 
 // WithResourceReader sets up the given resource reader, and also adds the reader's scheme to the evaluator's

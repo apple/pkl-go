@@ -24,7 +24,6 @@ import (
 	"io/fs"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
@@ -105,7 +104,7 @@ func newEvaluator() (pkl.Evaluator, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse settings.pkl URI: %w", err)
 			}
-			projectDirFlag = path.Join(settingsUri.Path, "..", *settings.ProjectDir)
+			projectDirFlag = filepath.Join(settingsUri.Path, "..", *settings.ProjectDir)
 		}
 	}
 	projectDir := findProjectDir(projectDirFlag)

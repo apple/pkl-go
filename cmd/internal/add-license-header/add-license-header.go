@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -47,7 +47,7 @@ func main() {
 	if !ok {
 		panic("can't find caller")
 	}
-	projectRoot := path.Join(path.Dir(filename), "../../../")
+	projectRoot := filepath.Join(filepath.Dir(filename), "../../../")
 	projectRootFs := os.DirFS(projectRoot)
 	var files []string
 	err := fs.WalkDir(projectRootFs, ".", func(path string, d fs.DirEntry, err error) error {
@@ -63,7 +63,7 @@ func main() {
 		panic(err)
 	}
 	for _, file := range files {
-		absolutePath := path.Join(projectRoot, file)
+		absolutePath := filepath.Join(projectRoot, file)
 		contents, err := os.ReadFile(absolutePath)
 		if err != nil {
 			panic(err)
