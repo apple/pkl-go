@@ -88,6 +88,11 @@ allowedResources: Listing<String>
 /// Paths must use `/` as the path separator.
 projectDir: String?
 
+/// The cache directory for storing packages.
+///
+/// This corresponds to the `--cache-dir` flag in the Pkl CLI.
+cacheDir: String?
+
 /// Print out the names of the files that will be generated, but skip writing anything to disk.
 dryRun: Boolean = false
 
