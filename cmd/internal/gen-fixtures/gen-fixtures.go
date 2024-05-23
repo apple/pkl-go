@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/generatorsettings"
@@ -35,7 +35,7 @@ var _ fs.FS = (*testFs)(nil)
 
 func (t testFs) Open(name string) (fs.File, error) {
 	_, fileName, _, _ := runtime.Caller(0)
-	return os.Open(path.Join(fileName, "../../../../", name))
+	return os.Open(filepath.Join(fileName, "../../../../", name))
 }
 
 func evaluateCollections(evaluator pkl.Evaluator, fixturesDir string) {
@@ -44,7 +44,7 @@ func evaluateCollections(evaluator pkl.Evaluator, fixturesDir string) {
 		if err != nil {
 			panic(err)
 		}
-		outPath := path.Join(fixturesDir, "msgpack", fmt.Sprintf("collections.%s.msgpack", expr))
+		outPath := filepath.Join(fixturesDir, "msgpack", fmt.Sprintf("collections.%s.msgpack", expr))
 		if err = os.WriteFile(outPath, outBytes, 0o666); err != nil {
 			panic(err)
 		}
@@ -53,7 +53,7 @@ func evaluateCollections(evaluator pkl.Evaluator, fixturesDir string) {
 }
 
 func makeMsgpack(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntry) {
-	msgpackDir := path.Join(fixturesDir, "msgpack")
+	msgpackDir := filepath.Join(fixturesDir, "msgpack")
 	if err := os.RemoveAll(msgpackDir); err != nil {
 		panic(err)
 	}
@@ -65,8 +65,8 @@ func makeMsgpack(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntr
 		if err != nil {
 			panic(err)
 		}
-		outPath := path.Join(fixturesDir, "msgpack", file.Name()+".msgpack")
-		if err = os.MkdirAll(path.Dir(outPath), 0o750); err != nil {
+		outPath := filepath.Join(fixturesDir, "msgpack", file.Name()+".msgpack")
+		if err = os.MkdirAll(filepath.Dir(outPath), 0o750); err != nil {
 			panic(err)
 		}
 		if err = os.WriteFile(outPath, outBytes, 0o600); err != nil {
@@ -78,7 +78,7 @@ func makeMsgpack(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntr
 }
 
 func makeGoCode(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntry) {
-	genDir := path.Join(fixturesDir, "gen")
+	genDir := filepath.Join(fixturesDir, "gen")
 	if err := os.RemoveAll(genDir); err != nil {
 		panic(err)
 	}
@@ -94,7 +94,7 @@ func makeGoCode(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntry
 		if file.IsDir() {
 			continue
 		}
-		if err := pkg.GenerateGo(evaluator, path.Join(fixturesDir, file.Name()), settings, false, cwd); err != nil {
+		if err := pkg.GenerateGo(evaluator, filepath.Join(fixturesDir, file.Name()), settings, false, cwd); err != nil {
 			panic(err)
 		}
 	}
@@ -105,7 +105,7 @@ func main() {
 	if !ok {
 		panic("can't find caller")
 	}
-	fixturesDir := path.Join(path.Dir(filename), "../../../pkl/test_fixtures")
+	fixturesDir := filepath.Join(filepath.Dir(filename), "../../../pkl/test_fixtures")
 	files, err := os.ReadDir(fixturesDir)
 	if err != nil {
 		panic(err)
