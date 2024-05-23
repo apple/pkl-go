@@ -123,6 +123,9 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 	if len(settings.AllowedResources) > 0 {
 		opts.AllowedResources = settings.AllowedResources
 	}
+	if *settings.CacheDir != "" {
+		opts.CacheDir = *settings.CacheDir
+	}
 }
 
 var (
@@ -227,6 +230,7 @@ func init() {
 	var allowedResources []string
 	var dryRun bool
 	var projectDir string
+	var cacheDir string
 	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file")
 	flags.StringVar(&generateScript, "generate-script", "", "The Generate.pkl script to use")
 	flags.StringToStringVar(&mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
@@ -236,6 +240,7 @@ func init() {
 	flags.StringSliceVar(&allowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
 	flags.StringSliceVar(&allowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
 	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
+	flags.StringVar(&cacheDir, "cache-dir", "", "The cache directory for storing packages")
 	flags.BoolVar(&dryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
 	flags.BoolVar(&printVersion, "version", false, "Print the version and exit")
 	var err error
@@ -263,6 +268,9 @@ func init() {
 	}
 	if projectDir != "" {
 		settings.ProjectDir = &projectDir
+	}
+	if cacheDir != "" {
+		settings.CacheDir = &cacheDir
 	}
 	settings.DryRun = dryRun
 }

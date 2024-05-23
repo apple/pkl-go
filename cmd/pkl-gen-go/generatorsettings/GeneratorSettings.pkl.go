@@ -73,6 +73,11 @@ type GeneratorSettings struct {
 	// Relative paths are resolved against the enclosing file.
 	ProjectDir *string `pkl:"projectDir"`
 
+	// The cache directory for storing packages.
+	//
+	// This corresponds to the `--cache-dir` flag in the Pkl CLI.
+	CacheDir *string `pkl:"cacheDir"`
+
 	// Print out the names of the files that will be generated, but skip writing anything to disk.
 	DryRun bool `pkl:"dryRun"`
 
