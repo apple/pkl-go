@@ -123,7 +123,7 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 	if len(settings.AllowedResources) > 0 {
 		opts.AllowedResources = settings.AllowedResources
 	}
-	if *settings.CacheDir != "" {
+	if settings.CacheDir != nil && *settings.CacheDir != "" {
 		opts.CacheDir = *settings.CacheDir
 	}
 }
