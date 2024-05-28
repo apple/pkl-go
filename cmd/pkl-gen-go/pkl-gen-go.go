@@ -124,7 +124,11 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 		opts.AllowedResources = settings.AllowedResources
 	}
 	if settings.CacheDir != nil && *settings.CacheDir != "" {
-		opts.CacheDir = *settings.CacheDir
+		cacheDir, err := filepath.Abs(*settings.CacheDir)
+		if err != nil {
+			panic(err)
+		}
+		opts.CacheDir = cacheDir
 	}
 }
 
