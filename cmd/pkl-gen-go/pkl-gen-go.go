@@ -143,7 +143,7 @@ var Version = "development"
 
 func init() {
 	info, ok := debug.ReadBuildInfo()
-	if !ok || info.Main.Version == "" || Version != "development" {
+	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" || Version != "development" {
 		return
 	}
 	Version = strings.TrimPrefix(info.Main.Version, "v")
@@ -247,6 +247,12 @@ func init() {
 	if err = flags.Parse(os.Args); err != nil && !errors.Is(err, pflag.ErrHelp) {
 		panic(err)
 	}
+	if projectDir != "" {
+		projectDir, err = filepath.Abs(projectDir)
+		if err != nil {
+			panic(err)
+		}
+	}
 	settings, err = loadGeneratorSettings(generatorSettingsPath, projectDir)
 	if err != nil {
 		panic(err)
@@ -267,7 +273,10 @@ func init() {
 		settings.AllowedResources = allowedResources
 	}
 	if projectDir != "" {
-		settings.ProjectDir = &projectDir
+		if settings.ProjectDir == nil {
+			settings.ProjectDir = new(string)
+		}
+		*settings.ProjectDir = projectDir
 	}
 	if cacheDir != "" {
 		settings.CacheDir = &cacheDir
