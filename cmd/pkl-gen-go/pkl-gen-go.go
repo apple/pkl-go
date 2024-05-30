@@ -124,7 +124,14 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 		opts.AllowedResources = settings.AllowedResources
 	}
 	if settings.CacheDir != nil && *settings.CacheDir != "" {
-		cacheDir, err := filepath.Abs(*settings.CacheDir)
+		cacheDir := *settings.CacheDir
+
+		if len(generatorSettingsPath) > 0 {
+			dir := filepath.Dir(generatorSettingsPath)
+			cacheDir = filepath.Join(dir, cacheDir)
+		}
+
+		cacheDir, err := filepath.Abs(cacheDir)
 		if err != nil {
 			panic(err)
 		}
@@ -133,10 +140,10 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 }
 
 var (
-	settings         *generatorsettings.GeneratorSettings
-	suppressWarnings bool
-	outputPath       string
-	printVersion     bool
+	settings                          *generatorsettings.GeneratorSettings
+	suppressWarnings                  bool
+	outputPath, generatorSettingsPath string
+	printVersion                      bool
 )
 
 // The version of pkl-gen-go.
@@ -226,7 +233,6 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string) 
 
 func init() {
 	flags := command.Flags()
-	var generatorSettingsPath string
 	var generateScript string
 	var mappings map[string]string
 	var basePath string
