@@ -23,6 +23,7 @@ import (
 // Reader is the base implementation shared by a ResourceReader and a ModuleReader.
 type Reader interface {
 	// Scheme returns the scheme part of the URL that this reader can read.
+	// The value should be the URI scheme up to (not including) ":"
 	Scheme() string
 
 	// IsGlobbable tells if this reader supports globbing via Pkl's `import*` and `glob*` keywords

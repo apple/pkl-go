@@ -17,7 +17,6 @@
 package pkl
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -57,10 +56,16 @@ type EvaluatorOptions struct {
 	//   - `"yaml"`
 	OutputFormat string
 
-	// AllowedModules is the URI patterns that determine which modules can be loaded and evaluated.
+	// AllowedModules defines URI patterns that determine which modules are permitted to be loaded and evaluated.
+	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
+	//
+	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
 	AllowedModules []string
 
-	// AllowedResources is the URI patterns that determine which resources can be loaded and evaluated.
+	// AllowedResources defines URI patterns that determine which resources are permitted to be loaded and evaluated.
+	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
+	//
+	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
 	AllowedResources []string
 
 	// ResourceReaders are the resource readers to be used by the evaluator.
@@ -79,11 +84,11 @@ type EvaluatorOptions struct {
 	// Attempting to read past the root directory is an error.
 	RootDir string
 
-	// ProjectDir is the project directory for the evaluator.
+	// ProjectBaseURI sets the project base path for the evaluator.
 	//
 	// Setting this determines how Pkl resolves dependency notation imports.
-	// It causes Pkl to look for the resolved dependencies relative to this directory,
-	// and load resolved dependencies from a PklProject.deps.json file inside this directory.
+	// It causes Pkl to look for the resolved dependencies relative to this base URI,
+	// and load resolved dependencies from `PklProject.deps.json` within the base path represented.
 	//
 	// NOTE:
 	// Setting this option is not equivalent to setting the `--project-dir` flag from the CLI.
@@ -98,13 +103,13 @@ type EvaluatorOptions struct {
 	//
 	// To emulate the CLI's `--project-dir` flag, create an evaluator with NewProjectEvaluator,
 	// or EvaluatorManager.NewProjectEvaluator.
-	ProjectDir string
+	ProjectBaseURI string
 
-	// DeclaredProjectDepenedencies is set of dependencies available to modules within ProjectDir.
+	// DeclaredProjectDepenedencies is set of dependencies available to modules within ProjectBaseURI.
 	//
-	// When importing dependencies, a PklProject.deps.json file must exist within ProjectDir
+	// When importing dependencies, a PklProject.deps.json file must exist within ProjectBaseURI
 	// that contains the project's resolved dependencies.
-	DeclaredProjectDepenedencies *ProjectDependencies
+	DeclaredProjectDependencies *ProjectDependencies
 }
 
 type ProjectRemoteDependency struct {
@@ -202,12 +207,12 @@ func (e *EvaluatorOptions) toMessage() *msgapi.CreateEvaluator {
 }
 
 func (e *EvaluatorOptions) project() *msgapi.ProjectOrDependency {
-	if e.ProjectDir == "" {
+	if e.ProjectBaseURI == "" {
 		return nil
 	}
 	return &msgapi.ProjectOrDependency{
-		ProjectFileUri: fmt.Sprintf("file://%s/PklProject", e.ProjectDir),
-		Dependencies:   e.DeclaredProjectDepenedencies.toMessage(),
+		ProjectFileUri: e.ProjectBaseURI + "/PklProject",
+		Dependencies:   e.DeclaredProjectDependencies.toMessage(),
 	}
 }
 
@@ -258,7 +263,7 @@ var WithDefaultCacheDir = func(opts *EvaluatorOptions) {
 var WithResourceReader = func(reader ResourceReader) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
 		opts.ResourceReaders = append(opts.ResourceReaders, reader)
-		opts.AllowedResources = append(opts.AllowedResources, reader.Scheme())
+		opts.AllowedResources = append(opts.AllowedResources, reader.Scheme()+":")
 	}
 }
 
@@ -267,7 +272,7 @@ var WithResourceReader = func(reader ResourceReader) func(opts *EvaluatorOptions
 var WithModuleReader = func(reader ModuleReader) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
 		opts.ModuleReaders = append(opts.ModuleReaders, reader)
-		opts.AllowedModules = append(opts.AllowedModules, reader.Scheme())
+		opts.AllowedModules = append(opts.AllowedModules, reader.Scheme()+":")
 	}
 }
 
@@ -321,8 +326,8 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 // WithProjectDependencies configures the evaluator with dependencies from the specified project.
 var WithProjectDependencies = func(project *Project) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
-		opts.ProjectDir = strings.TrimPrefix(strings.TrimSuffix(project.ProjectFileUri, "/PklProject"), "file://")
-		opts.DeclaredProjectDepenedencies = project.Dependencies()
+		opts.ProjectBaseURI = strings.TrimSuffix(project.ProjectFileUri, "/PklProject")
+		opts.DeclaredProjectDependencies = project.Dependencies()
 	}
 }
 
