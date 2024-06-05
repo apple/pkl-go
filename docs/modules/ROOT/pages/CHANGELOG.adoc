@@ -26,6 +26,7 @@
 === Breaking changes
 
 * `type DurationUnit` and `type DataSizeUnit` are now backed by `int64`, to avoid possible int overflow issues on 32 bit systems.
+* `EvaluatorOptions.ProjectDir` is renamed to `EvaluatorOptions.ProjectBaseURI` to be forwards-compatible with scheme-agnostic projects coming in Pkl 0.27.
 
 === Contributors ❤️
 
@@ -35,6 +36,7 @@ Thank you to all the contributors for this release!
 * https://github.com/jstrachan[@jstrachan]
 * https://github.com/candy12t[@candy12t]
 * https://github.com/KushalP[@KushalP]
+* https://github.com/HT154[@HT154]
 
 [[release-0.6.0]]
 == 0.6.0 (2024-03-11)
