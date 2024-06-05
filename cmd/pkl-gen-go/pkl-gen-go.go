@@ -22,8 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
@@ -97,15 +97,7 @@ CONFIGURING OUTPUT PATH
 func newEvaluator() (pkl.Evaluator, error) {
 	projectDirFlag := ""
 	if settings.ProjectDir != nil {
-		if filepath.IsAbs(*settings.ProjectDir) {
-			projectDirFlag = *settings.ProjectDir
-		} else {
-			settingsUri, err := url.Parse(settings.Uri)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse settings.pkl URI: %w", err)
-			}
-			projectDirFlag = filepath.Join(settingsUri.Path, "..", *settings.ProjectDir)
-		}
+		projectDirFlag = *settings.ProjectDir
 	}
 	projectDir := findProjectDir(projectDirFlag)
 	if projectDir == "" {
@@ -123,27 +115,16 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 	if len(settings.AllowedResources) > 0 {
 		opts.AllowedResources = settings.AllowedResources
 	}
-	if settings.CacheDir != nil && *settings.CacheDir != "" {
-		cacheDir := *settings.CacheDir
-
-		if len(generatorSettingsPath) > 0 {
-			dir := filepath.Dir(generatorSettingsPath)
-			cacheDir = filepath.Join(dir, cacheDir)
-		}
-
-		cacheDir, err := filepath.Abs(cacheDir)
-		if err != nil {
-			panic(err)
-		}
-		opts.CacheDir = cacheDir
+	if settings.CacheDir != nil {
+		opts.CacheDir = *settings.CacheDir
 	}
 }
 
 var (
-	settings                          *generatorsettings.GeneratorSettings
-	suppressWarnings                  bool
-	outputPath, generatorSettingsPath string
-	printVersion                      bool
+	settings         *generatorsettings.GeneratorSettings
+	suppressWarnings bool
+	outputPath       string
+	printVersion     bool
 )
 
 // The version of pkl-gen-go.
@@ -228,11 +209,25 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string) 
 	} else {
 		source = generatorSettingsSource()
 	}
-	return generatorsettings.Load(context.Background(), evaluator, source)
+	s, err := generatorsettings.Load(context.Background(), evaluator, source)
+	if err != nil {
+		return nil, err
+	}
+	settingsFilePath := path.Dir(source.Uri.Path)
+	if s.ProjectDir != nil && !path.IsAbs(*s.ProjectDir) {
+		normalized := path.Join(settingsFilePath, *s.ProjectDir)
+		s.ProjectDir = &normalized
+	}
+	if s.CacheDir != nil && !path.IsAbs(*s.CacheDir) {
+		normalized := path.Join(settingsFilePath, *s.CacheDir)
+		s.CacheDir = &normalized
+	}
+	return s, nil
 }
 
 func init() {
 	flags := command.Flags()
+	var generatorSettingsPath string
 	var generateScript string
 	var mappings map[string]string
 	var basePath string
@@ -289,7 +284,11 @@ func init() {
 		*settings.ProjectDir = projectDir
 	}
 	if cacheDir != "" {
-		settings.CacheDir = &cacheDir
+		normalized, err := filepath.Abs(cacheDir)
+		if err != nil {
+			panic(err)
+		}
+		settings.CacheDir = &normalized
 	}
 	settings.DryRun = dryRun
 }
