@@ -83,11 +83,11 @@ type EvaluatorOptions struct {
 	// Attempting to read past the root directory is an error.
 	RootDir string
 
-	// ProjectFileURI is the project directory for the evaluator.
+	// ProjectBaseURI sets the project base path for the evaluator.
 	//
 	// Setting this determines how Pkl resolves dependency notation imports.
-	// It causes Pkl to look for the resolved dependencies relative to this directory,
-	// and load resolved dependencies from a PklProject.deps.json file inside this directory.
+	// It causes Pkl to look for the resolved dependencies relative to this base URI,
+	// and load resolved dependencies from `PklProject.deps.json` within the base path represented.
 	//
 	// NOTE:
 	// Setting this option is not equivalent to setting the `--project-dir` flag from the CLI.
