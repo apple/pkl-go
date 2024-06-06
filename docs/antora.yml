@@ -1,6 +1,6 @@
 name: go
 title: Pkl Go Bindings
-version: &version 0.7.0
+version: &version 0.8.0
 nav:
   - nav.adoc
 asciidoc:
