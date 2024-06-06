@@ -1,7 +1,42 @@
 = Changelog
 
 [[release-0.7.0]]
-== 0.7.0 (UNRELEASED)
+== 0.7.0 (2024-06-06)
+
+=== Additions
+
+* Add a way to set the cache dir when running `pkl-gen-go`.
+    - Add `--cache-dir` flag to the CLI.
+    - Add `cacheDir` property to `GeneratorSettings.pkl`.
+
+=== Fixes
+
+* Correct typos in some doc comments.
+* Address a possible race condition that prevents correctly closing the evaluator.
+* Gracefully shut down the `pkl` child process. The process is now given five seconds to shut down before forcefully terminated.
+* Change pkl-gen-go to handle path separators correctly on Windows.
+* Fix unix file permissions when writing files.
+* Correctly resolve pkl-gen-go's `--project-dir` flag when given a relative path.
+
+=== Miscellaneous
+
+* Fix typos.
+* Update doc comments on modules to prevent godoc from processing license headers as documentation.
+
+=== Breaking changes
+
+* `type DurationUnit` and `type DataSizeUnit` are now backed by `int64`, to avoid possible int overflow issues on 32 bit systems.
+* `EvaluatorOptions.ProjectDir` is renamed to `EvaluatorOptions.ProjectBaseURI` to be forwards-compatible with scheme-agnostic projects coming in Pkl 0.27.
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/kasugamirai[@kasugamirai]
+* https://github.com/jstrachan[@jstrachan]
+* https://github.com/candy12t[@candy12t]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/HT154[@HT154]
 
 [[release-0.6.0]]
 == 0.6.0 (2024-03-11)
