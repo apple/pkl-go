@@ -114,30 +114,68 @@ const (
 	Day                      = Hour * 24
 )
 
+var (
+	durationUnitToStringMap = map[DurationUnit]string{
+		Nanosecond:  "ns",
+		Microsecond: "us",
+		Millisecond: "ms",
+		Second:      "s",
+		Minute:      "min",
+		Hour:        "h",
+		Day:         "d",
+	}
+
+	stringToDurationUnitMap = map[string]DurationUnit{
+		"ns":  Nanosecond,
+		"us":  Microsecond,
+		"ms":  Millisecond,
+		"s":   Second,
+		"min": Minute,
+		"h":   Hour,
+		"d":   Day,
+	}
+)
+
+var (
+	dataSizeUnitToStringMap = map[DataSizeUnit]string{
+		Bytes:     "b",
+		Kilobytes: "kb",
+		Kibibytes: "kib",
+		Megabytes: "mb",
+		Mebibytes: "mib",
+		Gigabytes: "gb",
+		Gibibytes: "gib",
+		Terabytes: "tb",
+		Tebibytes: "tib",
+		Petabytes: "pb",
+		Pebibytes: "pib",
+	}
+
+	stringToDataSizeUnitMap = map[string]DataSizeUnit{
+		"b":   Bytes,
+		"kb":  Kilobytes,
+		"kib": Kibibytes,
+		"mb":  Megabytes,
+		"mib": Mebibytes,
+		"gb":  Gigabytes,
+		"gib": Gibibytes,
+		"tb":  Terabytes,
+		"tib": Tebibytes,
+		"pb":  Petabytes,
+		"pib": Pebibytes,
+	}
+)
+
 var _ encoding.BinaryUnmarshaler = new(DurationUnit)
 
 // String returns the string representation of this DataSizeUnit.
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d DurationUnit) String() string {
-	switch d {
-	case Nanosecond:
-		return "ns"
-	case Microsecond:
-		return "us"
-	case Millisecond:
-		return "ms"
-	case Second:
-		return "s"
-	case Minute:
-		return "min"
-	case Hour:
-		return "h"
-	case Day:
-		return "d"
-	default:
-		return "<invalid>"
+	if str, found := durationUnitToStringMap[d]; found {
+		return str
 	}
+	return "<invalid>"
 }
 
 //goland:noinspection GoMixedReceiverTypes
@@ -152,24 +190,10 @@ func (d *DurationUnit) UnmarshalBinary(data []byte) error {
 
 // ToDurationUnit converts to a DurationUnit from its string representation.
 func ToDurationUnit(str string) (DurationUnit, error) {
-	switch str {
-	case "ns":
-		return Nanosecond, nil
-	case "us":
-		return Microsecond, nil
-	case "ms":
-		return Millisecond, nil
-	case "s":
-		return Second, nil
-	case "min":
-		return Minute, nil
-	case "h":
-		return Hour, nil
-	case "d":
-		return Day, nil
-	default:
-		return 0, fmt.Errorf("unrecognized Duration unit: `%s`", str)
+	if unit, found := stringToDurationUnitMap[str]; found {
+		return unit, nil
 	}
+	return 0, fmt.Errorf("unrecognized Duration unit: `%s`", str)
 }
 
 // DataSize is the Go representation of `pkl.base#DataSize`.
@@ -221,32 +245,10 @@ const (
 //
 //goland:noinspection GoMixedReceiverTypes
 func (d DataSizeUnit) String() string {
-	switch d {
-	case Bytes:
-		return "b"
-	case Kilobytes:
-		return "kb"
-	case Kibibytes:
-		return "kib"
-	case Megabytes:
-		return "mb"
-	case Mebibytes:
-		return "mib"
-	case Gigabytes:
-		return "gb"
-	case Gibibytes:
-		return "gib"
-	case Terabytes:
-		return "tb"
-	case Tebibytes:
-		return "tib"
-	case Petabytes:
-		return "pb"
-	case Pebibytes:
-		return "pib"
-	default:
-		return "<invalid>"
+	if str, found := dataSizeUnitToStringMap[d]; found {
+		return str
 	}
+	return "<invalid>"
 }
 
 //goland:noinspection GoMixedReceiverTypes
@@ -261,30 +263,8 @@ func (d *DataSizeUnit) UnmarshalBinary(data []byte) error {
 
 // ToDataSizeUnit converts to a DataSizeUnit from its string representation.
 func ToDataSizeUnit(str string) (DataSizeUnit, error) {
-	switch str {
-	case "b":
-		return Bytes, nil
-	case "kb":
-		return Kilobytes, nil
-	case "kib":
-		return Kibibytes, nil
-	case "mb":
-		return Megabytes, nil
-	case "mib":
-		return Mebibytes, nil
-	case "gb":
-		return Gigabytes, nil
-	case "gib":
-		return Gibibytes, nil
-	case "tb":
-		return Terabytes, nil
-	case "tib":
-		return Tebibytes, nil
-	case "pb":
-		return Petabytes, nil
-	case "pib":
-		return Pebibytes, nil
-	default:
-		return Bytes, fmt.Errorf("unrecognized DataSize unit: `%s`", str)
+	if unit, found := stringToDataSizeUnitMap[str]; found {
+		return unit, nil
 	}
+	return 0, fmt.Errorf("unrecognized DataSize unit: `%s`", str)
 }
