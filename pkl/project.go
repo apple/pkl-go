@@ -61,9 +61,10 @@ type ProjectEvaluatorSettings struct {
 
 func (project *Project) Dependencies() *ProjectDependencies {
 	if project.dependencies == nil {
-		var deps ProjectDependencies
-		deps.LocalDependencies = make(map[string]*ProjectLocalDependency)
-		deps.RemoteDependencies = make(map[string]*ProjectRemoteDependency)
+		deps := ProjectDependencies{
+			LocalDependencies:  make(map[string]*ProjectLocalDependency),
+			RemoteDependencies: make(map[string]*ProjectRemoteDependency),
+		}
 		for name, dep := range project.RawDependencies {
 			if proj, ok := dep.(*Project); ok {
 				localDep := &ProjectLocalDependency{
