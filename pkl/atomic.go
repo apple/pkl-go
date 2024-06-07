@@ -35,17 +35,18 @@ func (a *atomicBool) set(value bool) {
 	a.Store(value)
 }
 
-type atomicRandom struct {
-	mutex sync.Mutex
-	rand  *rand.Rand
+var randPool = &sync.Pool{
+	New: func() interface{} {
+		return rand.New(rand.NewSource(time.Now().UnixNano()))
+	},
 }
+
+type atomicRandom struct{}
 
 func (a *atomicRandom) Int63() int64 {
-	a.mutex.Lock()
-	defer a.mutex.Unlock()
-	return a.rand.Int63()
+	r := randPool.Get().(*rand.Rand)
+	defer randPool.Put(r)
+	return r.Int63()
 }
 
-var random = &atomicRandom{
-	rand: rand.New(rand.NewSource(time.Now().UnixMilli())),
-}
+var random = &atomicRandom{}
