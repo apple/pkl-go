@@ -1,15 +1,27 @@
 amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.2#/PklCI.pkl"
 
+local testJobs = jobs.keys.filter((it) -> it.startsWith("test"))
+
 prb {
   jobs {
-    "test"
+    ...testJobs
   }
 }
 
 main = buildWorkflow
 
-local pklVersion = "0.25.3"
-local pklBinary = "https://github.com/apple/pkl/releases/download/\(pklVersion)/pkl-linux-amd64"
+local class PklDistribution {
+  /// The version of this distribution
+  version: String
+
+  /// The URL to download this distribution
+  fixed downloadUrl: String = "https://github.com/apple/pkl/releases/download/\(version)/pkl-linux-amd64"
+}
+
+local pklDistributions: Listing<PklDistribution> = new {
+  new { version = "0.25.3" }
+  new { version = "0.26.0" }
+}
 
 release = (buildWorkflow) {
   jobs {
@@ -36,25 +48,27 @@ triggerDocsBuild = "release"
 triggerPackageDocsBuild = "release"
 
 jobs {
-  ["test"] = (goJob) {
-    steps {
-      new RunStep {
-        name = "go test"
-        command = """
-          curl -L -o pkl.bin \(pklBinary)
-          chmod +x pkl.bin
-          export PKL_EXEC=$(pwd)/pkl.bin
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-          echo "Running Pkl snippet tests"
-          ./scripts/test_snippets.sh
-          echo "Running Go unit tests"
-          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
-          """
-      }
-      new StoreTestResults {
-        path = "test-results"
+  for (distribution in pklDistributions) {
+    ["test-pkl-\(distribution.version.replaceAll(".", "-"))"] = (goJob) {
+      steps {
+        new RunStep {
+          name = "go test"
+          command = """
+            curl -L -o pkl.bin '\(distribution.downloadUrl)'
+            chmod +x pkl.bin
+            export PKL_EXEC=$(pwd)/pkl.bin
+            go install github.com/jstemmer/go-junit-report/v2@latest
+            echo "Running Pkl unit tests"
+            $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
+            echo "Running Pkl snippet tests"
+            ./scripts/test_snippets.sh
+            echo "Running Go unit tests"
+            go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+            """
+        }
+        new StoreTestResults {
+          path = "test-results"
+        }
       }
     }
   }
@@ -123,7 +137,7 @@ jobs {
       new RunStep {
         name = "Creating Pkl package"
         command = """
-          curl -L -o pkl.bin \(pklBinary)
+          curl -L -o pkl.bin '\(pklDistributions[pklDistributions.length - 1].downloadUrl)'
           chmod +x pkl.bin
           ./pkl.bin project package codegen/src/ --output-path out/pkl-package/
           """
@@ -198,11 +212,11 @@ local buildJobs = jobs.keys.filter((it) -> it.startsWith("build-"))
 
 local buildWorkflow: Workflow = new {
   jobs {
-    "test"
+    ...testJobs
     for (jobName in buildJobs) {
       new {
         [jobName] {
-          requires { "test" }
+          requires { ...testJobs }
         }
       }
     }

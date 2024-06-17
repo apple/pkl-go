@@ -21,9 +21,12 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"sort"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -61,6 +64,26 @@ import "@uri/URI.pkl"
 uri = URI.parse("https://www.example.com").toString()
 `), 0o644)
 	return tempDir
+}
+
+func getOpenPort() int {
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		panic(err)
+	}
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+	//goland:noinspection GoUnhandledErrorResult
+	defer listener.Close()
+	addrStr := listener.Addr().String()
+	parts := strings.Split(addrStr, ":")
+	port, err := strconv.Atoi(parts[len(parts)-1])
+	if err != nil {
+		panic(err)
+	}
+	return port
 }
 
 func TestEvaluator(t *testing.T) {
@@ -489,6 +512,27 @@ age = 43
 				}
 			}
 		}
+	})
+
+	t.Run("custom proxy options", func(t *testing.T) {
+		if version, err := manager.GetVersion(); pklVersion0_26.isGreaterThanString(version) || err != nil {
+			if err != nil {
+				t.Fatal(err.Error())
+			}
+			t.SkipNow()
+		}
+		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
+			options.Http = &Http{
+				Proxy: &Proxy{
+					Address: fmt.Sprintf("http://localhost:%d", getOpenPort()),
+				},
+			}
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = ev.EvaluateOutputText(context.Background(), UriSource(fmt.Sprintf("https://localhost:%d", getOpenPort())))
+		assert.Contains(t, err.Error(), "ConnectException: Error connecting to host `localhost`")
 	})
 
 	t.Cleanup(func() {

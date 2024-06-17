@@ -94,7 +94,11 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 		}
 		m.initialized = true
 	}
-	o := buildEvaluatorOptions(opts...)
+	version, err := m.GetVersion()
+	if err != nil {
+		return nil, err
+	}
+	o := buildEvaluatorOptions(version, opts...)
 	var newEvaluatorRequest msgapi.OutgoingMessage
 	requestId := random.Int63()
 	msg := o.toMessage()
