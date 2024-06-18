@@ -33,11 +33,11 @@ type fakeEvaluatorImpl struct {
 	closed  chan error
 }
 
-func (f *fakeEvaluatorImpl) getVersion() (string, error) {
+func (f *fakeEvaluatorImpl) getVersion() (*semver, error) {
 	if f.version == "" {
-		return "0.25.3", nil
+		return pklVersion0_25, nil
 	}
-	return f.version, nil
+	return parseSemver(f.version)
 }
 
 func (f *fakeEvaluatorImpl) init() error {

@@ -515,10 +515,11 @@ age = 43
 	})
 
 	t.Run("custom proxy options", func(t *testing.T) {
-		if version, err := manager.GetVersion(); pklVersion0_26.isGreaterThanString(version) || err != nil {
-			if err != nil {
-				t.Fatal(err.Error())
-			}
+		version, err := manager.(*evaluatorManager).getVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if pklVersion0_26.isGreaterThan(version) {
 			t.SkipNow()
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {

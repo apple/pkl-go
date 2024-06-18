@@ -76,7 +76,7 @@ type evaluatorManagerImpl interface {
 	inChan() chan msgapi.IncomingMessage
 	outChan() chan msgapi.OutgoingMessage
 	closedChan() chan error
-	getVersion() (string, error)
+	getVersion() (*semver, error)
 }
 
 var _ EvaluatorManager = (*evaluatorManager)(nil)
@@ -94,11 +94,14 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 		}
 		m.initialized = true
 	}
-	version, err := m.GetVersion()
+	version, err := m.getVersion()
 	if err != nil {
 		return nil, err
 	}
-	o := buildEvaluatorOptions(version, opts...)
+	o, err := buildEvaluatorOptions(version, opts...)
+	if err != nil {
+		return nil, err
+	}
 	var newEvaluatorRequest msgapi.OutgoingMessage
 	requestId := random.Int63()
 	msg := o.toMessage()
@@ -153,8 +156,16 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectDir s
 	return NewEvaluator(ctx, newOpts...)
 }
 
-func (m *evaluatorManager) GetVersion() (string, error) {
+func (m *evaluatorManager) getVersion() (*semver, error) {
 	return m.impl.getVersion()
+}
+
+func (m *evaluatorManager) GetVersion() (string, error) {
+	version, err := m.getVersion()
+	if err != nil {
+		return "", err
+	}
+	return version.String(), nil
 }
 
 func (m *evaluatorManager) Close() error {

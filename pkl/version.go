@@ -2,8 +2,14 @@ package pkl
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 )
+
+var semverPattern = regexp.MustCompile(`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`)
+
+var numericIdentifer = regexp.MustCompile(`^(0|[1-9]\d*)$`)
 
 //goland:noinspection GoSnakeCaseUsage
 var pklVersion0_25 = mustParseSemver("0.25.0")
@@ -12,11 +18,51 @@ var pklVersion0_25 = mustParseSemver("0.25.0")
 var pklVersion0_26 = mustParseSemver("0.26.0")
 
 type semver struct {
-	major      int
-	minor      int
-	patch      int
-	prerelease string
-	build      string
+	major                 int
+	minor                 int
+	patch                 int
+	prerelease            string
+	build                 string
+	prereleaseIdentifiers []prereleaseIdentifier
+}
+
+type prereleaseIdentifier struct {
+	numbericId     int
+	alphaNumericId string
+}
+
+func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {
+	if i.alphaNumericId != "" {
+		if other.alphaNumericId != "" {
+			return strings.Compare(i.alphaNumericId, other.alphaNumericId)
+		} else {
+			return 1
+		}
+	} else {
+		return compareInt(i.numbericId, other.numbericId)
+	}
+}
+
+func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
+	if s.prerelease != "" && len(s.prereleaseIdentifiers) > 0 {
+		return s.prereleaseIdentifiers
+	}
+	if s.prerelease == "" {
+		return nil
+	}
+	identifiers := strings.Split(s.prerelease, ".")
+	prereleaseIdentifiers := make([]prereleaseIdentifier, len(identifiers))
+	for i, str := range identifiers {
+		if numericIdentifer.MatchString(str) {
+			// guaranteed to succeed
+			num, _ := strconv.Atoi(str)
+			prereleaseIdentifiers[i] = prereleaseIdentifier{numbericId: num}
+		} else {
+			prereleaseIdentifiers[i] = prereleaseIdentifier{alphaNumericId: str}
+		}
+	}
+	s.prereleaseIdentifiers = prereleaseIdentifiers
+	return s.prereleaseIdentifiers
 }
 
 func compareInt(a, b int) int {
@@ -29,12 +75,12 @@ func compareInt(a, b int) int {
 	return 1
 }
 
-func (s *semver) compareToString(other string) int {
+func (s *semver) compareToString(other string) (int, error) {
 	otherVersion, err := parseSemver(other)
 	if err != nil {
-		return 0
+		return 0, err
 	}
-	return s.compareTo(otherVersion)
+	return s.compareTo(otherVersion), nil
 }
 
 // compareTo returns -1 if s < other, 1 if s > other, and 0 otherwise.
@@ -49,27 +95,37 @@ func (s *semver) compareTo(other *semver) int {
 	}
 	// technically we should proceed to comparing prerelease versions, but we can skip
 	// this part because we don't have a use-case for it.
-	return compareInt(s.patch, other.patch)
-}
-
-func (s *semver) isGreaterThanString(other string) bool {
-	return s.compareToString(other) == 1
-}
-
-func (s *semver) isLessThanOrEqualToString(other string) bool {
-	parsed, err := parseSemver(other)
-	if err != nil {
-		return false
+	comparison = compareInt(s.patch, other.patch)
+	if comparison != 0 {
+		return comparison
 	}
-	return s.compareTo(parsed) <= 0
+	ids1 := s.getPrereleaseIdentifiers()
+	ids2 := other.getPrereleaseIdentifiers()
+	for i := 0; i < min(len(ids1), len(ids2)); i++ {
+		cmp := ids1[i].compareTo(ids2[i])
+		if cmp != 0 {
+			return cmp
+		}
+	}
+	return compareInt(len(ids1), len(ids2))
 }
 
-func (s *semver) isGreaterThanOrEqualToString(other string) bool {
-	return s.compareToString(other) >= 0
+func (s *semver) isGreaterThan(other *semver) bool {
+	return s.compareTo(other) > 0
 }
 
 func (s *semver) String() string {
-	return fmt.Sprintf("%d.%d.%d", s.major, s.minor, s.patch)
+	res := fmt.Sprintf("%d.%d.%d", s.major, s.minor, s.patch)
+	if s.prerelease == "" && s.build == "" {
+		return res
+	}
+	if s.prerelease != "" {
+		res += "-" + s.prerelease
+	}
+	if s.build != "" {
+		res += "+" + s.build
+	}
+	return res
 }
 
 func mustParseSemver(s string) *semver {
@@ -82,7 +138,7 @@ func mustParseSemver(s string) *semver {
 
 func parseSemver(s string) (*semver, error) {
 	matched := semverPattern.FindStringSubmatch(s)
-	if len(matched) < 5 {
+	if len(matched) < 6 {
 		return nil, fmt.Errorf("failed to parse %s as semver", s)
 	}
 	major, err := strconv.Atoi(matched[1])

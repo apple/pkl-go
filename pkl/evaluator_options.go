@@ -17,6 +17,7 @@
 package pkl
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -114,7 +115,7 @@ type EvaluatorOptions struct {
 	// Settings for controlling how Pkl talks over HTTP(S).
 	//
 	// Added in Pkl 0.26.
-	// These fields are ignored if targeting Pkl 0.25.
+	// If the underlying Pkl does not support HTTP options, NewEvaluator will return with an error.
 	Http *Http
 }
 
@@ -306,18 +307,18 @@ var WithOsEnv = func(opts *EvaluatorOptions) {
 	}
 }
 
-func buildEvaluatorOptions(version string, fns ...func(*EvaluatorOptions)) *EvaluatorOptions {
+func buildEvaluatorOptions(version *semver, fns ...func(*EvaluatorOptions)) (*EvaluatorOptions, error) {
 	o := &EvaluatorOptions{}
 	for _, f := range fns {
 		f(o)
 	}
 	// repl:text is the URI of the module used to hold expressions. It should always be allowed.
 	o.AllowedModules = append(o.AllowedModules, "repl:text")
-	if o.Http != nil && pklVersion0_26.isGreaterThanString(version) {
+	if o.Http != nil && pklVersion0_26.isGreaterThan(version) {
 		// HTTP is not supported on Pkl 0.25; ignore as per documentation of EvaluatorOptions.Http.
-		o.Http = nil
+		return nil, fmt.Errorf("http options are not supported on Pkl versions lower than 0.26")
 	}
-	return o
+	return o, nil
 }
 
 // WithDefaultAllowedResources enables reading http, https, file, env, prop, modulepath, and package resources.
