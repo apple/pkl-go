@@ -1,4 +1,6 @@
-amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.2#/PklCI.pkl"
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.1.1#/PklCI.pkl"
+
+import "pkl:semver"
 
 local testJobs = jobs.keys.filter((it) -> it.startsWith("test"))
 
@@ -14,13 +16,23 @@ local class PklDistribution {
   /// The version of this distribution
   version: String
 
+  /// The parsed semver.
+  fixed _version: semver.Version = semver.parseOrNull(version)!!
+
   /// The URL to download this distribution
   fixed downloadUrl: String = "https://github.com/apple/pkl/releases/download/\(version)/pkl-linux-amd64"
+
+  /// The URL to download this distribution
+  fixed downloadUrlWindows: String =
+    if (_version.minor < 26) throw("\(version) is not supported on Windows")
+    else "https://github.com/apple/pkl/releases/download/\(version)/pkl-windows-amd64.exe"
 }
+
+local distributionLatest: PklDistribution = new { version = "0.26.0" }
 
 local pklDistributions: Listing<PklDistribution> = new {
   new { version = "0.25.3" }
-  new { version = "0.26.0" }
+  distributionLatest
 }
 
 release = (buildWorkflow) {
@@ -69,6 +81,35 @@ jobs {
         new StoreTestResults {
           path = "test-results"
         }
+      }
+    }
+  }
+  ["test-windows"] {
+    machine {
+      image = "windows-server-2022-gui:current"
+    }
+    resource_class = "windows.medium"
+    steps {
+      "checkout"
+      new RunStep { command = "systeminfo" }
+      new RunStep {
+        name = "go test"
+        command = #"""
+          echo "Installing Go"
+          Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
+          $pkg = "$PWD\go.exe"
+          Start-Process msiexec "/i $pkg /qn";
+
+          echo "Installing Pkl"
+          Invoke-WebRequest "\#(distributionLatest.downloadUrlWindows)" -OutFile pkl.exe
+          $env:PKL_EXEC = "$PWD\pkl.exe"
+
+          echo "Running Pkl unit tests"
+          .\pkl test --junit-reports test-results\ --project-dir codegen\src\
+
+          echo "Running Go unit tests"
+          go test -race -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
+          """#
       }
     }
   }
