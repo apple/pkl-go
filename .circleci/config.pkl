@@ -95,8 +95,10 @@ jobs {
         name = "go test"
         shell = "powershell.exe"
         command = #"""
-          echo "Installing Go"
+          echo "Downloading Go"
           Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
+
+          echo "Installing Go"
           $pkg = "$PWD\go.exe"
           Start-Process msiexec "/i $pkg /qn";
 
