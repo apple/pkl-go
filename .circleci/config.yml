@@ -7,8 +7,6 @@ jobs:
     steps:
     - checkout
     - run:
-        command: systeminfo
-    - run:
         command: |-
           echo "Installing Go"
           Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
@@ -25,6 +23,7 @@ jobs:
           echo "Running Go unit tests"
           go test -race -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
         name: go test
+        shell: powershell.exe
     resource_class: windows.medium
     machine:
       image: windows-server-2022-gui:current

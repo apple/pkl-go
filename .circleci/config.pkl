@@ -91,9 +91,9 @@ jobs {
     resource_class = "windows.medium"
     steps {
       "checkout"
-      new RunStep { command = "systeminfo" }
       new RunStep {
         name = "go test"
+        shell = "powershell.exe"
         command = #"""
           echo "Installing Go"
           Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
