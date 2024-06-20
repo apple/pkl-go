@@ -24,7 +24,7 @@ local class PklDistribution {
 
   /// The URL to download this distribution
   fixed downloadUrlWindows: String =
-    if (_version.minor < 26) throw("\(version) is not supported on Windows")
+    if (_version.minor < 26) throw("Pkl \(version) is not supported on Windows")
     else "https://github.com/apple/pkl/releases/download/\(version)/pkl-windows-amd64.exe"
 }
 
@@ -106,6 +106,9 @@ jobs {
 
           echo "Running Pkl unit tests"
           .\pkl test --junit-reports test-results\ --project-dir codegen\src\
+
+          echo "Installing go-junit-report"
+          go install github.com/jstemmer/go-junit-report/v2@latest
 
           echo "Running Go unit tests"
           go test -race -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
