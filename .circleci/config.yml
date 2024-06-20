@@ -3,12 +3,12 @@ version: '2.1'
 orbs:
   pr-approval: apple/pr-approval@0.1.0
 jobs:
-  test:
+  test-pkl-0-25-3:
     steps:
     - checkout
     - run:
         command: |-
-          curl -L -o pkl.bin https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64
+          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64'
           chmod +x pkl.bin
           export PKL_EXEC=$(pwd)/pkl.bin
           go install github.com/jstemmer/go-junit-report/v2@latest
@@ -22,7 +22,27 @@ jobs:
     - store_test_results:
         path: test-results
     docker:
-    - image: cimg/go:1.22
+    - image: cimg/go:1.21
+  test-pkl-0-26-0:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.26.0/pkl-linux-amd64'
+          chmod +x pkl.bin
+          export PKL_EXEC=$(pwd)/pkl.bin
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          echo "Running Pkl unit tests"
+          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
+          echo "Running Pkl snippet tests"
+          ./scripts/test_snippets.sh
+          echo "Running Go unit tests"
+          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+        name: go test
+    - store_test_results:
+        path: test-results
+    docker:
+    - image: cimg/go:1.21
   build-pkl-gen-go:
     steps:
     - checkout
@@ -83,7 +103,7 @@ jobs:
         paths:
         - out/
     docker:
-    - image: cimg/go:1.22
+    - image: cimg/go:1.21
   create-macos-universal-binary:
     steps:
     - attach_workspace:
@@ -109,7 +129,7 @@ jobs:
     - checkout
     - run:
         command: |-
-          curl -L -o pkl.bin https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64
+          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.26.0/pkl-linux-amd64'
           chmod +x pkl.bin
           ./pkl.bin project package codegen/src/ --output-path out/pkl-package/
         name: Creating Pkl package
@@ -192,7 +212,10 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - test:
+    - test-pkl-0-25-3:
+        requires:
+        - hold
+    - test-pkl-0-26-0:
         requires:
         - hold
     when:
@@ -201,20 +224,29 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - test
+    - test-pkl-0-25-3
+    - test-pkl-0-26-0
     - build-pkl-gen-go:
         requires:
-        - test
+        - test-pkl-0-25-3
+        - test-pkl-0-26-0
     - build-pkl-package:
         requires:
-        - test
+        - test-pkl-0-25-3
+        - test-pkl-0-26-0
     when:
       equal:
       - main
       - << pipeline.git.branch >>
   release:
     jobs:
-    - test:
+    - test-pkl-0-25-3:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - test-pkl-0-26-0:
         filters:
           branches:
             ignore: /.*/
@@ -222,7 +254,8 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - build-pkl-gen-go:
         requires:
-        - test
+        - test-pkl-0-25-3
+        - test-pkl-0-26-0
         filters:
           branches:
             ignore: /.*/
@@ -230,7 +263,8 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - build-pkl-package:
         requires:
-        - test
+        - test-pkl-0-25-3
+        - test-pkl-0-26-0
         filters:
           branches:
             ignore: /.*/

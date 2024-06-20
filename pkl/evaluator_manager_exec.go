@@ -69,7 +69,7 @@ type execEvaluator struct {
 	closed chan error
 	// exited is a flag that indicates evaluator was closed explicitly
 	exited      atomicBool
-	version     string
+	version     *semver
 	pklCommand  []string
 	processDone chan struct{}
 }
@@ -86,25 +86,24 @@ func (e *execEvaluator) closedChan() chan error {
 	return e.closed
 }
 
-var semverPattern = regexp.MustCompile(`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`)
-
 var pklVersionRegex = regexp.MustCompile(fmt.Sprintf("Pkl (%s).*", semverPattern.String()))
 
-func (e *execEvaluator) getVersion() (string, error) {
-	if e.version != "" {
+func (e *execEvaluator) getVersion() (*semver, error) {
+	if e.version != nil {
 		return e.version, nil
 	}
 	cmd, args := e.getCommandAndArgStrings()
 	command := exec.Command(cmd, append(args, "--version")...)
 	versionCmdOut, err := command.Output()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	version := pklVersionRegex.FindStringSubmatch(string(versionCmdOut))
-	if len(version) < 2 {
-		return "", fmt.Errorf("failed to get version information from Pkl. Ran `%s`, and got stdout \"%s\"", strings.Join(command.Args, " "), versionCmdOut)
+	matches := pklVersionRegex.FindStringSubmatch(string(versionCmdOut))
+	if len(matches) < 2 {
+		return nil, fmt.Errorf("failed to get version information from Pkl. Ran `%s`, and got stdout \"%s\"", strings.Join(command.Args, " "), versionCmdOut)
 	}
-	e.version = version[1]
+	version, err := parseSemver(matches[1])
+	e.version = version
 	return e.version, nil
 }
 

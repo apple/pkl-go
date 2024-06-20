@@ -78,6 +78,7 @@ type CreateEvaluator struct {
 	RootDir          string               `msgpack:"rootDir,omitempty"`
 	CacheDir         string               `msgpack:"cacheDir,omitempty"`
 	Project          *ProjectOrDependency `msgpack:"project,omitempty"`
+	Http             *Http                `msgpack:"http,omitempty"`
 	// Intentionally not used right now. Go has `context.WithTimeout` which is a more canonical way to handle timeouts.
 	TimeoutSeconds int64 `msgpack:"timeoutSeconds,omitempty"`
 }
@@ -88,6 +89,16 @@ type ProjectOrDependency struct {
 	ProjectFileUri string                          `msgpack:"projectFileUri,omitempty"`
 	Checksums      *Checksums                      `msgpack:"checksums,omitempty"`
 	Dependencies   map[string]*ProjectOrDependency `msgpack:"dependencies"`
+}
+
+type Http struct {
+	CaCertificates []byte `msgpack:"caCertificates,omitempty"`
+	Proxy          *Proxy `msgpack:"proxy,omitempty"`
+}
+
+type Proxy struct {
+	Address string   `msgpack:"address,omitempty"`
+	NoProxy []string `msgpack:"noproxy,omitempty"`
 }
 
 type Checksums struct {

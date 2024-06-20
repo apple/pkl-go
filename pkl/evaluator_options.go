@@ -17,6 +17,7 @@
 package pkl
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -110,6 +111,12 @@ type EvaluatorOptions struct {
 	// When importing dependencies, a PklProject.deps.json file must exist within ProjectBaseURI
 	// that contains the project's resolved dependencies.
 	DeclaredProjectDependencies *ProjectDependencies
+
+	// Settings for controlling how Pkl talks over HTTP(S).
+	//
+	// Added in Pkl 0.26.
+	// If the underlying Pkl does not support HTTP options, NewEvaluator will return with an error.
+	Http *Http
 }
 
 type ProjectRemoteDependency struct {
@@ -173,6 +180,77 @@ func (p *ProjectDependencies) toMessage() map[string]*msgapi.ProjectOrDependency
 	return ret
 }
 
+type Http struct {
+	// PEM format certificates to trust when making HTTP requests.
+	//
+	// If empty, Pkl will trust its own built-in certificates.
+	CaCertificates []byte
+
+	// Configuration of the HTTP proxy to use.
+	//
+	// If nil, uses the operating system's proxy configuration.
+	Proxy *Proxy
+}
+
+func (http *Http) toMessage() *msgapi.Http {
+	if http == nil {
+		return nil
+	}
+	return &msgapi.Http{
+		CaCertificates: http.CaCertificates,
+		Proxy:          http.Proxy.toMessage(),
+	}
+}
+
+type Proxy struct {
+	// The proxy to use for HTTP(S) connections.
+	//
+	// Only HTTP proxies are supported.
+	// The address must start with "http://", and cannot contain anything other than a host and an optional port.
+	//
+	// Example:
+	//
+	//  	Address: "http://my.proxy.example.com:5080"
+	Address string
+
+	// Hosts to which all connections should bypass a proxy.
+	//
+	// Values can be either hostnames, or IP addresses.
+	// IP addresses can optionally be provided using [CIDR notation].
+	//
+	// The only wildcard is `"*"`, which disables all proxying.
+	//
+	// A hostname matches all subdomains.
+	// For example, `example.com` matches `foo.example.com`, but not `fooexample.com`.
+	// A hostname that is prefixed with a dot matches the hostname itself,
+	// so `.example.com` matches `example.com`.
+	//
+	// Optionally, a port can be specified.
+	// If a port is omitted, all ports are matched.
+	//
+	// Example:
+	//
+	// 		NoProxy: []string{
+	//			"127.0.0.1",
+	//			"169.254.0.0/16",
+	//			"example.com",
+	//			"localhost:5050",
+	//		}
+	//
+	// [CIDR notation]: https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation
+	NoProxy []string
+}
+
+func (p *Proxy) toMessage() *msgapi.Proxy {
+	if p == nil {
+		return nil
+	}
+	return &msgapi.Proxy{
+		Address: p.Address,
+		NoProxy: p.NoProxy,
+	}
+}
+
 func (e *EvaluatorOptions) toMessage() *msgapi.CreateEvaluator {
 	var resourceReaders []*msgapi.ResourceReader
 	for _, reader := range e.ResourceReaders {
@@ -203,6 +281,7 @@ func (e *EvaluatorOptions) toMessage() *msgapi.CreateEvaluator {
 		OutputFormat:     e.OutputFormat,
 		RootDir:          e.RootDir,
 		Project:          e.project(),
+		Http:             e.Http.toMessage(),
 	}
 }
 
@@ -228,14 +307,17 @@ var WithOsEnv = func(opts *EvaluatorOptions) {
 	}
 }
 
-func buildEvaluatorOptions(fns ...func(*EvaluatorOptions)) *EvaluatorOptions {
+func buildEvaluatorOptions(version *semver, fns ...func(*EvaluatorOptions)) (*EvaluatorOptions, error) {
 	o := &EvaluatorOptions{}
 	for _, f := range fns {
 		f(o)
 	}
 	// repl:text is the URI of the module used to hold expressions. It should always be allowed.
 	o.AllowedModules = append(o.AllowedModules, "repl:text")
-	return o
+	if o.Http != nil && pklVersion0_26.isGreaterThan(version) {
+		return nil, fmt.Errorf("http options are not supported on Pkl versions lower than 0.26")
+	}
+	return o, nil
 }
 
 // WithDefaultAllowedResources enables reading http, https, file, env, prop, modulepath, and package resources.
