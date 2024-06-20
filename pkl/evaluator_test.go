@@ -532,8 +532,26 @@ age = 43
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = ev.EvaluateOutputText(context.Background(), UriSource(fmt.Sprintf("https://localhost:%d", getOpenPort())))
-		assert.Contains(t, err.Error(), "ConnectException: Error connecting to host `localhost`")
+		_, err = ev.EvaluateOutputText(context.Background(), UriSource("https://example.com"))
+		assert.ErrorContains(t, err, "ConnectException: Error connecting to host `example.com`")
+	})
+
+	t.Run("custom proxy options errors on Pkl 0.25", func(t *testing.T) {
+		version, err := manager.(*evaluatorManager).getVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version.isGreaterThan(pklVersion0_25) {
+			t.SkipNow()
+		}
+		_, err = manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
+			options.Http = &Http{
+				Proxy: &Proxy{
+					Address: fmt.Sprintf("http://localhost:%d", getOpenPort()),
+				},
+			}
+		})
+		assert.ErrorContains(t, err, "http options are not supported on Pkl versions lower than 0.26")
 	})
 
 	t.Cleanup(func() {
