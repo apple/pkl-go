@@ -33,22 +33,18 @@ type prereleaseIdentifier struct {
 
 func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {
 	if i.alphaNumericId != "" {
-		if other.alphaNumericId != "" {
-			return strings.Compare(i.alphaNumericId, other.alphaNumericId)
-		} else {
-			return 1
-		}
+		return strings.Compare(i.alphaNumericId, other.alphaNumericId)
 	} else {
 		return compareInt(i.numbericId, other.numbericId)
 	}
 }
 
 func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
-	if s.prerelease != "" && len(s.prereleaseIdentifiers) > 0 {
-		return s.prereleaseIdentifiers
-	}
 	if s.prerelease == "" {
 		return nil
+	}
+	if len(s.prereleaseIdentifiers) > 0 {
+		return s.prereleaseIdentifiers
 	}
 	identifiers := strings.Split(s.prerelease, ".")
 	prereleaseIdentifiers := make([]prereleaseIdentifier, len(identifiers))
