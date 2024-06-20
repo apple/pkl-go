@@ -27,6 +27,8 @@ jobs:
           go test -race -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
         name: go test
         shell: powershell.exe
+        environment:
+          CGO_ENABLED: '1'
     resource_class: windows.medium
     machine:
       image: windows-server-2022-gui:current
@@ -91,7 +93,7 @@ jobs:
           VERSION="${CIRCLE_TAG:1}"
 
           go build \
-            -o out/pkl-gen-go/pkl-gen-go-windows-amd64.bin \
+            -o out/pkl-gen-go/pkl-gen-go-windows-amd64.exe \
             -ldflags="-X 'main.Version=$VERSION'" \
             cmd/pkl-gen-go/pkl-gen-go.go
         name: go build windows amd64
@@ -104,13 +106,26 @@ jobs:
           VERSION="${CIRCLE_TAG:1}"
 
           go build \
-            -o out/pkl-gen-go/pkl-gen-go-windows-aarch64.bin \
+            -o out/pkl-gen-go/pkl-gen-go-windows-aarch64.exe \
             -ldflags="-X 'main.Version=$VERSION'" \
             cmd/pkl-gen-go/pkl-gen-go.go
         name: go build windows aarch64
         environment:
           GOOS: windows
           GOARCH: arm64
+    - run:
+        command: |-
+          # strip preceding "v"
+          VERSION="${CIRCLE_TAG:1}"
+
+          go build \
+            -o out/pkl-gen-go/pkl-gen-go-windows-amd64.exe \
+            -ldflags="-X 'main.Version=$VERSION'" \
+            cmd/pkl-gen-go/pkl-gen-go.go
+        name: go build windows amd64
+        environment:
+          GOOS: windows
+          GOARCH: amd64
     - persist_to_workspace:
         root: '.'
         paths:

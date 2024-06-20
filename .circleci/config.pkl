@@ -94,6 +94,9 @@ jobs {
       new RunStep {
         name = "go test"
         shell = "powershell.exe"
+        environment {
+          ["CGO_ENABLED"] = "1"
+        }
         command = #"""
           echo "Installing Go"
           Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
@@ -126,17 +129,34 @@ jobs {
               ["GOOS"] = if (os == "linux" || os == "windows") os else "darwin"
               ["GOARCH"] = if (arch == "amd64") arch else "arm64"
             }
+            local ext = if (os == "windows") "exe" else "bin"
             command = #"""
               # strip preceding "v"
               VERSION="${CIRCLE_TAG:1}"
 
               go build \
-                -o out/pkl-gen-go/pkl-gen-go-\#(os)-\#(arch).bin \
+                -o out/pkl-gen-go/pkl-gen-go-\#(os)-\#(arch).\#(ext) \
                 -ldflags="-X 'main.Version=$VERSION'" \
                 cmd/pkl-gen-go/pkl-gen-go.go
               """#
           }
         }
+      }
+      new RunStep {
+        name = "go build windows amd64"
+        environment {
+          ["GOOS"] = "windows"
+          ["GOARCH"] = "amd64"
+        }
+        command = #"""
+          # strip preceding "v"
+          VERSION="${CIRCLE_TAG:1}"
+
+          go build \
+            -o out/pkl-gen-go/pkl-gen-go-windows-amd64.exe \
+            -ldflags="-X 'main.Version=$VERSION'" \
+            cmd/pkl-gen-go/pkl-gen-go.go
+          """#
       }
       new PersistToWorkspaceStep {
         root = "."
