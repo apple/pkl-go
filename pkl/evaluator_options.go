@@ -315,7 +315,6 @@ func buildEvaluatorOptions(version *semver, fns ...func(*EvaluatorOptions)) (*Ev
 	// repl:text is the URI of the module used to hold expressions. It should always be allowed.
 	o.AllowedModules = append(o.AllowedModules, "repl:text")
 	if o.Http != nil && pklVersion0_26.isGreaterThan(version) {
-		// HTTP is not supported on Pkl 0.25; ignore as per documentation of EvaluatorOptions.Http.
 		return nil, fmt.Errorf("http options are not supported on Pkl versions lower than 0.26")
 	}
 	return o, nil
