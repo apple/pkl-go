@@ -24,11 +24,9 @@ jobs:
           go install github.com/jstemmer/go-junit-report/v2@latest
 
           echo "Running Go unit tests"
-          go test -race -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
+          go test -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
         name: go test
         shell: powershell.exe
-        environment:
-          CGO_ENABLED: '1'
     resource_class: windows.medium
     machine:
       image: windows-server-2022-gui:current

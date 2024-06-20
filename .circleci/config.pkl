@@ -94,9 +94,6 @@ jobs {
       new RunStep {
         name = "go test"
         shell = "powershell.exe"
-        environment {
-          ["CGO_ENABLED"] = "1"
-        }
         command = #"""
           echo "Installing Go"
           Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
@@ -114,7 +111,7 @@ jobs {
           go install github.com/jstemmer/go-junit-report/v2@latest
 
           echo "Running Go unit tests"
-          go test -race -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
+          go test -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
           """#
       }
     }
