@@ -27,7 +27,7 @@ type semver struct {
 }
 
 type prereleaseIdentifier struct {
-	numbericId     int
+	numericId      int
 	alphaNumericId string
 }
 
@@ -35,7 +35,7 @@ func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {
 	if i.alphaNumericId != "" {
 		return strings.Compare(i.alphaNumericId, other.alphaNumericId)
 	} else {
-		return compareInt(i.numbericId, other.numbericId)
+		return compareInt(i.numericId, other.numericId)
 	}
 }
 
@@ -52,7 +52,7 @@ func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
 		if numericIdentifer.MatchString(str) {
 			// guaranteed to succeed
 			num, _ := strconv.Atoi(str)
-			prereleaseIdentifiers[i] = prereleaseIdentifier{numbericId: num}
+			prereleaseIdentifiers[i] = prereleaseIdentifier{numericId: num}
 		} else {
 			prereleaseIdentifiers[i] = prereleaseIdentifier{alphaNumericId: str}
 		}
