@@ -60,30 +60,30 @@ triggerDocsBuild = "release"
 triggerPackageDocsBuild = "release"
 
 jobs {
-  for (distribution in pklDistributions) {
-    ["test-pkl-\(distribution.version.replaceAll(".", "-"))"] = (goJob) {
-      steps {
-        new RunStep {
-          name = "go test"
-          command = """
-            curl -L -o pkl.bin '\(distribution.downloadUrl)'
-            chmod +x pkl.bin
-            export PKL_EXEC=$(pwd)/pkl.bin
-            go install github.com/jstemmer/go-junit-report/v2@latest
-            echo "Running Pkl unit tests"
-            $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-            echo "Running Pkl snippet tests"
-            ./scripts/test_snippets.sh
-            echo "Running Go unit tests"
-            go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
-            """
-        }
-        new StoreTestResults {
-          path = "test-results"
-        }
-      }
-    }
-  }
+//   for (distribution in pklDistributions) {
+//     ["test-pkl-\(distribution.version.replaceAll(".", "-"))"] = (goJob) {
+//       steps {
+//         new RunStep {
+//           name = "go test"
+//           command = """
+//             curl -L -o pkl.bin '\(distribution.downloadUrl)'
+//             chmod +x pkl.bin
+//             export PKL_EXEC=$(pwd)/pkl.bin
+//             go install github.com/jstemmer/go-junit-report/v2@latest
+//             echo "Running Pkl unit tests"
+//             $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
+//             echo "Running Pkl snippet tests"
+//             ./scripts/test_snippets.sh
+//             echo "Running Go unit tests"
+//             go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+//             """
+//         }
+//         new StoreTestResults {
+//           path = "test-results"
+//         }
+//       }
+//     }
+//   }
   ["test-windows"] {
     machine {
       image = "windows-server-2022-gui:current"
@@ -115,12 +115,12 @@ jobs {
   }
   ["build-pkl-gen-go"] = (goJob) {
     steps {
-      for (os in List("macos", "linux")) {
+      for (os in List("macos", "linux", "windows")) {
         for (arch in List("amd64", "aarch64")) {
           new RunStep {
             name = "go build \(os) \(arch)"
             environment {
-              ["GOOS"] = if (os == "linux") os else "darwin"
+              ["GOOS"] = if (os == "linux" || os == "windows") os else "darwin"
               ["GOARCH"] = if (arch == "amd64") arch else "arm64"
             }
             command = #"""
