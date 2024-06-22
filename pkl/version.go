@@ -62,13 +62,14 @@ func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
 }
 
 func compareInt(a, b int) int {
-	if a == b {
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	default:
 		return 0
 	}
-	if a < b {
-		return -1
-	}
-	return 1
 }
 
 func (s *semver) compareToString(other string) (int, error) {
