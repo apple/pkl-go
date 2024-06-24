@@ -81,25 +81,20 @@ func (s *semver) compareToString(other string) (int, error) {
 
 // compareTo returns -1 if s < other, 1 if s > other, and 0 otherwise.
 func (s *semver) compareTo(other *semver) int {
-	comparison := compareInt(s.major, other.major)
-	if comparison != 0 {
+	if comparison := compareInt(s.major, other.major); comparison != 0 {
 		return comparison
 	}
-	comparison = compareInt(s.minor, other.minor)
-	if comparison != 0 {
+	if comparison := compareInt(s.minor, other.minor); comparison != 0 {
 		return comparison
 	}
 	// technically we should proceed to comparing prerelease versions, but we can skip
 	// this part because we don't have a use-case for it.
-	comparison = compareInt(s.patch, other.patch)
-	if comparison != 0 {
+	if comparison := compareInt(s.patch, other.patch); comparison != 0 {
 		return comparison
 	}
-	ids1 := s.getPrereleaseIdentifiers()
-	ids2 := other.getPrereleaseIdentifiers()
+	ids1, ids2 := s.getPrereleaseIdentifiers(), other.getPrereleaseIdentifiers()
 	for i := 0; i < min(len(ids1), len(ids2)); i++ {
-		cmp := ids1[i].compareTo(ids2[i])
-		if cmp != 0 {
+		if cmp := ids1[i].compareTo(ids2[i]); cmp != 0 {
 			return cmp
 		}
 	}
