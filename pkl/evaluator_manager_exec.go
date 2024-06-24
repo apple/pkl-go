@@ -103,6 +103,9 @@ func (e *execEvaluator) getVersion() (*semver, error) {
 		return nil, fmt.Errorf("failed to get version information from Pkl. Ran `%s`, and got stdout \"%s\"", strings.Join(command.Args, " "), versionCmdOut)
 	}
 	version, err := parseSemver(matches[1])
+	if err != nil {
+		return nil, err
+	}
 	e.version = version
 	return e.version, nil
 }
