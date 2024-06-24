@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"path"
 	"sync"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -145,7 +146,7 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectDir s
 	if err != nil {
 		return nil, err
 	}
-	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, projectDir+"/PklProject")
+	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, path.Join(projectDir, "PklProject"))
 	if err != nil {
 		return nil, err
 	}
