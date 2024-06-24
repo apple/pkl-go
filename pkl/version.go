@@ -34,9 +34,8 @@ type prereleaseIdentifier struct {
 func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {
 	if i.alphaNumericId != "" {
 		return strings.Compare(i.alphaNumericId, other.alphaNumericId)
-	} else {
-		return compareInt(i.numericId, other.numericId)
 	}
+	return compareInt(i.numericId, other.numericId)
 }
 
 func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
