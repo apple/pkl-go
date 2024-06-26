@@ -105,17 +105,17 @@ func (s *semver) isGreaterThan(other *semver) bool {
 }
 
 func (s *semver) String() string {
-	res := fmt.Sprintf("%d.%d.%d", s.major, s.minor, s.patch)
-	if s.prerelease == "" && s.build == "" {
-		return res
-	}
+	var builder strings.Builder
+	fmt.Fprintf(&builder, "%d.%d.%d", s.major, s.minor, s.patch)
 	if s.prerelease != "" {
-		res += "-" + s.prerelease
+		builder.WriteByte('-')
+		builder.WriteString(s.prerelease)
 	}
 	if s.build != "" {
-		res += "+" + s.build
+		builder.WriteByte('+')
+		builder.WriteString(s.build)
 	}
-	return res
+	return builder.String()
 }
 
 func mustParseSemver(s string) *semver {
