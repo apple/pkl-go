@@ -19,7 +19,7 @@ package pkl
 import (
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 // ModuleSource represents a source for Pkl evaluation.
@@ -43,13 +43,13 @@ type ModuleSource struct {
 //
 // It panics if the current working directory cannot be resolved.
 func FileSource(pathElems ...string) *ModuleSource {
-	src := path.Join(pathElems...)
-	if !path.IsAbs(src) {
+	src := filepath.Join(pathElems...)
+	if !filepath.IsAbs(src) {
 		p, err := os.Getwd()
 		if err != nil {
 			panic(err)
 		}
-		src = path.Join(p, src)
+		src = filepath.Join(p, src)
 	}
 	return &ModuleSource{
 		Uri: &url.URL{
