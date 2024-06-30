@@ -26,17 +26,17 @@ function generateType(
   enclosing: reflect.TypeDeclaration,
   seenMappings: List<GoMapping>
 ): Type =
-  if (type is reflect.DeclaredType)
+  if (type is reflect.NullableType)
+  let (_elem = generateType(type.member, enclosing, seenMappings))
+  // No double pointers
+    if (_elem is Type.Pointer) _elem
+    else new Type.Pointer { elem = _elem }
+  else if (type is reflect.DeclaredType)
     generateDeclaredType(type, enclosing, seenMappings)
   else if (type is reflect.ModuleType)
     let (moduleClass = enclosing.enclosingDeclaration.moduleClass)
       generateType(reflect.DeclaredType(moduleClass), moduleClass, seenMappings)
   else if (type is reflect.UnionType) generateUnionType(type, seenMappings)
-  else if (type is reflect.NullableType)
-    let (_elem = generateType(type.member, enclosing, seenMappings))
-      // No double pointers
-      if (_elem is Type.Pointer) _elem
-      else new Type.Pointer { elem = _elem }
   else if (type is reflect.UnknownType) anyType
   else if (type is reflect.NothingType) throw("Unable to generate Go for the `nothing` type")
   else if (type is reflect.StringLiteralType) new Type.Declared { typeName = "string" }
