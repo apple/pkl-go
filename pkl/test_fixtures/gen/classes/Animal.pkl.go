@@ -1,6 +1,6 @@
 // Code generated from Pkl module `classes`. DO NOT EDIT.
 package classes
 
-type Animal interface {
+type IAnimal interface {
 	GetName() string
 }
