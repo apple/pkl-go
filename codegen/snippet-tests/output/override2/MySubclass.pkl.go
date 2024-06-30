@@ -1,22 +1,22 @@
 // Code generated from Pkl module `Override2`. DO NOT EDIT.
 package override2
 
-type MySubclass interface {
-	Override2
+type IMySubclass interface {
+	IOverride2
 
 	GetFoo() string
 }
 
-var _ MySubclass = (*MySubclassImpl)(nil)
+var _ IMySubclass = MySubclass{}
 
-type MySubclassImpl struct {
-	*Override2Impl
+type MySubclass struct {
+	Override2
 
 	// Different doc comments
 	Foo string `pkl:"foo"`
 }
 
 // Different doc comments
-func (rcv *MySubclassImpl) GetFoo() string {
+func (rcv MySubclass) GetFoo() string {
 	return rcv.Foo
 }

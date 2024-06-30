@@ -1,16 +1,16 @@
 // Code generated from Pkl module `lib3`. DO NOT EDIT.
 package lib3
 
-type GoGoGo interface {
+type IGoGoGo interface {
 	GetDuck() string
 }
 
-var _ GoGoGo = (*GoGoGoImpl)(nil)
+var _ IGoGoGo = GoGoGo{}
 
-type GoGoGoImpl struct {
+type GoGoGo struct {
 	Duck string `pkl:"duck"`
 }
 
-func (rcv *GoGoGoImpl) GetDuck() string {
+func (rcv GoGoGo) GetDuck() string {
 	return rcv.Duck
 }

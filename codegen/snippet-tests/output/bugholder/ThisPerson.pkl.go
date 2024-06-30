@@ -1,28 +1,28 @@
 // Code generated from Pkl module `org.foo.BugHolder`. DO NOT EDIT.
 package bugholder
 
-type ThisPerson interface {
+type IThisPerson interface {
+	IPerson
+
+	GetMyself() *IThisPerson
+
+	GetSomeoneElse() IPerson
+}
+
+var _ IThisPerson = ThisPerson{}
+
+type ThisPerson struct {
 	Person
 
-	GetMyself() ThisPerson
+	Myself *IThisPerson `pkl:"myself"`
 
-	GetSomeoneElse() Person
+	SomeoneElse IPerson `pkl:"someoneElse"`
 }
 
-var _ ThisPerson = (*ThisPersonImpl)(nil)
-
-type ThisPersonImpl struct {
-	*PersonImpl
-
-	Myself ThisPerson `pkl:"myself"`
-
-	SomeoneElse Person `pkl:"someoneElse"`
-}
-
-func (rcv *ThisPersonImpl) GetMyself() ThisPerson {
+func (rcv ThisPerson) GetMyself() *IThisPerson {
 	return rcv.Myself
 }
 
-func (rcv *ThisPersonImpl) GetSomeoneElse() Person {
+func (rcv ThisPerson) GetSomeoneElse() IPerson {
 	return rcv.SomeoneElse
 }

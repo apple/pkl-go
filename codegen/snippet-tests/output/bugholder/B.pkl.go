@@ -1,24 +1,24 @@
 // Code generated from Pkl module `org.foo.BugHolder`. DO NOT EDIT.
 package bugholder
 
-type B interface {
-	A
+type IB interface {
+	IA
 
 	GetB() string
 }
 
-var _ B = (*BImpl)(nil)
+var _ IB = B{}
 
-type BImpl struct {
+type B struct {
 	B string `pkl:"b"`
 
 	A string `pkl:"a"`
 }
 
-func (rcv *BImpl) GetB() string {
+func (rcv B) GetB() string {
 	return rcv.B
 }
 
-func (rcv *BImpl) GetA() string {
+func (rcv B) GetA() string {
 	return rcv.A
 }

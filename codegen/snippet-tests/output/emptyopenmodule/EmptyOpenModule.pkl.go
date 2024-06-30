@@ -7,19 +7,19 @@ import (
 	"github.com/apple/pkl-go/pkl"
 )
 
-type EmptyOpenModule interface {
+type IEmptyOpenModule interface {
 }
 
-var _ EmptyOpenModule = (*EmptyOpenModuleImpl)(nil)
+var _ IEmptyOpenModule = EmptyOpenModule{}
 
-type EmptyOpenModuleImpl struct {
+type EmptyOpenModule struct {
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a EmptyOpenModule
 func LoadFromPath(ctx context.Context, path string) (ret EmptyOpenModule, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return EmptyOpenModule{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -33,9 +33,9 @@ func LoadFromPath(ctx context.Context, path string) (ret EmptyOpenModule, err er
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a EmptyOpenModule
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (EmptyOpenModule, error) {
-	var ret EmptyOpenModuleImpl
+	var ret EmptyOpenModule
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return EmptyOpenModule{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }

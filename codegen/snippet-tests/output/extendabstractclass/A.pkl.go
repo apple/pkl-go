@@ -1,6 +1,6 @@
 // Code generated from Pkl module `ExtendsAbstractClass`. DO NOT EDIT.
 package extendabstractclass
 
-type A interface {
+type IA interface {
 	GetB() string
 }
