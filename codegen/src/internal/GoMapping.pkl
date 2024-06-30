@@ -95,9 +95,9 @@ class Class extends GoMapping {
       || clazz.superclass.reflectee != Typed && clazz.superclass.reflectee != Module
     )
       new Interface {
-        name = self.name
+        name = "\(self.name)"
         type = new Type.Declared {
-          typeName = self.name
+          typeName = outer.name
           importPath = self.goPackage
           package = self.goPackageShort
         }
@@ -107,18 +107,16 @@ class Class extends GoMapping {
   struct: Struct? =
     if (clazz.modifiers.contains("abstract")) null
     else
-      let (structName =  if (interface == null) name else "\(name)Impl")
+      let (structName = if (self.interface == null) name else "\(self.name)Impl")
         new Struct {
           name = structName
           clazz = self.clazz
-          type = new Type.Pointer {
-            elem = new Type.Declared {
+          type = new Type.Declared {
               typeName = structName
               importPath = self.goPackage
               package = self.goPackageShort
             }
           }
-        }
 
 }
 

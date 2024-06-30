@@ -5,12 +5,12 @@ type Bar interface {
 	Foo
 }
 
-var _ Bar = (*BarImpl)(nil)
+var _ Bar = BarImpl{}
 
 type BarImpl struct {
 	MyProp string `pkl:"myProp"`
 }
 
-func (rcv *BarImpl) GetMyProp() string {
+func (rcv BarImpl) GetMyProp() string {
 	return rcv.MyProp
 }

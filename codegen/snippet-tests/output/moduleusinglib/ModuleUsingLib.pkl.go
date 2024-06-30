@@ -21,10 +21,10 @@ type ModuleUsingLib struct {
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a ModuleUsingLib
-func LoadFromPath(ctx context.Context, path string) (ret *ModuleUsingLib, err error) {
+func LoadFromPath(ctx context.Context, path string) (ret ModuleUsingLib, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return ModuleUsingLib{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -37,10 +37,10 @@ func LoadFromPath(ctx context.Context, path string) (ret *ModuleUsingLib, err er
 }
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a ModuleUsingLib
-func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (*ModuleUsingLib, error) {
+func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (ModuleUsingLib, error) {
 	var ret ModuleUsingLib
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return ModuleUsingLib{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }
