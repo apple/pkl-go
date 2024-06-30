@@ -9,7 +9,7 @@ type Dog interface {
 	GetBreed() string
 }
 
-var _ Dog = (*DogImpl)(nil)
+var _ Dog = DogImpl{}
 
 type DogImpl struct {
 	Barks bool `pkl:"barks"`
@@ -19,14 +19,14 @@ type DogImpl struct {
 	Name string `pkl:"name"`
 }
 
-func (rcv *DogImpl) GetBarks() bool {
+func (rcv DogImpl) GetBarks() bool {
 	return rcv.Barks
 }
 
-func (rcv *DogImpl) GetBreed() string {
+func (rcv DogImpl) GetBreed() string {
 	return rcv.Breed
 }
 
-func (rcv *DogImpl) GetName() string {
+func (rcv DogImpl) GetName() string {
 	return rcv.Name
 }
