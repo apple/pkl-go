@@ -5,12 +5,12 @@ type MyClass interface {
 	GetThing() string
 }
 
-var _ MyClass = (*MyClassImpl)(nil)
+var _ MyClass = MyClassImpl{}
 
 type MyClassImpl struct {
 	Thing string `pkl:"thing"`
 }
 
-func (rcv *MyClassImpl) GetThing() string {
+func (rcv MyClassImpl) GetThing() string {
 	return rcv.Thing
 }

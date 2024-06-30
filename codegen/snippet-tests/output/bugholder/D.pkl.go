@@ -7,14 +7,14 @@ type D interface {
 	GetD() string
 }
 
-var _ D = (*DImpl)(nil)
+var _ D = DImpl{}
 
 type DImpl struct {
-	*CImpl
+	CImpl
 
 	D string `pkl:"d"`
 }
 
-func (rcv *DImpl) GetD() string {
+func (rcv DImpl) GetD() string {
 	return rcv.D
 }
