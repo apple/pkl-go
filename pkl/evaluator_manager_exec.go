@@ -121,7 +121,7 @@ func (e *execEvaluator) getCommandAndArgStrings() (string, []string) {
 		// this previously required the `--server` argument, and is no longer needed.
 		// strip it if exists.
 		pklExecEnv = strings.Replace(pklExecEnv, " --server", "", 1)
-		parts := strings.Split(pklExecEnv, " ")
+		parts := strings.Fields(pklExecEnv)
 		return parts[0], parts[1:]
 	}
 	return "pkl", []string{}
