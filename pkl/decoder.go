@@ -221,6 +221,8 @@ func (d *decoder) decodePklObject(typ reflect.Type) (*reflect.Value, error) {
 		fallthrough
 	case codeListing:
 		return d.decodeSliceImpl(reflect.TypeOf([]any{}))
+	case codeSet:
+		return d.decodeSet(reflect.TypeOf(map[any]any{}))
 	case codeDataSize:
 		return d.decodeDataSize()
 	case codeDuration:
