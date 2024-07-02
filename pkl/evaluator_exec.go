@@ -51,7 +51,7 @@ func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(op
 // because it lessens the overhead of each successive evaluator.
 func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
-	projectEvaluator, err := manager.NewEvaluator(ctx, PreconfiguredOptions)
+	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

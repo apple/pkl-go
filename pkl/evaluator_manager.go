@@ -142,7 +142,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 }
 
 func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	projectEvaluator, err := NewEvaluator(ctx, PreconfiguredOptions)
+	projectEvaluator, err := NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
