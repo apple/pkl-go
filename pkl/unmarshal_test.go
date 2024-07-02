@@ -400,6 +400,18 @@ func TestUnmarshal_Set(t *testing.T) {
 	}
 }
 
+func TestUnmarshal_Set_any(t *testing.T) {
+	var res any
+	emptyStruct := struct{}{}
+	if assert.NoError(t, pkl.Unmarshal(collectionsRes9, &res)) {
+		assert.Equal(t, map[any]any{
+			"one":   emptyStruct,
+			"two":   emptyStruct,
+			"three": emptyStruct,
+		}, res)
+	}
+}
+
 func TestUnmarshal_AnyType(t *testing.T) {
 	var res any2.Any
 	err := pkl.Unmarshal(anies, &res)
