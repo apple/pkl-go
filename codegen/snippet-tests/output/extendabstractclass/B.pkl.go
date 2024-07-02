@@ -1,24 +1,24 @@
 // Code generated from Pkl module `ExtendsAbstractClass`. DO NOT EDIT.
 package extendabstractclass
 
-type B interface {
-	A
+type IB interface {
+	IA
 
 	GetC() string
 }
 
-var _ B = (*BImpl)(nil)
+var _ IB = B{}
 
-type BImpl struct {
+type B struct {
 	B string `pkl:"b"`
 
 	C string `pkl:"c"`
 }
 
-func (rcv *BImpl) GetB() string {
+func (rcv B) GetB() string {
 	return rcv.B
 }
 
-func (rcv *BImpl) GetC() string {
+func (rcv B) GetC() string {
 	return rcv.C
 }

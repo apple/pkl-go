@@ -1,20 +1,20 @@
 // Code generated from Pkl module `classes`. DO NOT EDIT.
 package classes
 
-type Greyhound interface {
-	Dog
+type IGreyhound interface {
+	IDog
 
 	GetCanRoach() bool
 }
 
-var _ Greyhound = (*GreyhoundImpl)(nil)
+var _ IGreyhound = Greyhound{}
 
-type GreyhoundImpl struct {
-	*DogImpl
+type Greyhound struct {
+	Dog
 
 	CanRoach bool `pkl:"canRoach"`
 }
 
-func (rcv *GreyhoundImpl) GetCanRoach() bool {
+func (rcv Greyhound) GetCanRoach() bool {
 	return rcv.CanRoach
 }
