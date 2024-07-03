@@ -217,8 +217,8 @@ func TestLoadProjectWithProxy(t *testing.T) {
 			expectedSettings := &ProjectEvaluatorSettings{
 				Http: &ProjectEvaluatorSettingsHttp{
 					Proxy: &ProjectEvaluatorSettingsProxy{
-						Address: "http://localhost:80",
-						NoProxy: []string{
+						Address: &[]string{"http://localhost:80"}[0],
+						NoProxy: &[]string{
 							"127.0.0.1",
 							"192.168.0.1/24",
 							"example.com",

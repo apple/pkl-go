@@ -67,8 +67,8 @@ type ProjectEvaluatorSettingsHttp struct {
 
 // ProjectEvaluatorSettingsProxy is the Go representation of pkl.EvaluatorSettings.Proxy
 type ProjectEvaluatorSettingsProxy struct {
-	Address string   `pkl:"address"`
-	NoProxy []string `pkl:"noProxy"`
+	Address *string   `pkl:"address"`
+	NoProxy *[]string `pkl:"noProxy"`
 }
 
 func (project *Project) Dependencies() *ProjectDependencies {
