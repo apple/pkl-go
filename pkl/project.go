@@ -46,17 +46,29 @@ type ProjectPackage struct {
 	Uri                 string   `pkl:"uri"`
 }
 
-// ProjectEvaluatorSettings is the Go representation of pkl.Project#EvaluatorSettings
+// ProjectEvaluatorSettings is the Go representation of pkl.EvaluatorSettings
 type ProjectEvaluatorSettings struct {
-	ExternalProperties map[string]string `pkl:"externalProperties"`
-	Env                map[string]string `pkl:"env"`
-	AllowedModules     []string          `pkl:"allowedModules"`
-	AllowedResources   []string          `pkl:"allowedResources"`
-	NoCache            *bool             `pkl:"noCache"`
-	ModulePath         []string          `pkl:"modulePath"`
-	Timeout            Duration          `pkl:"timeout"`
-	ModuleCacheDir     string            `pkl:"moduleCacheDir"`
-	RootDir            string            `pkl:"rootDir"`
+	ExternalProperties map[string]string             `pkl:"externalProperties"`
+	Env                map[string]string             `pkl:"env"`
+	AllowedModules     []string                      `pkl:"allowedModules"`
+	AllowedResources   []string                      `pkl:"allowedResources"`
+	NoCache            *bool                         `pkl:"noCache"`
+	ModulePath         []string                      `pkl:"modulePath"`
+	Timeout            Duration                      `pkl:"timeout"`
+	ModuleCacheDir     string                        `pkl:"moduleCacheDir"`
+	RootDir            string                        `pkl:"rootDir"`
+	Http               *ProjectEvaluatorSettingsHttp `pkl:"http"`
+}
+
+// ProjectEvaluatorSettingsHttp is the Go representation of pkl.EvaluatorSettings.Http
+type ProjectEvaluatorSettingsHttp struct {
+	Proxy *ProjectEvaluatorSettingsProxy `pkl:"proxy"`
+}
+
+// ProjectEvaluatorSettingsProxy is the Go representation of pkl.EvaluatorSettings.Proxy
+type ProjectEvaluatorSettingsProxy struct {
+	Address *string   `pkl:"address"`
+	NoProxy *[]string `pkl:"noProxy"`
 }
 
 func (project *Project) Dependencies() *ProjectDependencies {

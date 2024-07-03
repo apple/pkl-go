@@ -1,4 +1,4 @@
-package pkl_test
+package pkl
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/apple/pkl-go/pkl"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -87,6 +86,32 @@ package {
 }
 `
 
+const project3Contents = `
+amends "pkl:Project"
+
+evaluatorSettings {
+  http {
+    proxy {
+      address = "http://localhost:80"
+      noProxy {
+        "127.0.0.1"
+        "192.168.0.1/24"
+        "example.com"
+        "localhost:8000"
+      }
+    }
+  }
+}
+
+package {
+  name = "pigeon"
+  baseUri = "package://example.com/pigeon"
+  version = "0.26.0"
+  description = "Some project about pigeons"
+  packageZipUrl = "https://example.com/pigeon/\(version)/pigeon-\(version).zip"
+}
+`
+
 func writeFile(t *testing.T, filename string, contents string) {
 	if err := os.WriteFile(filename, []byte(contents), 0o777); err != nil {
 		t.Logf("Failed to write file %s: %s", filename, err)
@@ -100,7 +125,7 @@ func TestLoadProject(t *testing.T) {
 	_ = os.Mkdir(tempDir+"/storks", 0o777)
 	writeFile(t, tempDir+"/hawks/PklProject", project1Contents)
 	writeFile(t, tempDir+"/storks/PklProject", project2Contents)
-	project, err := pkl.LoadProject(context.Background(), tempDir+"/hawks/PklProject")
+	project, err := LoadProject(context.Background(), tempDir+"/hawks/PklProject")
 	if assert.NoError(t, err) {
 		t.Run("projectFileUri", func(t *testing.T) {
 			assert.Equal(t, fmt.Sprintf("file://%s/hawks/PklProject", tempDir), project.ProjectFileUri)
@@ -108,10 +133,10 @@ func TestLoadProject(t *testing.T) {
 
 		t.Run("evaluatorSettings", func(t *testing.T) {
 			fals := false
-			expectedSettings := &pkl.ProjectEvaluatorSettings{
-				Timeout: pkl.Duration{
+			expectedSettings := &ProjectEvaluatorSettings{
+				Timeout: Duration{
 					Value: 5,
-					Unit:  pkl.Minute,
+					Unit:  Minute,
 				},
 				NoCache:            &fals,
 				RootDir:            ".",
@@ -126,7 +151,7 @@ func TestLoadProject(t *testing.T) {
 		})
 
 		t.Run("package", func(t *testing.T) {
-			expectedPackage := &pkl.ProjectPackage{
+			expectedPackage := &ProjectPackage{
 				Name:                "hawk",
 				BaseUri:             "package://example.com/hawk",
 				Version:             "0.5.0",
@@ -148,17 +173,17 @@ func TestLoadProject(t *testing.T) {
 		})
 
 		t.Run("dependencies", func(t *testing.T) {
-			expectedDependences := &pkl.ProjectDependencies{
-				RemoteDependencies: map[string]*pkl.ProjectRemoteDependency{
+			expectedDependences := &ProjectDependencies{
+				RemoteDependencies: map[string]*ProjectRemoteDependency{
 					"flamingos": {PackageUri: "package://example.com/flamingos@0.5.0"},
 				},
-				LocalDependencies: map[string]*pkl.ProjectLocalDependency{
+				LocalDependencies: map[string]*ProjectLocalDependency{
 					"storks": {
 						ProjectFileUri: fmt.Sprintf("file://%s/storks/PklProject", tempDir),
 						PackageUri:     "package://example.com/storks@0.5.0",
-						Dependencies: &pkl.ProjectDependencies{
-							LocalDependencies:  map[string]*pkl.ProjectLocalDependency{},
-							RemoteDependencies: map[string]*pkl.ProjectRemoteDependency{},
+						Dependencies: &ProjectDependencies{
+							LocalDependencies:  map[string]*ProjectLocalDependency{},
+							RemoteDependencies: map[string]*ProjectRemoteDependency{},
 						},
 					},
 				},
@@ -168,6 +193,41 @@ func TestLoadProject(t *testing.T) {
 
 		t.Run("tests", func(t *testing.T) {
 			assert.Equal(t, []string{"test1.pkl", "test2.pkl"}, project.Tests)
+		})
+	}
+}
+
+func TestLoadProjectWithProxy(t *testing.T) {
+	manager := NewEvaluatorManager()
+	version, err := manager.(*evaluatorManager).getVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pklVersion0_26.isGreaterThan(version) {
+		t.SkipNow()
+	}
+
+	tempDir := t.TempDir()
+	_ = os.Mkdir(tempDir+"/pigeons", 0o777)
+	writeFile(t, tempDir+"/pigeons/PklProject", project3Contents)
+
+	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
+	if assert.NoError(t, err) {
+		t.Run("evaluatorSettings", func(t *testing.T) {
+			expectedSettings := &ProjectEvaluatorSettings{
+				Http: &ProjectEvaluatorSettingsHttp{
+					Proxy: &ProjectEvaluatorSettingsProxy{
+						Address: &[]string{"http://localhost:80"}[0],
+						NoProxy: &[]string{
+							"127.0.0.1",
+							"192.168.0.1/24",
+							"example.com",
+							"localhost:8000",
+						},
+					},
+				},
+			}
+			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
 		})
 	}
 }
