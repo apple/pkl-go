@@ -81,7 +81,10 @@ func (e *evaluator) EvaluateModule(ctx context.Context, source *ModuleSource, ou
 func (e *evaluator) EvaluateOutputText(ctx context.Context, source *ModuleSource) (string, error) {
 	var out string
 	err := e.EvaluateExpression(ctx, source, "output.text", &out)
-	return out, err
+	if err != nil {
+		return "", err
+	}
+	return out, nil
 }
 
 func (e *evaluator) EvaluateOutputValue(ctx context.Context, source *ModuleSource, out any) error {
@@ -91,7 +94,10 @@ func (e *evaluator) EvaluateOutputValue(ctx context.Context, source *ModuleSourc
 func (e *evaluator) EvaluateOutputFiles(ctx context.Context, source *ModuleSource) (map[string]string, error) {
 	var out map[string]string
 	err := e.EvaluateExpression(ctx, source, "output.files.toMap().mapValues((_, it) -> it.text)", &out)
-	return out, err
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out interface{}) error {
