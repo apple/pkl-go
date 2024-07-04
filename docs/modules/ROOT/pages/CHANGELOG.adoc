@@ -14,10 +14,10 @@
 
 === Miscellaneous
 
-* Refactoring for performance and clarity of the parsing and comparison of versions.
+* Improved performance and clarity of version comparison.
 * Fix unhandled error in the evaluator manager.
 * Reduced lock contention in `atomicRandom`.
-* Resolution of the path to `PklProject` files is is made platform independent by using `path.Join`.
+* Use `path.join` to make the resolution of `PklProject` files platform independent.
 
 === Breaking changes
 
