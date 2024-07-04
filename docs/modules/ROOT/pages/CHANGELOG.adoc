@@ -1,5 +1,35 @@
 = Changelog
 
+[[release-0.8.0]]
+== 0.8.0 (2024-07-04)
+
+=== Additions
+
+* Support for Pkl 0.26
+
+=== Fixes
+
+* Make the loading of `generator-settings.pkl` observe the CLI's `--cache-dir` for air-gapped use.
+* Fix decoding of sets when input type is any.
+
+=== Miscellaneous
+
+* Improved performance and clarity of version comparison.
+* Fix unhandled error in the evaluator manager.
+* Reduced lock contention in `atomicRandom`.
+* Use `path.join` to make the resolution of `PklProject` files platform independent.
+
+=== Breaking changes
+
+* `NewProjectEvaluator` now interprets `PklProject` files with the same configuration as the modules in the project.
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/kasugamirai[@kasugamirai]
+* https://github.com/HT154[@HT154]
+
 [[release-0.7.0]]
 == 0.7.0 (2024-06-06)
 
