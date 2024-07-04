@@ -189,14 +189,19 @@ func findProjectDir(projectDirFlag string) string {
 
 // Loads the settings for controlling codegen.
 // Uses a Pkl evaluator that is separate from what's used for actually running codegen.
-func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string) (*generatorsettings.GeneratorSettings, error) {
+func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, cacheDirFlag string) (*generatorsettings.GeneratorSettings, error) {
 	projectDir := findProjectDir(projectDirFlag)
 	var evaluator pkl.Evaluator
 	var err error
+	opts := func(opts *pkl.EvaluatorOptions) {
+		if cacheDirFlag != "" {
+			opts.CacheDir = cacheDirFlag
+		}
+	}
 	if projectDir != "" {
-		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, pkl.PreconfiguredOptions)
+		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, pkl.PreconfiguredOptions, opts)
 	} else {
-		evaluator, err = pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+		evaluator, err = pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions, opts)
 	}
 	if err != nil {
 		panic(err)
@@ -258,7 +263,7 @@ func init() {
 			panic(err)
 		}
 	}
-	settings, err = loadGeneratorSettings(generatorSettingsPath, projectDir)
+	settings, err = loadGeneratorSettings(generatorSettingsPath, projectDir, cacheDir)
 	if err != nil {
 		panic(err)
 	}
