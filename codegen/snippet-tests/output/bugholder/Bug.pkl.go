@@ -9,7 +9,7 @@ import (
 
 type Bug struct {
 	// The owner of this bug.
-	Owner *Person `pkl:"owner"`
+	Owner *IPerson `pkl:"owner"`
 
 	// The age of this bug
 	Age *int `pkl:"age"`
