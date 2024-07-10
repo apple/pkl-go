@@ -21,6 +21,7 @@ import (
 	_ "embed"
 	"fmt"
 	"go/format"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -82,7 +83,7 @@ func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string
 	if err != nil {
 		return err
 	}
-	log("Dry run; printing filenames but not writing files to disk\n")
+	logWarning("Dry run; printing filenames but not writing files to disk\n")
 	for _, filename := range filenames {
 		if settings.BasePath != "" {
 			if strings.HasPrefix(filename, settings.BasePath) {
@@ -97,8 +98,12 @@ func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string
 	return nil
 }
 
-func log(format string, a ...any) {
-	_, _ = fmt.Fprintf(os.Stderr, format, a...)
+func logInfo(format string, a ...any) {
+	slog.Info(fmt.Sprintf(format, a...))
+}
+
+func logWarning(format string, a ...any) {
+	slog.Warn(fmt.Sprintf(format, a...))
 }
 
 func GenerateGo(
@@ -108,7 +113,7 @@ func GenerateGo(
 	silent bool,
 	outputPath string,
 ) error {
-	log("Generating Go sources for module \033[36m%s\033[0m\n", pklModulePath)
+	logInfo("Generating Go sources for module \033[36m%s\033[0m\n", pklModulePath)
 	var err error
 	if !uriRegex.MatchString(pklModulePath) {
 		pklModulePath, err = filepath.Abs(pklModulePath)
@@ -121,7 +126,7 @@ func GenerateGo(
 		if err != nil {
 			return err
 		}
-		log("Using custom generator script: \033[36m%s\033[0m\n", settings.GeneratorScriptPath)
+		logInfo("Using custom generator script: \033[36m%s\033[0m\n", settings.GeneratorScriptPath)
 	}
 	if err = determineBasePath(settings); err != nil {
 		return err
@@ -157,14 +162,14 @@ func GenerateGo(
 			if strings.HasPrefix(filename, settings.BasePath) {
 				filename = strings.TrimPrefix(filename, settings.BasePath)
 			} else {
-				log("Skipping codegen for file \033[36m%s\033[0m because it does not exist in base path \033[36m%s\033[0m\n", filename, settings.BasePath)
+				logInfo("Skipping codegen for file \033[36m%s\033[0m because it does not exist in base path \033[36m%s\033[0m\n", filename, settings.BasePath)
 				continue
 			}
 		}
 
 		formatted, diff, err := doFormat(contents)
 		if err != nil {
-			log("[warning] Attempted to format file %s but it produced an unexpected error. Error: %s\n", filename, err.Error())
+			logWarning("[warning] Attempted to format file %s but it produced an unexpected error. Error: %s\n", filename, err.Error())
 			formatted = []byte(contents)
 		}
 		if len(diff) > 0 {
@@ -180,7 +185,7 @@ func GenerateGo(
 		fmt.Println(out)
 	}
 	if len(diffs) > 0 && !silent {
-		log("\n[notice] Some generated code needed to be formatted by the Go formatter." +
+		logInfo("\n[notice] Some generated code needed to be formatted by the Go formatter." +
 			" This is a bug on the Pkl side. To help us out, please file a GitHub issue for this, and include the Pkl source code input.\n" +
 			"This message can be suppressed using the --suppress-format-warning flag.\n\n" +
 			"Diffs:\n")
