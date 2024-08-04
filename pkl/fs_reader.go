@@ -40,7 +40,7 @@ func (f *fsReader) HasHierarchicalUris() bool {
 }
 
 func (f *fsReader) ListElements(url url.URL) ([]PathElement, error) {
-	path := strings.TrimSuffix(strings.TrimPrefix(url.Path, "/"), "/")
+	path := strings.Trim(url.Path, "/")
 	if path == "" {
 		path = "."
 	}
@@ -48,7 +48,7 @@ func (f *fsReader) ListElements(url url.URL) ([]PathElement, error) {
 	if err != nil {
 		return nil, err
 	}
-	var ret []PathElement
+	ret := make([]PathElement, 0, len(entries))
 	for _, entry := range entries {
 		// copy Pkl's built-in `file` ModuleKey and don't follow symlinks.
 		if entry.Type()&fs.ModeSymlink != 0 {
