@@ -52,7 +52,7 @@ type InternalError struct {
 var _ error = (*InternalError)(nil)
 
 func (r *InternalError) Error() string {
-	return fmt.Sprintf("an internal error ocurred: %v", r.err)
+	return fmt.Sprintf("an internal error occurred: %v", r.err)
 }
 
 // Is implements the interface expected by errors.Is.
