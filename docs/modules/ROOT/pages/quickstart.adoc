@@ -85,7 +85,7 @@ With the above scaffolding set up, evaluate Pkl configuration data in Go.
 
 First, define some configuration that uses the Pkl schema.
 
-In our example, we create a file at path `pkl/local/appConfig.pkl`. We imagine that we are defining configuration for a server running in a local environment, and would likewise place other environments in sibling directorys; e.g. `pkl/int/appConfig.pkl` and `pkl/prod/appConfig.pkl`.
+In our example, we create a file at path `pkl/local/appConfig.pkl`. We imagine that we are defining configuration for a server running in a local environment, and would likewise place other environments in sibling directories; e.g. `pkl/int/appConfig.pkl` and `pkl/prod/appConfig.pkl`.
 
 .pkl/local/appConfig.pkl
 [source,pkl]
