@@ -1,16 +1,16 @@
 // Code generated from Pkl module `override`. DO NOT EDIT.
 package override
 
-type Bar interface {
-	Foo
+type IBar interface {
+	IFoo
 }
 
-var _ Bar = (*BarImpl)(nil)
+var _ IBar = Bar{}
 
-type BarImpl struct {
+type Bar struct {
 	MyProp string `pkl:"myProp"`
 }
 
-func (rcv *BarImpl) GetMyProp() string {
+func (rcv Bar) GetMyProp() string {
 	return rcv.MyProp
 }
