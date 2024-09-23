@@ -159,8 +159,8 @@ func TestLoadProject(t *testing.T) {
 				Env:                map[string]string{"one": "1"},
 				ExternalProperties: map[string]string{"two": "2"},
 				ModulePath:         []string{"modulepath1/", "modulepath2/"},
-				AllowedModules:     []string{"foo:", "bar:"},
-				AllowedResources:   []string{"baz:", "biz:"},
+				AllowedModules:     &[]string{"foo:", "bar:"},
+				AllowedResources:   &[]string{"baz:", "biz:"},
 			}
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
 		})

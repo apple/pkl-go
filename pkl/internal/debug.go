@@ -32,6 +32,6 @@ func init() {
 // Debug writes debugging messages if PKL_DEBUG is set to 1.
 func Debug(format string, a ...any) {
 	if debugEnabled {
-		_, _ = os.Stdout.WriteString("[pkl-go] " + fmt.Sprintf(format, a...) + "\n")
+		_, _ = os.Stderr.WriteString("[pkl-go] " + fmt.Sprintf(format, a...) + "\n")
 	}
 }
