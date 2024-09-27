@@ -46,17 +46,16 @@ func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
 		return s.prereleaseIdentifiers
 	}
 	identifiers := strings.Split(s.prerelease, ".")
-	prereleaseIdentifiers := make([]prereleaseIdentifier, len(identifiers))
+	s.prereleaseIdentifiers = make([]prereleaseIdentifier, len(identifiers))
 	for i, str := range identifiers {
 		if numericIdentifer.MatchString(str) {
 			// guaranteed to succeed
 			num, _ := strconv.Atoi(str)
-			prereleaseIdentifiers[i] = prereleaseIdentifier{numericId: num}
+			s.prereleaseIdentifiers[i] = prereleaseIdentifier{numericId: num}
 		} else {
-			prereleaseIdentifiers[i] = prereleaseIdentifier{alphaNumericId: str}
+			s.prereleaseIdentifiers[i] = prereleaseIdentifier{alphaNumericId: str}
 		}
 	}
-	s.prereleaseIdentifiers = prereleaseIdentifiers
 	return s.prereleaseIdentifiers
 }
 
