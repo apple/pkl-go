@@ -37,7 +37,10 @@ import (
 //go:embed template.gopkl
 var templateSource string
 
-var uriRegex = regexp.MustCompile("^[a-z]+:")
+var (
+	uriRegex = regexp.MustCompile("^[a-z]+:")
+	tmpl     = template.Must(template.New("pkl").Parse(templateSource))
+)
 
 type TemplateValues struct {
 	*generatorsettings.GeneratorSettings
@@ -69,11 +72,10 @@ func doFormat(src string) ([]byte, string, error) {
 		return nil, "", fmt.Errorf("error formatting Go source: %w", err)
 	}
 	strFormatted := string(formatted)
-	var diffs string
-	if src != strFormatted {
-		diffs = cmp.Diff(src, strFormatted)
+	if src == strFormatted {
+		return formatted, "", nil
 	}
-	return formatted, diffs, nil
+	return formatted, cmp.Diff(src, strFormatted), nil
 }
 
 func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string, settings *generatorsettings.GeneratorSettings) error {
@@ -85,11 +87,10 @@ func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string
 	log("Dry run; printing filenames but not writing files to disk\n")
 	for _, filename := range filenames {
 		if settings.BasePath != "" {
-			if strings.HasPrefix(filename, settings.BasePath) {
-				filename = strings.TrimPrefix(filename, settings.BasePath)
-			} else {
+			if !strings.HasPrefix(filename, settings.BasePath) {
 				continue
 			}
+			filename = strings.TrimPrefix(filename, settings.BasePath)
 		}
 		out := filepath.Join(outputPath, filename)
 		fmt.Println(out)
@@ -130,13 +131,8 @@ func GenerateGo(
 	if err != nil {
 		return err
 	}
-	defer func(path string) {
-		_ = os.RemoveAll(path)
-	}(tmpFile.Name())
-	tmpl, err := template.New("pkl").Parse(templateSource)
-	if err != nil {
-		return err
-	}
+	defer os.RemoveAll(tmpFile.Name())
+
 	templateValues := TemplateValues{
 		GeneratorSettings: settings,
 		PklModulePath:     pklModulePath,
@@ -154,12 +150,11 @@ func GenerateGo(
 	diffs := make(map[string]string)
 	for filename, contents := range files {
 		if settings.BasePath != "" {
-			if strings.HasPrefix(filename, settings.BasePath) {
-				filename = strings.TrimPrefix(filename, settings.BasePath)
-			} else {
+			if !strings.HasPrefix(filename, settings.BasePath) {
 				log("Skipping codegen for file \033[36m%s\033[0m because it does not exist in base path \033[36m%s\033[0m\n", filename, settings.BasePath)
 				continue
 			}
+			filename = strings.TrimPrefix(filename, settings.BasePath)
 		}
 
 		formatted, diff, err := doFormat(contents)
@@ -167,7 +162,7 @@ func GenerateGo(
 			log("[warning] Attempted to format file %s but it produced an unexpected error. Error: %s\n", filename, err.Error())
 			formatted = []byte(contents)
 		}
-		if len(diff) > 0 {
+		if diff != "" {
 			diffs[filename] = diff
 		}
 		out := filepath.Join(outputPath, filename)
