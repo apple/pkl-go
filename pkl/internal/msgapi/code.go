@@ -35,4 +35,5 @@ const (
 	codeInitializeModuleReaderResponse   int = 0x101
 	codeInitializeResourceReaderRequest  int = 0x102
 	codeInitializeResourceReaderResponse int = 0x103
+	codeCloseExternalProcess             int = 0x104
 )

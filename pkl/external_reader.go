@@ -6,8 +6,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -51,7 +49,6 @@ func NewExternalReaderRuntime(ctx context.Context, opts ...func(options *Externa
 		in:                           make(chan msgapi.IncomingMessage),
 		out:                          make(chan msgapi.OutgoingMessage),
 		closed:                       make(chan error),
-		signal:                       make(chan os.Signal),
 	}, nil
 }
 
@@ -60,7 +57,6 @@ type externalReaderRuntime struct {
 	in     chan msgapi.IncomingMessage
 	out    chan msgapi.OutgoingMessage
 	closed chan error
-	signal chan os.Signal
 	exited atomicBool
 }
 
@@ -79,10 +75,7 @@ func (r *externalReaderRuntime) Run() error {
 
 	go r.readIncomingMessages()
 	go r.handleSendMessages()
-	go r.handleSignals()
 	go r.listen()
-
-	signal.Notify(r.signal, syscall.SIGTERM) // TODO this is probably not windows safe
 
 	return <-r.closed
 }
@@ -92,7 +85,6 @@ func (r *externalReaderRuntime) Close() {
 	close(r.in)
 	close(r.out)
 	close(r.closed)
-	close(r.signal)
 }
 
 func (r *externalReaderRuntime) readIncomingMessages() {
@@ -131,12 +123,6 @@ func (r *externalReaderRuntime) handleSendMessages() {
 	}
 }
 
-func (r *externalReaderRuntime) handleSignals() {
-	for _ = range r.signal {
-		r.Close()
-	}
-}
-
 func (r *externalReaderRuntime) listen() {
 	for msg := range r.in {
 		switch msg := msg.(type) {
@@ -152,6 +138,8 @@ func (r *externalReaderRuntime) listen() {
 			r.handleListResources(msg)
 		case *msgapi.ListModules:
 			r.handleListModules(msg)
+		case *msgapi.CloseExternalProcess:
+			r.Close()
 		}
 	}
 }
