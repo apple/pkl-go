@@ -1,0 +1,58 @@
+= External Readers
+
+pkl-go provides APIs that aid in implementing xref:main:language-reference:index.adoc#external-readers[External Readers].
+In this mode of execution, the program built with pkl-go runs as a child process of the Pkl evaluator, rather than a parent process.
+The https://pkg.go.dev/github.com/apple/pkl-go/pkl#ExternalReaderRuntime[`pkl.ExternalReaderRuntime`] type provides a set of tools for building external readers.
+
+Much like implementing xref:ROOT:evaluation.adoc#custom-readers[Custom Readers], external readers are implemented by providing one or more instances of the https://pkg.go.dev/github.com/apple/pkl-go/pkl#ResourceReader[`pkl.ResourceReader`] and https://pkg.go.dev/github.com/apple/pkl-go/pkl#ModuleReader[`pkl.ModuleReader`] interfaces.
+
+== Example
+
+This simple reader implementation reads the specified environment variable:
+
+.main.go
+[source,go]
+----
+package main
+
+import (
+	"github.com/apple/pkl-go/pkl"
+)
+
+func main() {
+	runtime, err := pkl.NewExternalReaderRuntime(context.Background(), func(opts *pkl.ExternalReaderRuntimeOptions) {
+		opts.ResourceReaders = append(opts.ResourceReaders, myReader{})
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if err := runtime.Run(); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+type myReader struct{}
+
+var _ pkl.ResourceReader = &myReader{}
+
+func (r myReader) Scheme() string {
+	return "env2"
+}
+
+func (r myReader) HasHierarchicalUris() bool {
+	return false
+}
+
+func (r myReader) IsGlobbable() bool {
+	return false
+}
+
+func (r myReader) ListElements(baseURI url.URL) ([]pkl.PathElement, error) {
+	return nil, nil
+}
+
+func (r myReader) Read(uri url.URL) ([]byte, error) {
+	return []byte(os.Getenv(uri.Opaque)), nil
+}
+----
