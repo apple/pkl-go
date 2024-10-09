@@ -1,5 +1,24 @@
 = Changelog
 
+[[release-0.8.1]]
+== 0.8.1 (2024-10-10)
+
+=== Fixes
+
+* Fix an issue where `EvaluatorOptions.Http.Proxy.NoProxy` is being ignored (https://github.com/apple/pkl-go/pull/106[#106]).
+
+=== Miscellaneous
+
+* Documentation improvements (https://github.com/apple/pkl-go/pull/94[#94], https://github.com/apple/pkl-go/pull/105[#105]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/HT154[@HT154]
+* https://github.com/StefMa[@StefMa]
+* https://github.com/kitsune7[@kitsune7]
+
 [[release-0.8.0]]
 == 0.8.0 (2024-07-04)
 
