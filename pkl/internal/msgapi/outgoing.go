@@ -98,7 +98,7 @@ type Http struct {
 
 type Proxy struct {
 	Address string   `msgpack:"address,omitempty"`
-	NoProxy []string `msgpack:"noproxy,omitempty"`
+	NoProxy []string `msgpack:"noProxy,omitempty"`
 }
 
 type Checksums struct {
