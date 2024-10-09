@@ -21,7 +21,8 @@ The binaries are available as assets on our link:https://github.com/apple/pkl-go
 go install github.com/apple/pkl-go/cmd/pkl-gen-go@v{version}
 
 # via curl
-curl -L -o pkl-gen-go github.com/apple/pkl-go/releases/download/v{version}/pkl-gen-go-macos.bin
+# available platforms: macos, linux-amd64, and linux-aarch64
+curl -L -o pkl-gen-go github.com/apple/pkl-go/releases/download/v{version}/pkl-gen-go-<platform>.bin
 chmod +x pkl-gen-go
 ----
 
@@ -59,7 +60,7 @@ Code generation is done via the `pkl-gen-go` CLI. To install:
 
 [source,bash]
 ----
-go install github.com/apple/pkl-go/cmd/pkl-gen-go@latest
+go install github.com/apple/pkl-go/cmd/pkl-gen-go@v{version}
 ----
 
 In our example, Go sources can be generated using the following command:
