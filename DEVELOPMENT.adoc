@@ -11,13 +11,20 @@ It is possible to
 
 . Create a file named `debugpkl`
 . Mark the file executable with `chmod +x debugpkl`
-. Populate the file with this content (note: the path to the executable will depend on where the Pkl repo is cloned):
+. Populate the file with this content (note: the value for `JPKL_EXEC` will need to be updated depending on where the Pkl repo is cloned):
 
 [,shell]
 ----
 #!/bin/sh
 
-exec java -agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005,suspend=y -jar /path/to/pkl/pkl-cli/build/executable/jpkl "$@"
+JPKL_EXEC=/path/to/pkl/pkl-cli/build/executable/jpkl
+
+if [ "$1" = "--version" ]; then
+  # if this is the version discovery command, don't connect to the debugger
+  exec "$JPKL_EXEC" "$@"
+fi
+
+exec java -agentlib:jdwp=transport=dt_socket,server=n,address=127.0.0.1:5005,suspend=y -jar "$JPKL_EXEC" "$@"
 ----
 
 
