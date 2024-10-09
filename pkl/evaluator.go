@@ -223,37 +223,48 @@ func (e *evaluator) handleReadModule(msg *msgapi.ReadModule) {
 }
 
 func (e *evaluator) handleListResources(msg *msgapi.ListResources) {
-	response := &msgapi.ListResourcesResponse{EvaluatorId: e.evaluatorId, RequestId: msg.RequestId}
+	response := &msgapi.ListResourcesResponse{
+		EvaluatorId: e.evaluatorId,
+		RequestId:   msg.RequestId,
+	}
+
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
 		e.manager.impl.outChan() <- response
 		return
 	}
-	var reader ResourceReader
-	for _, r := range e.resourceReaders {
-		if r.Scheme() == u.Scheme {
-			reader = r
-			break
-		}
-	}
+
+	reader := e.findResourceReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No resource reader found for scheme `%s`", u.Scheme)
 		e.manager.impl.outChan() <- response
 		return
 	}
+
 	pathElements, err := reader.ListElements(*u)
 	if err != nil {
 		response.Error = err.Error()
 	} else {
-		for _, pathElement := range pathElements {
-			response.PathElements = append(response.PathElements, &msgapi.PathElement{
-				Name:        pathElement.Name(),
-				IsDirectory: pathElement.IsDirectory(),
-			})
+		response.PathElements = make([]*msgapi.PathElement, len(pathElements))
+		for i, pe := range pathElements {
+			response.PathElements[i] = &msgapi.PathElement{
+				Name:        pe.Name(),
+				IsDirectory: pe.IsDirectory(),
+			}
 		}
 	}
+
 	e.manager.impl.outChan() <- response
+}
+
+func (e *evaluator) findResourceReader(scheme string) ResourceReader {
+	for _, r := range e.resourceReaders {
+		if r.Scheme() == scheme {
+			return r
+		}
+	}
+	return nil
 }
 
 func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
