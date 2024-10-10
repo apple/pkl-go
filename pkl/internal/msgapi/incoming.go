@@ -38,6 +38,7 @@ var (
 	_ IncomingMessage = (*Log)(nil)
 	_ IncomingMessage = (*ListResources)(nil)
 	_ IncomingMessage = (*ListModules)(nil)
+	_ IncomingMessage = (*CloseExternalProcess)(nil)
 )
 
 type CreateEvaluatorResponse struct {
@@ -98,6 +99,24 @@ type ListModules struct {
 	Uri         string `msgpack:"uri"`
 }
 
+type InitializeModuleReader struct {
+	incomingMessageImpl
+
+	RequestId int64  `msgpack:"requestId"`
+	Scheme    string `msgpack:"scheme"`
+}
+
+type InitializeResourceReader struct {
+	incomingMessageImpl
+
+	RequestId int64  `msgpack:"requestId"`
+	Scheme    string `msgpack:"scheme"`
+}
+
+type CloseExternalProcess struct {
+	incomingMessageImpl
+}
+
 func Decode(decoder *msgpack.Decoder) (IncomingMessage, error) {
 	_, err := decoder.DecodeArrayLen()
 	if err != nil {
@@ -134,6 +153,18 @@ func Decode(decoder *msgpack.Decoder) (IncomingMessage, error) {
 		return &resp, err
 	case codeListModulesRequest:
 		var resp ListModules
+		err = decoder.Decode(&resp)
+		return &resp, err
+	case codeInitializeModuleReaderRequest:
+		var resp InitializeModuleReader
+		err = decoder.Decode(&resp)
+		return &resp, err
+	case codeInitializeResourceReaderRequest:
+		var resp InitializeResourceReader
+		err = decoder.Decode(&resp)
+		return &resp, err
+	case codeCloseExternalProcess:
+		var resp CloseExternalProcess
 		err = decoder.Decode(&resp)
 		return &resp, err
 	default:
