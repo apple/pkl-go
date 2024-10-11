@@ -113,6 +113,39 @@ package {
 }
 `
 
+const project4Contents = `
+amends "pkl:Project"
+
+evaluatorSettings {
+  externalModuleReaders {
+		["scheme1"] {
+			executable = "reader1"
+		}
+		["scheme2"] {
+			executable = "reader2"
+			arguments { "with"; "args" }
+		}
+	}
+	externalResourceReaders {
+		["scheme3"] {
+			executable = "reader3"
+		}
+		["scheme4"] {
+			executable = "reader4"
+			arguments { "with"; "args" }
+		}
+	}
+}
+
+package {
+  name = "pigeon"
+  baseUri = "package://example.com/pigeon"
+  version = "0.26.0"
+  description = "Some project about pigeons"
+  packageZipUrl = "https://example.com/pigeon/\(version)/pigeon-\(version).zip"
+}
+`
+
 func writeFile(t *testing.T, filename string, contents string) {
 	if err := os.WriteFile(filename, []byte(contents), 0o777); err != nil {
 		t.Logf("Failed to write file %s: %s", filename, err)
@@ -240,6 +273,38 @@ func TestLoadProjectWithProxy(t *testing.T) {
 							"localhost:8000",
 						},
 					},
+				},
+			}
+			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
+		})
+	}
+}
+
+func TestLoadProjectWithExternalReaders(t *testing.T) {
+	manager := NewEvaluatorManager()
+	version, err := manager.(*evaluatorManager).getVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pklVersion0_27.isGreaterThan(version) {
+		t.SkipNow()
+	}
+
+	tempDir := t.TempDir()
+	_ = os.Mkdir(tempDir+"/pigeons", 0o777)
+	writeFile(t, tempDir+"/pigeons/PklProject", project4Contents)
+
+	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
+	if assert.NoError(t, err) {
+		t.Run("evaluatorSettings", func(t *testing.T) {
+			expectedSettings := &ProjectEvaluatorSettings{
+				ExternalModuleReaders: map[string]ProjectEvaluatorSettingExternalReader{
+					"scheme1": {Executable: "reader1"},
+					"scheme2": {Executable: "reader2", Arguments: []string{"with", "args"}},
+				},
+				ExternalResourceReaders: map[string]ProjectEvaluatorSettingExternalReader{
+					"scheme3": {Executable: "reader3"},
+					"scheme4": {Executable: "reader4", Arguments: []string{"with", "args"}},
 				},
 			}
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
