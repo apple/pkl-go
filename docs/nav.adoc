@@ -1,4 +1,5 @@
 * xref:ROOT:quickstart.adoc[Quickstart]
 * xref:ROOT:evaluation.adoc[Evaluator API]
 * xref:ROOT:codegen.adoc[Code Generation]
+* xref:ROOT:external-readers.adoc[External Readers]
 * xref:ROOT:CHANGELOG.adoc[Changelog]

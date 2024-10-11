@@ -18,6 +18,8 @@ package pkl
 
 import (
 	"net/url"
+
+	"github.com/apple/pkl-go/pkl/internal/msgapi"
 )
 
 // Reader is the base implementation shared by a ResourceReader and a ModuleReader.
@@ -136,4 +138,37 @@ type ModuleReader interface {
 
 	// Read reads the string contents of this module.
 	Read(url url.URL) (string, error)
+}
+
+func resourceReadersToMessage(readers []ResourceReader) []*msgapi.ResourceReader {
+	resourceReaders := make([]*msgapi.ResourceReader, len(readers))
+	for idx, reader := range readers {
+		resourceReaders[idx] = &msgapi.ResourceReader{
+			Scheme:              reader.Scheme(),
+			IsGlobbable:         reader.IsGlobbable(),
+			HasHierarchicalUris: reader.HasHierarchicalUris(),
+		}
+	}
+	return resourceReaders
+}
+
+func moduleReadersToMessage(readers []ModuleReader) []*msgapi.ModuleReader {
+	moduleReaders := make([]*msgapi.ModuleReader, len(readers))
+	for idx, reader := range readers {
+		moduleReaders[idx] = &msgapi.ModuleReader{
+			Scheme:              reader.Scheme(),
+			IsGlobbable:         reader.IsGlobbable(),
+			HasHierarchicalUris: reader.HasHierarchicalUris(),
+			IsLocal:             reader.IsLocal(),
+		}
+	}
+	return moduleReaders
+}
+
+func externalReadersToMessage(readers map[string]ExternalReader) map[string]*msgapi.ExternalReader {
+	externalReaders := make(map[string]*msgapi.ExternalReader, len(readers))
+	for scheme, reader := range readers {
+		externalReaders[scheme] = reader.toMessage()
+	}
+	return externalReaders
 }
