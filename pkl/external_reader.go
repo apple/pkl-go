@@ -31,6 +31,25 @@ type ExternalReaderRuntimeOptions struct {
 	ModuleReaders []ModuleReader
 }
 
+var WithRuntimeResourceReader = func(reader ResourceReader) func(*ExternalReaderRuntimeOptions) {
+	return func(options *ExternalReaderRuntimeOptions) {
+		options.ResourceReaders = append(options.ResourceReaders, reader)
+	}
+}
+
+var WithRuntimeModuleReader = func(reader ModuleReader) func(*ExternalReaderRuntimeOptions) {
+	return func(options *ExternalReaderRuntimeOptions) {
+		options.ModuleReaders = append(options.ModuleReaders, reader)
+	}
+}
+
+var WithRuntimeStreams = func(requestReader io.Reader, responseWriter io.Writer) func(*ExternalReaderRuntimeOptions) {
+	return func(options *ExternalReaderRuntimeOptions) {
+		options.RequestReader = requestReader
+		options.ResponseWriter = responseWriter
+	}
+}
+
 func NewExternalReaderRuntime(ctx context.Context, opts ...func(options *ExternalReaderRuntimeOptions)) (ExternalReaderRuntime, error) {
 	o := ExternalReaderRuntimeOptions{}
 	for _, f := range opts {
