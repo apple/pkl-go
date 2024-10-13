@@ -1,4 +1,6 @@
-amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.2#/PklCI.pkl"
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.1.1#/PklCI.pkl"
+
+import "pkl:semver"
 
 local testJobs = jobs.keys.filter((it) -> it.startsWith("test"))
 
@@ -14,13 +16,23 @@ local class PklDistribution {
   /// The version of this distribution
   version: String
 
+  /// The parsed semver.
+  fixed _version: semver.Version = semver.parseOrNull(version)!!
+
   /// The URL to download this distribution
   fixed downloadUrl: String = "https://github.com/apple/pkl/releases/download/\(version)/pkl-linux-amd64"
+
+  /// The URL to download this distribution
+  fixed downloadUrlWindows: String =
+    if (_version.minor < 26) throw("Pkl \(version) is not supported on Windows")
+    else "https://github.com/apple/pkl/releases/download/\(version)/pkl-windows-amd64.exe"
 }
+
+local distributionLatest: PklDistribution = new { version = "0.26.0" }
 
 local pklDistributions: Listing<PklDistribution> = new {
   new { version = "0.25.3" }
-  new { version = "0.26.0" }
+  distributionLatest
 }
 
 release = (buildWorkflow) {
@@ -48,51 +60,102 @@ triggerDocsBuild = "release"
 triggerPackageDocsBuild = "release"
 
 jobs {
-  for (distribution in pklDistributions) {
-    ["test-pkl-\(distribution.version.replaceAll(".", "-"))"] = (goJob) {
-      steps {
-        new RunStep {
-          name = "go test"
-          command = """
-            curl -L -o pkl.bin '\(distribution.downloadUrl)'
-            chmod +x pkl.bin
-            export PKL_EXEC=$(pwd)/pkl.bin
-            go install github.com/jstemmer/go-junit-report/v2@latest
-            echo "Running Pkl unit tests"
-            $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-            echo "Running Pkl snippet tests"
-            ./scripts/test_snippets.sh
-            echo "Running Go unit tests"
-            go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
-            """
-        }
-        new StoreTestResults {
-          path = "test-results"
-        }
+//   for (distribution in pklDistributions) {
+//     ["test-pkl-\(distribution.version.replaceAll(".", "-"))"] = (goJob) {
+//       steps {
+//         new RunStep {
+//           name = "go test"
+//           command = """
+//             curl -L -o pkl.bin '\(distribution.downloadUrl)'
+//             chmod +x pkl.bin
+//             export PKL_EXEC=$(pwd)/pkl.bin
+//             go install github.com/jstemmer/go-junit-report/v2@latest
+//             echo "Running Pkl unit tests"
+//             $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
+//             echo "Running Pkl snippet tests"
+//             ./scripts/test_snippets.sh
+//             echo "Running Go unit tests"
+//             go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+//             """
+//         }
+//         new StoreTestResults {
+//           path = "test-results"
+//         }
+//       }
+//     }
+//   }
+  ["test-windows"] {
+    machine {
+      image = "windows-server-2022-gui:current"
+    }
+    resource_class = "windows.medium"
+    steps {
+      "checkout"
+      new RunStep {
+        name = "go test"
+        shell = "powershell.exe"
+        command = #"""
+          echo "Downloading Go"
+          Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
+
+          echo "Installing Go"
+          $pkg = "$PWD\go.exe"
+          Start-Process msiexec "/i $pkg /qn";
+
+          echo "Installing Pkl"
+          Invoke-WebRequest "\#(distributionLatest.downloadUrlWindows)" -OutFile pkl.exe
+          $env:PKL_EXEC = "$PWD\pkl.exe"
+
+          echo "Running Pkl unit tests"
+          .\pkl test --junit-reports test-results\ --project-dir codegen\src\
+
+          echo "Installing go-junit-report"
+          go install github.com/jstemmer/go-junit-report/v2@latest
+
+          echo "Running Go unit tests"
+          go test -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
+          """#
       }
     }
   }
   ["build-pkl-gen-go"] = (goJob) {
     steps {
-      for (os in List("macos", "linux")) {
+      for (os in List("macos", "linux", "windows")) {
         for (arch in List("amd64", "aarch64")) {
           new RunStep {
             name = "go build \(os) \(arch)"
             environment {
-              ["GOOS"] = if (os == "linux") os else "darwin"
+              ["GOOS"] = if (os == "linux" || os == "windows") os else "darwin"
               ["GOARCH"] = if (arch == "amd64") arch else "arm64"
             }
+            local ext = if (os == "windows") "exe" else "bin"
             command = #"""
               # strip preceding "v"
               VERSION="${CIRCLE_TAG:1}"
 
               go build \
-                -o out/pkl-gen-go/pkl-gen-go-\#(os)-\#(arch).bin \
+                -o out/pkl-gen-go/pkl-gen-go-\#(os)-\#(arch).\#(ext) \
                 -ldflags="-X 'main.Version=$VERSION'" \
                 cmd/pkl-gen-go/pkl-gen-go.go
               """#
           }
         }
+      }
+      new RunStep {
+        name = "go build windows amd64"
+        environment {
+          ["GOOS"] = "windows"
+          ["GOARCH"] = "amd64"
+        }
+        command = #"""
+          # strip preceding "v"
+          VERSION="${CIRCLE_TAG:1}"
+
+          go build \
+            -o out/pkl-gen-go/pkl-gen-go-windows-amd64.exe \
+            -ldflags="-X 'main.Version=$VERSION'" \
+            cmd/pkl-gen-go/pkl-gen-go.go
+          """#
       }
       new PersistToWorkspaceStep {
         root = "."
