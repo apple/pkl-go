@@ -306,7 +306,11 @@ func getStructFields(typ reflect.Type) map[string]structField {
 		field := typ.Field(i)
 		// embedded
 		if field.Anonymous {
-			for k, v := range getStructFields(field.Type.Elem()) {
+			fieldType := field.Type
+			if fieldType.Kind() == reflect.Pointer {
+				fieldType = fieldType.Elem()
+			}
+			for k, v := range getStructFields(fieldType) {
 				ret[k] = v
 			}
 		} else {
@@ -328,14 +332,22 @@ func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 	for i := 0; i < numFields; i++ {
 		field := typ.Field(i)
 		if field.Anonymous {
-			fieldValue := reflect.New(field.Type.Elem())
-			// Assertion: all embedded fields are pointers to structs.
-			structValue, err := d.getOutputValue(field.Type.Elem())
+			fieldType := field.Type
+			isPointer := fieldType.Kind() == reflect.Pointer
+			if isPointer {
+				fieldType = fieldType.Elem()
+			}
+			fieldValue := reflect.New(fieldType)
+			structValue, err := d.getOutputValue(fieldType)
 			if err != nil {
 				return nil, err
 			}
 			fieldValue.Elem().Set(*structValue)
-			ret.FieldByName(field.Name).Set(fieldValue)
+			if isPointer {
+				ret.FieldByName(field.Name).Set(fieldValue)
+			} else {
+				ret.FieldByName(field.Name).Set(fieldValue.Elem())
+			}
 		}
 	}
 	return &ret, nil
