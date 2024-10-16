@@ -7,5 +7,5 @@ type Bike struct {
 	// Wheels are the front and back wheels.
 	//
 	// There are typically two of them.
-	Wheels []*Wheel `pkl:"wheels"`
+	Wheels []Wheel `pkl:"wheels"`
 }

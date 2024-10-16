@@ -7,16 +7,16 @@ type MySubclass interface {
 	GetFoo() string
 }
 
-var _ MySubclass = (*MySubclassImpl)(nil)
+var _ MySubclass = MySubclassImpl{}
 
 type MySubclassImpl struct {
-	*Override2Impl
+	Override2Impl
 
 	// Different doc comments
 	Foo string `pkl:"foo"`
 }
 
 // Different doc comments
-func (rcv *MySubclassImpl) GetFoo() string {
+func (rcv MySubclassImpl) GetFoo() string {
 	return rcv.Foo
 }
