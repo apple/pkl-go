@@ -30,7 +30,7 @@ func (d *decoder) decodeMap(inType reflect.Type) (*reflect.Value, error) {
 		return d.decodeSet(inType)
 	}
 	if code != codeMap && code != codeMapping {
-		return nil, fmt.Errorf("invalid code for slices: %d", code)
+		return nil, fmt.Errorf("invalid code for maps: %d", code)
 	}
 	return d.decodeMapImpl(inType)
 }

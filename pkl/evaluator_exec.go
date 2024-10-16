@@ -16,7 +16,10 @@
 
 package pkl
 
-import "context"
+import (
+	"context"
+	"path/filepath"
+)
 
 // NewEvaluator returns an evaluator backed by a single EvaluatorManager.
 // Its manager gets closed when the evaluator is closed.
@@ -45,7 +48,7 @@ func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(op
 // pklCmd is treated as the base command that spawns Pkl.
 // For example, the below snippet spawns the command /opt/bin/pkl.
 //
-//	NewProjectEvaluatorWithCommand(context.Background(), []string{"/opt/bin/pkl"}, "/path/to/my/project")
+//	NewProjectEvaluatorWithCommand(context.Background(), "/path/to/my/project", []string{"/opt/bin/pkl"})
 //
 // If creating multiple evaluators, prefer using EvaluatorManager.NewProjectEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
@@ -55,7 +58,10 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklC
 	if err != nil {
 		return nil, err
 	}
-	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, projectDir+"/PklProject")
+	defer projectEvaluator.Close()
+
+	projectPath := filepath.Join(projectDir, "PklProject")
+	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, projectPath)
 	if err != nil {
 		return nil, err
 	}
