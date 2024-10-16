@@ -1,24 +1,24 @@
 // Code generated from Pkl module `classes`. DO NOT EDIT.
 package classes
 
-type Cat interface {
-	Animal
+type ICat interface {
+	IAnimal
 
 	GetMeows() bool
 }
 
-var _ Cat = (*CatImpl)(nil)
+var _ ICat = Cat{}
 
-type CatImpl struct {
+type Cat struct {
 	Meows bool `pkl:"meows"`
 
 	Name string `pkl:"name"`
 }
 
-func (rcv *CatImpl) GetMeows() bool {
+func (rcv Cat) GetMeows() bool {
 	return rcv.Meows
 }
 
-func (rcv *CatImpl) GetName() string {
+func (rcv Cat) GetName() string {
 	return rcv.Name
 }
