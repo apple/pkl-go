@@ -40,7 +40,7 @@ func (f *fsReader) HasHierarchicalUris() bool {
 }
 
 func (f *fsReader) ListElements(url url.URL) ([]PathElement, error) {
-	path := strings.TrimPrefix(url.Path, "/")
+	path := strings.Trim(url.Path, "/")
 	if path == "" {
 		path = "."
 	}
