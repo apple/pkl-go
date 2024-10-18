@@ -31,9 +31,9 @@ const (
 	codeListResourcesResponse            int = 0x2b
 	codeListModulesRequest               int = 0x2c
 	codeListModulesResponse              int = 0x2d
-	codeInitializeModuleReaderRequest    int = 0x100
-	codeInitializeModuleReaderResponse   int = 0x101
-	codeInitializeResourceReaderRequest  int = 0x102
-	codeInitializeResourceReaderResponse int = 0x103
-	codeCloseExternalProcess             int = 0x104
+	codeInitializeModuleReaderRequest    int = 0x2e
+	codeInitializeModuleReaderResponse   int = 0x2f
+	codeInitializeResourceReaderRequest  int = 0x30
+	codeInitializeResourceReaderResponse int = 0x31
+	codeCloseExternalProcess             int = 0x32
 )
