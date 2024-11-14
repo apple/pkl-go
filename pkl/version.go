@@ -71,13 +71,13 @@ func compareInt(a, b int) int {
 	}
 }
 
-func (s *semver) compareToString(other string) (int, error) {
-	otherVersion, err := parseSemver(other)
-	if err != nil {
-		return 0, err
-	}
-	return s.compareTo(otherVersion), nil
-}
+// func (s *semver) compareToString(other string) (int, error) {
+// 	otherVersion, err := parseSemver(other)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	return s.compareTo(otherVersion), nil
+// }
 
 // compareTo returns -1 if s < other, 1 if s > other, and 0 otherwise.
 func (s *semver) compareTo(other *semver) int {

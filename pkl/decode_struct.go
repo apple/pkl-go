@@ -299,7 +299,12 @@ func parseStructOpts(field *reflect.StructField) structFieldOpts {
 	return ret
 }
 
+var structFieldsCache = make(map[reflect.Type]map[string]structField)
+
 func getStructFields(typ reflect.Type) map[string]structField {
+	if fields, ok := structFieldsCache[typ]; ok {
+		return fields
+	}
 	numFields := typ.NumField()
 	ret := make(map[string]structField)
 	for i := 0; i < numFields; i++ {
@@ -317,6 +322,7 @@ func getStructFields(typ reflect.Type) map[string]structField {
 			ret[opts.propertyName] = structField{StructField: &field, structFieldOpts: opts}
 		}
 	}
+	structFieldsCache[typ] = ret
 	return ret
 }
 
