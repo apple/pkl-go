@@ -47,7 +47,7 @@ type Evaluator interface {
 
 	// EvaluateExpression evaluates the provided expression on the given module source, and writes
 	// the result into the value pointed by out.
-	EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out interface{}) error
+	EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out any) error
 
 	// EvaluateExpressionRaw evaluates the provided module, and returns the underlying value's raw
 	// bytes.
@@ -94,7 +94,7 @@ func (e *evaluator) EvaluateOutputFiles(ctx context.Context, source *ModuleSourc
 	return out, err
 }
 
-func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out interface{}) error {
+func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out any) error {
 	bytes, err := e.EvaluateExpressionRaw(ctx, source, expr)
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 	}
 	select {
 	case <-ctx.Done():
-		return nil, nil
+		return nil, ctx.Err()
 	case err := <-interrupted:
 		return nil, err
 	case resp := <-ch:
@@ -149,7 +149,11 @@ func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
 		log.Default().Printf("warn: received a message for an unknown request id: %d", resp.RequestId)
 		return
 	}
-	ch := c.(chan *msgapi.EvaluateResponse)
+	ch, ok := c.(chan *msgapi.EvaluateResponse)
+	if !ok {
+		log.Default().Printf("warn: unexpected type in pendingRequests for request id: %d", resp.RequestId)
+		return
+	}
 	ch <- resp
 	close(ch)
 	e.pendingRequests.Delete(resp.RequestId)
@@ -175,13 +179,7 @@ func (e *evaluator) handleReadResource(msg *msgapi.ReadResource) {
 		e.manager.impl.outChan() <- response
 		return
 	}
-	var reader ResourceReader
-	for _, r := range e.resourceReaders {
-		if r.Scheme() == u.Scheme {
-			reader = r
-			break
-		}
-	}
+	reader := e.findResourceReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No resource reader found for scheme `%s`", u.Scheme)
 		e.manager.impl.outChan() <- response
@@ -203,13 +201,7 @@ func (e *evaluator) handleReadModule(msg *msgapi.ReadModule) {
 		e.manager.impl.outChan() <- response
 		return
 	}
-	var reader ModuleReader
-	for _, r := range e.moduleReaders {
-		if r.Scheme() == u.Scheme {
-			reader = r
-			break
-		}
-	}
+	reader := e.findModuleReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No module reader found for scheme `%s`", u.Scheme)
 		e.manager.impl.outChan() <- response
@@ -267,6 +259,15 @@ func (e *evaluator) findResourceReader(scheme string) ResourceReader {
 	return nil
 }
 
+func (e *evaluator) findModuleReader(scheme string) ModuleReader {
+	for _, r := range e.moduleReaders {
+		if r.Scheme() == scheme {
+			return r
+		}
+	}
+	return nil
+}
+
 func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 	response := &msgapi.ListModulesResponse{EvaluatorId: e.evaluatorId, RequestId: msg.RequestId}
 	u, err := url.Parse(msg.Uri)
@@ -275,13 +276,7 @@ func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 		e.manager.impl.outChan() <- response
 		return
 	}
-	var reader ModuleReader
-	for _, r := range e.moduleReaders {
-		if r.Scheme() == u.Scheme {
-			reader = r
-			break
-		}
-	}
+	reader := e.findModuleReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No module reader found for scheme `%s`", u.Scheme)
 		e.manager.impl.outChan() <- response
