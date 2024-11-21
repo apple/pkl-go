@@ -1,17 +1,17 @@
 // Code generated from Pkl module `classes`. DO NOT EDIT.
 package classes
 
-type Dog interface {
-	Animal
+type IDog interface {
+	IAnimal
 
 	GetBarks() bool
 
 	GetBreed() string
 }
 
-var _ Dog = (*DogImpl)(nil)
+var _ IDog = Dog{}
 
-type DogImpl struct {
+type Dog struct {
 	Barks bool `pkl:"barks"`
 
 	Breed string `pkl:"breed"`
@@ -19,14 +19,14 @@ type DogImpl struct {
 	Name string `pkl:"name"`
 }
 
-func (rcv *DogImpl) GetBarks() bool {
+func (rcv Dog) GetBarks() bool {
 	return rcv.Barks
 }
 
-func (rcv *DogImpl) GetBreed() string {
+func (rcv Dog) GetBreed() string {
 	return rcv.Breed
 }
 
-func (rcv *DogImpl) GetName() string {
+func (rcv Dog) GetName() string {
 	return rcv.Name
 }
