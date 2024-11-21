@@ -17,14 +17,35 @@
 package pkl
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
-func Test_PathSource(t *testing.T) {
-	src := FileSource("/usr/local/myfile.pkl")
-	assert.Equal(t, "file:///usr/local/myfile.pkl", src.Uri.String())
-	src = FileSource("/usr", "local", "lib", "myotherfile.pkl")
-	assert.Equal(t, "file:///usr/local/lib/myotherfile.pkl", src.Uri.String())
+// FileSource builds a ModuleSource, treating its arguments as paths on the file system.
+//
+// If the provided path is not an absolute path, it will be resolved against the current working
+// directory.
+//
+// If multiple path arguments are provided, they are joined as multiple elements of the path.
+//
+// It panics if the current working directory cannot be resolved.
+func FileSource(pathElems ...string) *ModuleSource {
+	src := filepath.Join(pathElems...)
+	// TODO: this can possibly be wrong because the path can be a UNC path.
+	if !filepath.IsAbs(src) {
+		p, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+		src = filepath.Join(p, src)
+	}
+	return &ModuleSource{
+		Uri: &url.URL{
+			Scheme: "file",
+			Path:   "/" + strings.ReplaceAll(src, "\\", "/"),
+		},
+	}
 }
+

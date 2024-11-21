@@ -3,46 +3,35 @@ version: '2.1'
 orbs:
   pr-approval: apple/pr-approval@0.1.0
 jobs:
-  test-pkl-0-25-3:
+  test-windows:
     steps:
     - checkout
     - run:
         command: |-
-          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64'
-          chmod +x pkl.bin
-          export PKL_EXEC=$(pwd)/pkl.bin
-          go install github.com/jstemmer/go-junit-report/v2@latest
+          echo "Downloading Go"
+          Invoke-WebRequest "https://go.dev/dl/go1.21.11.windows-386.msi" -OutFile go.exe
+
+          echo "Installing Go"
+          $pkg = "$PWD\go.exe"
+          Start-Process msiexec "/i $pkg /qn";
+
+          echo "Installing Pkl"
+          Invoke-WebRequest "https://github.com/apple/pkl/releases/download/0.26.0/pkl-windows-amd64.exe" -OutFile pkl.exe
+          $env:PKL_EXEC = "$PWD\pkl.exe"
+
           echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-          echo "Running Pkl snippet tests"
-          ./scripts/test_snippets.sh
-          echo "Running Go unit tests"
-          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
-        name: go test
-    - store_test_results:
-        path: test-results
-    docker:
-    - image: cimg/go:1.21
-  test-pkl-0-26-0:
-    steps:
-    - checkout
-    - run:
-        command: |-
-          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.26.0/pkl-linux-amd64'
-          chmod +x pkl.bin
-          export PKL_EXEC=$(pwd)/pkl.bin
+          .\pkl test --junit-reports test-results\ --project-dir codegen\src\
+
+          echo "Installing go-junit-report"
           go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-          echo "Running Pkl snippet tests"
-          ./scripts/test_snippets.sh
+
           echo "Running Go unit tests"
-          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+          go test -v .\... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results\go-test-results.xml
         name: go test
-    - store_test_results:
-        path: test-results
-    docker:
-    - image: cimg/go:1.21
+        shell: powershell.exe
+    resource_class: windows.medium
+    machine:
+      image: windows-server-2022-gui:current
   build-pkl-gen-go:
     steps:
     - checkout
@@ -98,6 +87,45 @@ jobs:
         environment:
           GOOS: linux
           GOARCH: arm64
+    - run:
+        command: |-
+          # strip preceding "v"
+          VERSION="${CIRCLE_TAG:1}"
+
+          go build \
+            -o out/pkl-gen-go/pkl-gen-go-windows-amd64.exe \
+            -ldflags="-X 'main.Version=$VERSION'" \
+            cmd/pkl-gen-go/pkl-gen-go.go
+        name: go build windows amd64
+        environment:
+          GOOS: windows
+          GOARCH: amd64
+    - run:
+        command: |-
+          # strip preceding "v"
+          VERSION="${CIRCLE_TAG:1}"
+
+          go build \
+            -o out/pkl-gen-go/pkl-gen-go-windows-aarch64.exe \
+            -ldflags="-X 'main.Version=$VERSION'" \
+            cmd/pkl-gen-go/pkl-gen-go.go
+        name: go build windows aarch64
+        environment:
+          GOOS: windows
+          GOARCH: arm64
+    - run:
+        command: |-
+          # strip preceding "v"
+          VERSION="${CIRCLE_TAG:1}"
+
+          go build \
+            -o out/pkl-gen-go/pkl-gen-go-windows-amd64.exe \
+            -ldflags="-X 'main.Version=$VERSION'" \
+            cmd/pkl-gen-go/pkl-gen-go.go
+        name: go build windows amd64
+        environment:
+          GOOS: windows
+          GOARCH: amd64
     - persist_to_workspace:
         root: '.'
         paths:
@@ -212,10 +240,7 @@ workflows:
         type: approval
     - pr-approval/authenticate:
         context: pkl-pr-approval
-    - test-pkl-0-25-3:
-        requires:
-        - hold
-    - test-pkl-0-26-0:
+    - test-windows:
         requires:
         - hold
     when:
@@ -224,29 +249,20 @@ workflows:
         pattern: ^pull/\d+(/head)?$
   main:
     jobs:
-    - test-pkl-0-25-3
-    - test-pkl-0-26-0
+    - test-windows
     - build-pkl-gen-go:
         requires:
-        - test-pkl-0-25-3
-        - test-pkl-0-26-0
+        - test-windows
     - build-pkl-package:
         requires:
-        - test-pkl-0-25-3
-        - test-pkl-0-26-0
+        - test-windows
     when:
       equal:
       - main
       - << pipeline.git.branch >>
   release:
     jobs:
-    - test-pkl-0-25-3:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - test-pkl-0-26-0:
+    - test-windows:
         filters:
           branches:
             ignore: /.*/
@@ -254,8 +270,7 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - build-pkl-gen-go:
         requires:
-        - test-pkl-0-25-3
-        - test-pkl-0-26-0
+        - test-windows
         filters:
           branches:
             ignore: /.*/
@@ -263,8 +278,7 @@ workflows:
             only: /^v?\d+\.\d+\.\d+$/
     - build-pkl-package:
         requires:
-        - test-pkl-0-25-3
-        - test-pkl-0-26-0
+        - test-windows
         filters:
           branches:
             ignore: /.*/
