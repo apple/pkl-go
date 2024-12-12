@@ -1,7 +1,6 @@
 package pkl
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -12,16 +11,21 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-type ExternalReaderRuntime interface {
+// ExternalReaderClient is an interface for implementing [external readers](https://pkl-lang.org/main/current/language-reference/index.html#external-readers).
+type ExternalReaderClient interface {
+	// Run starts the ExternalReaderClient and blocks until the reader is closed by [ExternalReaderClient.Close] or the Pkl evaluator.
 	Run() error
+
+	// Close disconnects the ExternalReaderClient from the Pkl evaluator and cleans up any resources.
 	Close()
 }
 
-type ExternalReaderRuntimeOptions struct {
-	// Reader to receive requests. If omitted, os.Stdin will be used
+// ExternalReaderClientOptions is the set of options available to control ExternalReaderClients.
+type ExternalReaderClientOptions struct {
+	// RequestReader is the interface used to read messages from the Pkl evaluator. If omitted, os.Stdin will be used.
 	RequestReader io.Reader
 
-	// Writer to publish responses. If omitted, os.Stdout will be used
+	// ResponseWriter is the interface used to send messages to the Pkl evaluator. If omitted, os.Stdout will be used.
 	ResponseWriter io.Writer
 
 	// ResourceReaders are the resource readers to be used by the evaluator.
@@ -31,27 +35,31 @@ type ExternalReaderRuntimeOptions struct {
 	ModuleReaders []ModuleReader
 }
 
-var WithRuntimeResourceReader = func(reader ResourceReader) func(*ExternalReaderRuntimeOptions) {
-	return func(options *ExternalReaderRuntimeOptions) {
+// WithExternalClientResourceReader adds an additional [ResourceReader] to the ExternalReaderClient.
+var WithExternalClientResourceReader = func(reader ResourceReader) func(*ExternalReaderClientOptions) {
+	return func(options *ExternalReaderClientOptions) {
 		options.ResourceReaders = append(options.ResourceReaders, reader)
 	}
 }
 
-var WithRuntimeModuleReader = func(reader ModuleReader) func(*ExternalReaderRuntimeOptions) {
-	return func(options *ExternalReaderRuntimeOptions) {
+// WithExternalClientModuleReader adds an additional [ModuleReader] to the ExternalReaderClient.
+var WithExternalClientModuleReader = func(reader ModuleReader) func(*ExternalReaderClientOptions) {
+	return func(options *ExternalReaderClientOptions) {
 		options.ModuleReaders = append(options.ModuleReaders, reader)
 	}
 }
 
-var WithRuntimeStreams = func(requestReader io.Reader, responseWriter io.Writer) func(*ExternalReaderRuntimeOptions) {
-	return func(options *ExternalReaderRuntimeOptions) {
+// WithExternalClientStreams sets the input and output interfaces the ExternalReaderClient will use to communicate with the Pkl evaluator.
+var WithExternalClientStreams = func(requestReader io.Reader, responseWriter io.Writer) func(*ExternalReaderClientOptions) {
+	return func(options *ExternalReaderClientOptions) {
 		options.RequestReader = requestReader
 		options.ResponseWriter = responseWriter
 	}
 }
 
-func NewExternalReaderRuntime(ctx context.Context, opts ...func(options *ExternalReaderRuntimeOptions)) (ExternalReaderRuntime, error) {
-	o := ExternalReaderRuntimeOptions{}
+// NewExternalReaderClient creates a new ExternalReaderClient.
+func NewExternalReaderClient(opts ...func(options *ExternalReaderClientOptions)) (ExternalReaderClient, error) {
+	o := ExternalReaderClientOptions{}
 	for _, f := range opts {
 		f(&o)
 	}
@@ -63,27 +71,25 @@ func NewExternalReaderRuntime(ctx context.Context, opts ...func(options *Externa
 		o.ResponseWriter = os.Stdout
 	}
 
-	return &externalReaderRuntime{
-		ExternalReaderRuntimeOptions: o,
-		in:                           make(chan msgapi.IncomingMessage),
-		out:                          make(chan msgapi.OutgoingMessage),
-		closed:                       make(chan error),
+	return &externalReaderClient{
+		ExternalReaderClientOptions: o,
+		in:                          make(chan msgapi.IncomingMessage),
+		out:                         make(chan msgapi.OutgoingMessage),
+		closed:                      make(chan error),
 	}, nil
 }
 
-type externalReaderRuntime struct {
-	ExternalReaderRuntimeOptions
+type externalReaderClient struct {
+	ExternalReaderClientOptions
 	in     chan msgapi.IncomingMessage
 	out    chan msgapi.OutgoingMessage
 	closed chan error
 	exited atomicBool
 }
 
-var _ ExternalReaderRuntime = (*externalReaderRuntime)(nil)
+var _ ExternalReaderClient = (*externalReaderClient)(nil)
 
-func (r *externalReaderRuntime) Run() error {
-	// XXX Does it mae sense to check if RequestReader/Write are TTYs and throw an error if so?
-
+func (r *externalReaderClient) Run() error {
 	internal.Debug("Starting external reader runtime")
 	for _, reader := range r.ModuleReaders {
 		internal.Debug("Registered module reader of type %T for scheme %q", reader, reader.Scheme())
@@ -99,14 +105,14 @@ func (r *externalReaderRuntime) Run() error {
 	return <-r.closed
 }
 
-func (r *externalReaderRuntime) Close() {
+func (r *externalReaderClient) Close() {
 	r.exited.set(true)
 	close(r.in)
 	close(r.out)
 	close(r.closed)
 }
 
-func (r *externalReaderRuntime) readIncomingMessages() {
+func (r *externalReaderClient) readIncomingMessages() {
 	dec := msgpack.NewDecoder(r.RequestReader)
 	for {
 		msg, err := msgapi.Decode(dec)
@@ -122,7 +128,7 @@ func (r *externalReaderRuntime) readIncomingMessages() {
 	}
 }
 
-func (r *externalReaderRuntime) handleSendMessages() {
+func (r *externalReaderClient) handleSendMessages() {
 	for msg := range r.out {
 		internal.Debug("Sending message: %#v", msg)
 		b, err := msg.ToMsgPack()
@@ -142,7 +148,7 @@ func (r *externalReaderRuntime) handleSendMessages() {
 	}
 }
 
-func (r *externalReaderRuntime) listen() {
+func (r *externalReaderClient) listen() {
 	for msg := range r.in {
 		switch msg := msg.(type) {
 		case *msgapi.InitializeModuleReader:
@@ -163,7 +169,7 @@ func (r *externalReaderRuntime) listen() {
 	}
 }
 
-func (r *externalReaderRuntime) handleInitializeModuleReader(msg *msgapi.InitializeModuleReader) {
+func (r *externalReaderClient) handleInitializeModuleReader(msg *msgapi.InitializeModuleReader) {
 	for _, reader := range r.ModuleReaders {
 		if reader.Scheme() == msg.Scheme {
 			r.out <- &msgapi.InitializeModuleReaderResponse{
@@ -183,7 +189,7 @@ func (r *externalReaderRuntime) handleInitializeModuleReader(msg *msgapi.Initial
 	}
 }
 
-func (r *externalReaderRuntime) handleInitializeResourceReader(msg *msgapi.InitializeResourceReader) {
+func (r *externalReaderClient) handleInitializeResourceReader(msg *msgapi.InitializeResourceReader) {
 	for _, reader := range r.ResourceReaders {
 		if reader.Scheme() == msg.Scheme {
 			r.out <- &msgapi.InitializeResourceReaderResponse{
@@ -202,7 +208,7 @@ func (r *externalReaderRuntime) handleInitializeResourceReader(msg *msgapi.Initi
 	}
 }
 
-func (r *externalReaderRuntime) handleReadResource(msg *msgapi.ReadResource) {
+func (r *externalReaderClient) handleReadResource(msg *msgapi.ReadResource) {
 	response := &msgapi.ReadResourceResponse{EvaluatorId: msg.EvaluatorId, RequestId: msg.RequestId}
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
@@ -230,7 +236,7 @@ func (r *externalReaderRuntime) handleReadResource(msg *msgapi.ReadResource) {
 	r.out <- response
 }
 
-func (r *externalReaderRuntime) handleReadModule(msg *msgapi.ReadModule) {
+func (r *externalReaderClient) handleReadModule(msg *msgapi.ReadModule) {
 	response := &msgapi.ReadModuleResponse{EvaluatorId: msg.EvaluatorId, RequestId: msg.RequestId}
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
@@ -257,7 +263,7 @@ func (r *externalReaderRuntime) handleReadModule(msg *msgapi.ReadModule) {
 	r.out <- response
 }
 
-func (r *externalReaderRuntime) handleListResources(msg *msgapi.ListResources) {
+func (r *externalReaderClient) handleListResources(msg *msgapi.ListResources) {
 	response := &msgapi.ListResourcesResponse{EvaluatorId: msg.EvaluatorId, RequestId: msg.RequestId}
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
@@ -291,7 +297,7 @@ func (r *externalReaderRuntime) handleListResources(msg *msgapi.ListResources) {
 	r.out <- response
 }
 
-func (r *externalReaderRuntime) handleListModules(msg *msgapi.ListModules) {
+func (r *externalReaderClient) handleListModules(msg *msgapi.ListModules) {
 	response := &msgapi.ListModulesResponse{EvaluatorId: msg.EvaluatorId, RequestId: msg.RequestId}
 	u, err := url.Parse(msg.Uri)
 	if err != nil {

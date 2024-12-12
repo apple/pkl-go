@@ -120,13 +120,13 @@ type EvaluatorOptions struct {
 
 	// ExternalModuleReaders registers external commands that implement module reader schemes.
 	//
-	// Added in Pkl 0.27
+	// Added in Pkl 0.27.
 	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
 	ExternalModuleReaders map[string]ExternalReader
 
 	// ExternalResourceReaders registers external commands that implement resource reader schemes.
 	//
-	// Added in Pkl 0.27
+	// Added in Pkl 0.27.
 	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
 	ExternalResourceReaders map[string]ExternalReader
 }
