@@ -27,14 +27,14 @@ import (
 )
 
 func main() {
-	runtime, err := pkl.NewExternalReaderClient(func(opts *pkl.ExternalReaderClientOptions) {
+	client, err := pkl.NewExternalReaderClient(func(opts *pkl.ExternalReaderClientOptions) {
 		opts.ResourceReaders = append(opts.ResourceReaders, fibReader{})
 	})
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := runtime.Run(); err != nil {
+	if err := client.Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
