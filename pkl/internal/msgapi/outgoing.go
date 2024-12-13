@@ -66,21 +66,24 @@ type ModuleReader struct {
 }
 
 type CreateEvaluator struct {
-	RequestId        int64                `msgpack:"requestId"`
-	ResourceReaders  []*ResourceReader    `msgpack:"clientResourceReaders,omitempty"`
-	ModuleReaders    []*ModuleReader      `msgpack:"clientModuleReaders,omitempty"`
-	ModulePaths      []string             `msgpack:"modulePaths,omitempty"`
-	Env              map[string]string    `msgpack:"env,omitempty"`
-	Properties       map[string]string    `msgpack:"properties,omitempty"`
-	OutputFormat     string               `msgpack:"outputFormat,omitempty"`
-	AllowedModules   []string             `msgpack:"allowedModules,omitempty"`
-	AllowedResources []string             `msgpack:"allowedResources,omitempty"`
-	RootDir          string               `msgpack:"rootDir,omitempty"`
-	CacheDir         string               `msgpack:"cacheDir,omitempty"`
-	Project          *ProjectOrDependency `msgpack:"project,omitempty"`
-	Http             *Http                `msgpack:"http,omitempty"`
+	RequestId              int64                `msgpack:"requestId"`
+	ResourceReaders        []*ResourceReader    `msgpack:"clientResourceReaders,omitempty"`
+	ModuleReaders          []*ModuleReader      `msgpack:"clientModuleReaders,omitempty"`
+	ExternalReaderCommands [][]string           `msgpack:"externalReaderCommands,omitempty"`
+	ModulePaths            []string             `msgpack:"modulePaths,omitempty"`
+	Env                    map[string]string    `msgpack:"env,omitempty"`
+	Properties             map[string]string    `msgpack:"properties,omitempty"`
+	OutputFormat           string               `msgpack:"outputFormat,omitempty"`
+	AllowedModules         []string             `msgpack:"allowedModules,omitempty"`
+	AllowedResources       []string             `msgpack:"allowedResources,omitempty"`
+	RootDir                string               `msgpack:"rootDir,omitempty"`
+	CacheDir               string               `msgpack:"cacheDir,omitempty"`
+	Project                *ProjectOrDependency `msgpack:"project,omitempty"`
+	Http                   *Http                `msgpack:"http,omitempty"`
 	// Intentionally not used right now. Go has `context.WithTimeout` which is a more canonical way to handle timeouts.
-	TimeoutSeconds int64 `msgpack:"timeoutSeconds,omitempty"`
+	TimeoutSeconds          int64                      `msgpack:"timeoutSeconds,omitempty"`
+	ExternalModuleReaders   map[string]*ExternalReader `msgpack:"externalModuleReaders,omitempty"`
+	ExternalResourceReaders map[string]*ExternalReader `msgpack:"externalResourceReaders,omitempty"`
 }
 
 type ProjectOrDependency struct {
@@ -99,6 +102,11 @@ type Http struct {
 type Proxy struct {
 	Address string   `msgpack:"address,omitempty"`
 	NoProxy []string `msgpack:"noProxy,omitempty"`
+}
+
+type ExternalReader struct {
+	Executable string   `msgpack:"executable"`
+	Arguments  []string `msgpack:"arguments,omitempty"`
 }
 
 type Checksums struct {
@@ -176,4 +184,22 @@ func (msg ListModulesResponse) ToMsgPack() ([]byte, error) {
 type PathElement struct {
 	Name        string `msgpack:"name"`
 	IsDirectory bool   `msgpack:"isDirectory"`
+}
+
+type InitializeModuleReaderResponse struct {
+	RequestId int64         `msgpack:"requestId"`
+	Spec      *ModuleReader `msgpack:"spec,omitempty"`
+}
+
+func (msg InitializeModuleReaderResponse) ToMsgPack() ([]byte, error) {
+	return packMessage(msg, codeInitializeModuleReaderResponse)
+}
+
+type InitializeResourceReaderResponse struct {
+	RequestId int64           `msgpack:"requestId"`
+	Spec      *ResourceReader `msgpack:"spec,omitempty"`
+}
+
+func (msg InitializeResourceReaderResponse) ToMsgPack() ([]byte, error) {
+	return packMessage(msg, codeInitializeResourceReaderResponse)
 }

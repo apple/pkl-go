@@ -14,24 +14,30 @@
 // limitations under the License.
 // ===----------------------------------------------------------------------===//
 
-package internal
+//go:build unix
+// +build unix
+
+package pkl
 
 import (
-	"fmt"
 	"os"
+	"os/exec"
+	"syscall"
 )
 
-var DebugEnabled bool
-
-func init() {
-	if value, exists := os.LookupEnv("PKL_DEBUG"); exists && value == "1" {
-		DebugEnabled = true
-	}
+func (e *execEvaluator) getStartCommand() *exec.Cmd {
+	exe, arg := e.getCommandAndArgStrings()
+	cmd := exec.Command(exe, append(arg, "server")...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	return cmd
 }
 
-// Debug writes debugging messages if PKL_DEBUG is set to 1.
-func Debug(format string, a ...any) {
-	if DebugEnabled {
-		_, _ = os.Stderr.WriteString("[pkl-go] " + fmt.Sprintf(format, a...) + "\n")
+// killProcess kills the process's entire group
+func killProcess(proc *os.Process) error {
+	pgid, err := syscall.Getpgid(proc.Pid)
+	if err != nil {
+		return err
 	}
+	// negative pid indicates to send the signal to the whole pg
+	return syscall.Kill(-pgid, syscall.SIGKILL)
 }

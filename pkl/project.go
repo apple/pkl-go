@@ -1,3 +1,19 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+
 package pkl
 
 import (
@@ -49,17 +65,19 @@ type ProjectPackage struct {
 
 // ProjectEvaluatorSettings is the Go representation of pkl.EvaluatorSettings
 type ProjectEvaluatorSettings struct {
-	ExternalProperties map[string]string             `pkl:"externalProperties"`
-	Env                map[string]string             `pkl:"env"`
-	AllowedModules     []string                      `pkl:"allowedModules"`
-	AllowedResources   []string                      `pkl:"allowedResources"`
-	NoCache            *bool                         `pkl:"noCache"`
-	ModulePath         []string                      `pkl:"modulePath"`
-	Timeout            Duration                      `pkl:"timeout"`
-	ModuleCacheDir     string                        `pkl:"moduleCacheDir"`
-	RootDir            string                        `pkl:"rootDir"`
-	Http               *ProjectEvaluatorSettingsHttp `pkl:"http"`
-	Color              string                        `pkl:"color"`
+	ExternalProperties      map[string]string                                `pkl:"externalProperties"`
+	Env                     map[string]string                                `pkl:"env"`
+	AllowedModules          *[]string                                        `pkl:"allowedModules"`
+	AllowedResources        *[]string                                        `pkl:"allowedResources"`
+	NoCache                 *bool                                            `pkl:"noCache"`
+	ModulePath              []string                                         `pkl:"modulePath"`
+	Timeout                 Duration                                         `pkl:"timeout"`
+	ModuleCacheDir          string                                           `pkl:"moduleCacheDir"`
+	RootDir                 string                                           `pkl:"rootDir"`
+	Http                    *ProjectEvaluatorSettingsHttp                    `pkl:"http"`
+	Color                   string                                           `pkl:"color"`
+	ExternalModuleReaders   map[string]ProjectEvaluatorSettingExternalReader `pkl:"externalModuleReaders"`
+	ExternalResourceReaders map[string]ProjectEvaluatorSettingExternalReader `pkl:"externalResourceReaders"`
 }
 
 // ProjectEvaluatorSettingsHttp is the Go representation of pkl.EvaluatorSettings.Http
@@ -71,6 +89,12 @@ type ProjectEvaluatorSettingsHttp struct {
 type ProjectEvaluatorSettingsProxy struct {
 	Address *string   `pkl:"address"`
 	NoProxy *[]string `pkl:"noProxy"`
+}
+
+// ProjectEvaluatorSettingExternalReader is the Go representation of pkl.EvaluatorSettings.ExternalReader
+type ProjectEvaluatorSettingExternalReader struct {
+	Executable string   `pkl:"executable"`
+	Arguments  []string `pkl:"arguments"`
 }
 
 func (project *Project) Dependencies() *ProjectDependencies {

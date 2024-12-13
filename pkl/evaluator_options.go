@@ -117,6 +117,18 @@ type EvaluatorOptions struct {
 	// Added in Pkl 0.26.
 	// If the underlying Pkl does not support HTTP options, NewEvaluator will return with an error.
 	Http *Http
+
+	// ExternalModuleReaders registers external commands that implement module reader schemes.
+	//
+	// Added in Pkl 0.27.
+	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
+	ExternalModuleReaders map[string]ExternalReader
+
+	// ExternalResourceReaders registers external commands that implement resource reader schemes.
+	//
+	// Added in Pkl 0.27.
+	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
+	ExternalResourceReaders map[string]ExternalReader
 }
 
 type ProjectRemoteDependency struct {
@@ -251,37 +263,37 @@ func (p *Proxy) toMessage() *msgapi.Proxy {
 	}
 }
 
+type ExternalReader struct {
+	Executable string
+	Arguments  []string
+}
+
+func (r *ExternalReader) toMessage() *msgapi.ExternalReader {
+	if r == nil {
+		return nil
+	}
+	return &msgapi.ExternalReader{
+		Executable: r.Executable,
+		Arguments:  r.Arguments,
+	}
+}
+
 func (e *EvaluatorOptions) toMessage() *msgapi.CreateEvaluator {
-	var resourceReaders []*msgapi.ResourceReader
-	for _, reader := range e.ResourceReaders {
-		resourceReaders = append(resourceReaders, &msgapi.ResourceReader{
-			Scheme:              reader.Scheme(),
-			IsGlobbable:         reader.IsGlobbable(),
-			HasHierarchicalUris: reader.HasHierarchicalUris(),
-		})
-	}
-	var moduleReaders []*msgapi.ModuleReader
-	for _, reader := range e.ModuleReaders {
-		moduleReaders = append(moduleReaders, &msgapi.ModuleReader{
-			Scheme:              reader.Scheme(),
-			IsGlobbable:         reader.IsGlobbable(),
-			HasHierarchicalUris: reader.HasHierarchicalUris(),
-			IsLocal:             reader.IsLocal(),
-		})
-	}
 	return &msgapi.CreateEvaluator{
-		ResourceReaders:  resourceReaders,
-		ModuleReaders:    moduleReaders,
-		Env:              e.Env,
-		Properties:       e.Properties,
-		ModulePaths:      e.ModulePaths,
-		AllowedModules:   e.AllowedModules,
-		AllowedResources: e.AllowedResources,
-		CacheDir:         e.CacheDir,
-		OutputFormat:     e.OutputFormat,
-		RootDir:          e.RootDir,
-		Project:          e.project(),
-		Http:             e.Http.toMessage(),
+		ResourceReaders:         resourceReadersToMessage(e.ResourceReaders),
+		ModuleReaders:           moduleReadersToMessage(e.ModuleReaders),
+		Env:                     e.Env,
+		Properties:              e.Properties,
+		ModulePaths:             e.ModulePaths,
+		AllowedModules:          e.AllowedModules,
+		AllowedResources:        e.AllowedResources,
+		CacheDir:                e.CacheDir,
+		OutputFormat:            e.OutputFormat,
+		RootDir:                 e.RootDir,
+		Project:                 e.project(),
+		Http:                    e.Http.toMessage(),
+		ExternalModuleReaders:   externalReadersToMessage(e.ExternalModuleReaders),
+		ExternalResourceReaders: externalReadersToMessage(e.ExternalResourceReaders),
 	}
 }
 
@@ -316,6 +328,9 @@ func buildEvaluatorOptions(version *semver, fns ...func(*EvaluatorOptions)) (*Ev
 	o.AllowedModules = append(o.AllowedModules, "repl:text")
 	if o.Http != nil && pklVersion0_26.isGreaterThan(version) {
 		return nil, fmt.Errorf("http options are not supported on Pkl versions lower than 0.26")
+	}
+	if (len(o.ExternalModuleReaders) > 0 || len(o.ExternalResourceReaders) > 0) && pklVersion0_27.isGreaterThan(version) {
+		return nil, fmt.Errorf("external reader options are not supported on Pkl versions lower than 0.27")
 	}
 	return o, nil
 }
@@ -394,14 +409,45 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 		}
 		opts.Properties = evaluatorSettings.ExternalProperties
 		opts.Env = evaluatorSettings.Env
-		opts.AllowedModules = evaluatorSettings.AllowedModules
-		opts.AllowedResources = evaluatorSettings.AllowedResources
+		if evaluatorSettings.AllowedModules != nil {
+			opts.AllowedModules = *evaluatorSettings.AllowedModules
+		}
+		if evaluatorSettings.AllowedResources != nil {
+			opts.AllowedResources = *evaluatorSettings.AllowedResources
+		}
 		if evaluatorSettings.NoCache != nil && *evaluatorSettings.NoCache {
 			opts.CacheDir = ""
 		} else {
 			opts.CacheDir = evaluatorSettings.ModuleCacheDir
 		}
 		opts.RootDir = evaluatorSettings.RootDir
+		if evaluatorSettings.Http != nil {
+			opts.Http = &Http{}
+			if evaluatorSettings.Http.Proxy != nil {
+				opts.Http.Proxy = &Proxy{NoProxy: opts.Http.Proxy.NoProxy}
+				if evaluatorSettings.Http.Proxy.Address != nil {
+					opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
+				}
+			}
+		}
+		if evaluatorSettings.ExternalModuleReaders != nil {
+			opts.ExternalModuleReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalModuleReaders))
+			for scheme, reader := range evaluatorSettings.ExternalModuleReaders {
+				opts.ExternalModuleReaders[scheme] = ExternalReader(reader)
+				if evaluatorSettings.AllowedModules == nil { // if no explicit allowed modules are set in the project, allow declared external module readers
+					opts.AllowedModules = append(opts.AllowedModules, scheme+":")
+				}
+			}
+		}
+		if evaluatorSettings.ExternalResourceReaders != nil {
+			opts.ExternalResourceReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalResourceReaders))
+			for scheme, reader := range evaluatorSettings.ExternalResourceReaders {
+				opts.ExternalResourceReaders[scheme] = ExternalReader(reader)
+				if evaluatorSettings.AllowedResources == nil { // if no explicit allowed resources are set in the project, allow declared external resource readers
+					opts.AllowedResources = append(opts.AllowedResources, scheme+":")
+				}
+			}
+		}
 	}
 }
 
@@ -417,6 +463,26 @@ var WithProject = func(project *Project) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
 		WithProjectEvaluatorSettings(project)(opts)
 		WithProjectDependencies(project)(opts)
+	}
+}
+
+var WithExternalModuleReader = func(scheme string, spec ExternalReader) func(opts *EvaluatorOptions) {
+	return func(opts *EvaluatorOptions) {
+		if opts.ExternalModuleReaders == nil {
+			opts.ExternalModuleReaders = map[string]ExternalReader{}
+		}
+		opts.ExternalModuleReaders[scheme] = spec
+		opts.AllowedModules = append(opts.AllowedModules, scheme+":")
+	}
+}
+
+var WithExternalResourceReader = func(scheme string, spec ExternalReader) func(opts *EvaluatorOptions) {
+	return func(opts *EvaluatorOptions) {
+		if opts.ExternalResourceReaders == nil {
+			opts.ExternalResourceReaders = map[string]ExternalReader{}
+		}
+		opts.ExternalResourceReaders[scheme] = spec
+		opts.AllowedResources = append(opts.AllowedResources, scheme+":")
 	}
 }
 

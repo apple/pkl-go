@@ -14,24 +14,19 @@
 // limitations under the License.
 // ===----------------------------------------------------------------------===//
 
-package internal
+package pkl
 
 import (
-	"fmt"
 	"os"
+	"os/exec"
+	"strconv"
 )
 
-var DebugEnabled bool
-
-func init() {
-	if value, exists := os.LookupEnv("PKL_DEBUG"); exists && value == "1" {
-		DebugEnabled = true
-	}
+func (e *execEvaluator) getStartCommand() *exec.Cmd {
+	cmd, arg := e.getCommandAndArgStrings()
+	return exec.Command(cmd, append(arg, "server")...)
 }
 
-// Debug writes debugging messages if PKL_DEBUG is set to 1.
-func Debug(format string, a ...any) {
-	if DebugEnabled {
-		_, _ = os.Stderr.WriteString("[pkl-go] " + fmt.Sprintf(format, a...) + "\n")
-	}
+func killProcess(proc *os.Process) error {
+	return exec.Command("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(proc.Pid)).Run()
 }
