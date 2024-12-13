@@ -18,6 +18,7 @@ type Project struct {
 	Package           *ProjectPackage           `pkl:"package"`
 	EvaluatorSettings *ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
 	Tests             []string                  `pkl:"tests"`
+	Annotations       []Object                  `pkl:"annotations"`
 
 	// internal field; use Project.Dependencies instead.
 	// values are either *Project or *ProjectRemoteDependency
@@ -58,6 +59,7 @@ type ProjectEvaluatorSettings struct {
 	ModuleCacheDir     string                        `pkl:"moduleCacheDir"`
 	RootDir            string                        `pkl:"rootDir"`
 	Http               *ProjectEvaluatorSettingsHttp `pkl:"http"`
+	Color              string                        `pkl:"color"`
 }
 
 // ProjectEvaluatorSettingsHttp is the Go representation of pkl.EvaluatorSettings.Http

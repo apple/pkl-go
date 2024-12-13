@@ -21,6 +21,7 @@ local class PklDistribution {
 local pklDistributions: Listing<PklDistribution> = new {
   new { version = "0.25.3" }
   new { version = "0.26.0" }
+  new { version = "0.27.1" }
 }
 
 release = (buildWorkflow) {

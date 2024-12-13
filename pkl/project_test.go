@@ -10,6 +10,7 @@ import (
 )
 
 const project1Contents = `
+@ModuleInfo { minPklVersion = "0.25.0" }
 amends "pkl:Project"
 
 evaluatorSettings {
