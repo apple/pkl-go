@@ -24,11 +24,8 @@ import (
 var debugEnabled bool
 
 func init() {
-	for _, env := range os.Environ() {
-		if env == "PKL_DEBUG=1" {
-			debugEnabled = true
-			break
-		}
+	if value, exists := os.LookupEnv("PKL_DEBUG"); exists && value == "1" {
+		debugEnabled = true
 	}
 }
 
