@@ -39,6 +39,7 @@ fibErrC = test.catch(() -> read("fib:-10"))
 
 func TestExternalReaderE2E(t *testing.T) {
 	manager := NewEvaluatorManager()
+	defer manager.Close()
 	version, err := manager.(*evaluatorManager).getVersion()
 	if err != nil {
 		t.Fatal(err)

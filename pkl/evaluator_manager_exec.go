@@ -127,11 +127,6 @@ func (e *execEvaluator) getCommandAndArgStrings() (string, []string) {
 	return "pkl", []string{}
 }
 
-func (e *execEvaluator) getStartCommand() *exec.Cmd {
-	cmd, arg := e.getCommandAndArgStrings()
-	return exec.Command(cmd, append(arg, "server")...)
-}
-
 func (e *execEvaluator) init() error {
 	e.cmd = e.getStartCommand()
 	e.cmd.Env = os.Environ()
@@ -182,13 +177,12 @@ func (e *execEvaluator) readIncomingMessages(stdout io.Reader) {
 	}
 }
 
-func (e *execEvaluator) handleSendMessages(stdin io.Writer) {
+func (e *execEvaluator) handleSendMessages(stdin io.WriteCloser) {
+	defer stdin.Close()
+
 	for msg := range e.out {
 		internal.Debug("Sending message: %#v", msg)
 		b, err := msg.ToMsgPack()
-		if e.exited.get() {
-			return
-		}
 		if err != nil {
 			e.closed <- &InternalError{err: err}
 			return
@@ -211,22 +205,14 @@ func (e *execEvaluator) deinit() error {
 	close(e.out)
 	close(e.closed)
 
-	pid := e.cmd.Process.Pid
-	if err := e.interruptProcess(); err != nil {
-		internal.Debug("Failed to interrupt process %d: %v", pid, err)
-	}
-	return e.enforceKillOnTimeout(pid)
+	return e.enforceKillOnTimeout()
 }
 
-func (e *execEvaluator) interruptProcess() error {
-	return e.cmd.Process.Signal(os.Interrupt)
-}
-
-func (e *execEvaluator) enforceKillOnTimeout(pid int) error {
+func (e *execEvaluator) enforceKillOnTimeout() error {
 	select {
 	case <-time.After(5 * time.Second):
-		if err := e.cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("failed to kill process %d: %v", pid, err)
+		if err := killProcess(e.cmd.Process); err != nil {
+			return fmt.Errorf("failed to kill process %d: %v", e.cmd.Process.Pid, err)
 		}
 	case <-e.processDone:
 		// The process has finished
