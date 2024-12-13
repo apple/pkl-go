@@ -90,7 +90,7 @@ type externalReaderClient struct {
 var _ ExternalReaderClient = (*externalReaderClient)(nil)
 
 func (r *externalReaderClient) Run() error {
-	internal.Debug("Starting external reader runtime")
+	internal.Debug("Starting external reader client")
 	for _, reader := range r.ModuleReaders {
 		internal.Debug("Registered module reader of type %T for scheme %q", reader, reader.Scheme())
 	}

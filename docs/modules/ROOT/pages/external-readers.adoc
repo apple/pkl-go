@@ -2,7 +2,7 @@
 
 pkl-go provides APIs that aid in implementing xref:main:language-reference:index.adoc#external-readers[External Readers].
 In this mode of execution, the program built with pkl-go runs as a child process of the Pkl evaluator, rather than a parent process.
-The https://pkg.go.dev/github.com/apple/pkl-go/pkl#ExternalReaderRuntime[`pkl.ExternalReaderRuntime`] type provides a set of tools for building external readers.
+The https://pkg.go.dev/github.com/apple/pkl-go/pkl#ExternalReaderClient[`pkl.ExternalReaderClient`] type provides a set of tools for building external readers.
 
 Much like implementing xref:ROOT:evaluation.adoc#custom-readers[Custom Readers], external readers are implemented by providing one or more instances of the https://pkg.go.dev/github.com/apple/pkl-go/pkl#ResourceReader[`pkl.ResourceReader`] and https://pkg.go.dev/github.com/apple/pkl-go/pkl#ModuleReader[`pkl.ModuleReader`] interfaces.
 
@@ -16,18 +16,19 @@ This simple reader implementation reads the specified environment variable:
 package main
 
 import (
+	"log"
+	"net/url"
+	"os"
+
 	"github.com/apple/pkl-go/pkl"
 )
 
 func main() {
-	runtime, err := pkl.NewExternalReaderClient(func(opts *pkl.ExternalReaderClientOptions) {
-		opts.ResourceReaders = append(opts.ResourceReaders, myReader{})
-	})
+	client, err := pkl.NewExternalReaderClient(pkl.WithExternalClientResourceReader(myReader{}))
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	if err := runtime.Run(); err != nil {
+	if err := client.Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
