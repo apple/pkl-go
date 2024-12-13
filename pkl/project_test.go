@@ -10,6 +10,7 @@ import (
 )
 
 const project1Contents = `
+@ModuleInfo { minPklVersion = "0.25.0" }
 amends "pkl:Project"
 
 evaluatorSettings {
@@ -129,6 +130,20 @@ func TestLoadProject(t *testing.T) {
 	if assert.NoError(t, err) {
 		t.Run("projectFileUri", func(t *testing.T) {
 			assert.Equal(t, fmt.Sprintf("file://%s/hawks/PklProject", tempDir), project.ProjectFileUri)
+		})
+
+		t.Run("annotations", func(t *testing.T) {
+			manager := NewEvaluatorManager()
+			defer manager.Close()
+			version, err := manager.(*evaluatorManager).getVersion()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if version.isLessThan(pklVersion0_27) {
+				t.SkipNow()
+			}
+			assert.Len(t, project.Annotations, 1)
+			assert.Equal(t, project.Annotations[0].Properties["minPklVersion"], "0.25.0")
 		})
 
 		t.Run("evaluatorSettings", func(t *testing.T) {

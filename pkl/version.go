@@ -17,6 +17,9 @@ var pklVersion0_25 = mustParseSemver("0.25.0")
 //goland:noinspection GoSnakeCaseUsage
 var pklVersion0_26 = mustParseSemver("0.26.0")
 
+//goland:noinspection GoSnakeCaseUsage
+var pklVersion0_27 = mustParseSemver("0.27.0")
+
 type semver struct {
 	major                 int
 	minor                 int
@@ -103,6 +106,10 @@ func (s *semver) compareTo(other *semver) int {
 
 func (s *semver) isGreaterThan(other *semver) bool {
 	return s.compareTo(other) > 0
+}
+
+func (s *semver) isLessThan(other *semver) bool {
+	return s.compareTo(other) < 0
 }
 
 func (s *semver) String() string {
