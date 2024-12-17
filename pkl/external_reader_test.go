@@ -71,9 +71,9 @@ func TestExternalReaderE2E(t *testing.T) {
 
 	output, err := evaluator.EvaluateOutputText(context.Background(), FileSource(tempDir+"/test.pkl"))
 	assert.NoError(t, err)
-	assert.Equal(t, output, `fib5 = 3
-fib10 = 34
-fib100 = 4181
+	assert.Equal(t, output, `fib5 = 5
+fib10 = 55
+fib100 = 6765
 fibErrA = "I/O error reading resource `+"`fib:%20`"+`. IOException: input uri must be in format fib:<positive integer>: non-positive value"
 fibErrB = "I/O error reading resource `+"`fib:abc`"+`. IOException: input uri must be in format fib:<positive integer>: non-positive value"
 fibErrC = "I/O error reading resource `+"`fib:-10`"+`. IOException: input uri must be in format fib:<positive integer>: non-positive value"
