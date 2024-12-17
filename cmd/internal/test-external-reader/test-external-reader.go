@@ -60,28 +60,21 @@ func (r fibReader) ListElements(baseURI url.URL) ([]pkl.PathElement, error) {
 }
 
 func (r fibReader) Read(uri url.URL) ([]byte, error) {
-	i, err := strconv.Atoi(uri.Opaque)
-	if i <= 0 {
+	n, err := strconv.Atoi(uri.Opaque)
+	if n <= 0 {
 		err = errors.New("non-positive value")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("input uri must be in format fib:<positive integer>: %w", err)
 	}
 
-	fib := fibonacci()
-	result := 0
-	for range i {
-		result = fib()
-	}
-
-	return []byte(strconv.Itoa(result)), nil
+	return []byte(strconv.Itoa(fibonacci(n))), nil
 }
 
-func fibonacci() func() int {
+func fibonacci(n int) int {
 	f0, f1 := 0, 1
-	return func() int {
-		result := f0
+	for range n {
 		f0, f1 = f1, f0+f1
-		return result
 	}
+	return f0
 }
