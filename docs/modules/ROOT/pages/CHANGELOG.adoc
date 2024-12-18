@@ -14,7 +14,7 @@
 
 === Fixes
 
-* Fixes a memory leak where `NewProjectEvaluatorWithCommand` creates an ephemeral evaluator but does not close it (https://github.com/apple/pkl-go/pull/112[#112]).
+* Fix a memory leak where `NewProjectEvaluatorWithCommand` creates an ephemeral evaluator but does not close it (https://github.com/apple/pkl-go/pull/112[#112]).
 
 === Contributors ❤️
 
