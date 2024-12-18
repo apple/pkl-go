@@ -175,13 +175,7 @@ func (e *evaluator) handleReadResource(msg *msgapi.ReadResource) {
 		e.manager.impl.outChan() <- response
 		return
 	}
-	var reader ResourceReader
-	for _, r := range e.resourceReaders {
-		if r.Scheme() == u.Scheme {
-			reader = r
-			break
-		}
-	}
+	reader := e.findResourceReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No resource reader found for scheme `%s`", u.Scheme)
 		e.manager.impl.outChan() <- response
@@ -203,13 +197,7 @@ func (e *evaluator) handleReadModule(msg *msgapi.ReadModule) {
 		e.manager.impl.outChan() <- response
 		return
 	}
-	var reader ModuleReader
-	for _, r := range e.moduleReaders {
-		if r.Scheme() == u.Scheme {
-			reader = r
-			break
-		}
-	}
+	reader := e.findModuleReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No module reader found for scheme `%s`", u.Scheme)
 		e.manager.impl.outChan() <- response
@@ -258,15 +246,6 @@ func (e *evaluator) handleListResources(msg *msgapi.ListResources) {
 	e.manager.impl.outChan() <- response
 }
 
-func (e *evaluator) findResourceReader(scheme string) ResourceReader {
-	for _, r := range e.resourceReaders {
-		if r.Scheme() == scheme {
-			return r
-		}
-	}
-	return nil
-}
-
 func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 	response := &msgapi.ListModulesResponse{EvaluatorId: e.evaluatorId, RequestId: msg.RequestId}
 	u, err := url.Parse(msg.Uri)
@@ -275,13 +254,7 @@ func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 		e.manager.impl.outChan() <- response
 		return
 	}
-	var reader ModuleReader
-	for _, r := range e.moduleReaders {
-		if r.Scheme() == u.Scheme {
-			reader = r
-			break
-		}
-	}
+	reader := e.findModuleReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No module reader found for scheme `%s`", u.Scheme)
 		e.manager.impl.outChan() <- response
@@ -299,6 +272,24 @@ func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 		}
 	}
 	e.manager.impl.outChan() <- response
+}
+
+func (e *evaluator) findModuleReader(scheme string) ModuleReader {
+	for _, r := range e.moduleReaders {
+		if r.Scheme() == scheme {
+			return r
+		}
+	}
+	return nil
+}
+
+func (e *evaluator) findResourceReader(scheme string) ResourceReader {
+	for _, r := range e.resourceReaders {
+		if r.Scheme() == scheme {
+			return r
+		}
+	}
+	return nil
 }
 
 type simpleEvaluator struct {
