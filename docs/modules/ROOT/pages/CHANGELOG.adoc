@@ -1,5 +1,28 @@
 = Changelog
 
+[[release-0.9.0]]
+== 0.9.0 (2024-12-18)
+
+=== Additions
+
+* Add new struct fields to match added standard library properties in Pkl 0.27 (https://github.com/apple/pkl-go/pull/101[#101], https://github.com/apple/pkl-go/pull/119[#119]).
+* Add a new API called `ExternalReaderClient`, which provides a way to write an external module or resource reader (https://github.com/apple/pkl-go/pull/101[#101]).
+
+=== Miscellaneous
+
+* Codebase improvements (https://github.com/apple/pkl-go/pull/110[#110], https://github.com/apple/pkl-go/pull/112[#112]).
+
+=== Fixes
+
+* Fixes a memory leak where `NewProjectEvaluatorWithCommand` creates an ephemeral evaluator but does not close it (https://github.com/apple/pkl-go/pull/112[#112]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/kasugamirai[@kasugamirai]
+* https://github.com/HT154[@HT154]
+
 [[release-0.8.1]]
 == 0.8.1 (2024-10-10)
 
