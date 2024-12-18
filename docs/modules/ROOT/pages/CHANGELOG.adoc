@@ -20,8 +20,8 @@
 
 Thank you to all the contributors for this release!
 
-* https://github.com/kasugamirai[@kasugamirai]
 * https://github.com/HT154[@HT154]
+* https://github.com/kasugamirai[@kasugamirai]
 
 [[release-0.8.1]]
 == 0.8.1 (2024-10-10)
