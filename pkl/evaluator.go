@@ -47,7 +47,7 @@ type Evaluator interface {
 
 	// EvaluateExpression evaluates the provided expression on the given module source, and writes
 	// the result into the value pointed by out.
-	EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out interface{}) error
+	EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out any) error
 
 	// EvaluateExpressionRaw evaluates the provided module, and returns the underlying value's raw
 	// bytes.
@@ -94,7 +94,7 @@ func (e *evaluator) EvaluateOutputFiles(ctx context.Context, source *ModuleSourc
 	return out, err
 }
 
-func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out interface{}) error {
+func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out any) error {
 	bytes, err := e.EvaluateExpressionRaw(ctx, source, expr)
 	if err != nil {
 		return err
