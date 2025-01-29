@@ -1,20 +1,20 @@
 // Code generated from Pkl module `ExtendingOpenClass`. DO NOT EDIT.
 package extendopenclass
 
-type MyClass interface {
-	MyOpenClass
+type IMyClass interface {
+	IMyOpenClass
 
 	GetMyBoolean() bool
 }
 
-var _ MyClass = (*MyClassImpl)(nil)
+var _ IMyClass = MyClass{}
 
-type MyClassImpl struct {
-	*MyOpenClassImpl
+type MyClass struct {
+	MyOpenClass
 
 	MyBoolean bool `pkl:"myBoolean"`
 }
 
-func (rcv *MyClassImpl) GetMyBoolean() bool {
+func (rcv MyClass) GetMyBoolean() bool {
 	return rcv.MyBoolean
 }

@@ -26,10 +26,10 @@ type Duration struct {
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Duration
-func LoadFromPath(ctx context.Context, path string) (ret *Duration, err error) {
+func LoadFromPath(ctx context.Context, path string) (ret Duration, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return Duration{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -42,10 +42,10 @@ func LoadFromPath(ctx context.Context, path string) (ret *Duration, err error) {
 }
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a Duration
-func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (*Duration, error) {
+func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (Duration, error) {
 	var ret Duration
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return Duration{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }

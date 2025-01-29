@@ -1,16 +1,16 @@
 // Code generated from Pkl module `ExtendingOpenClass`. DO NOT EDIT.
 package extendopenclass
 
-type MyOpenClass interface {
+type IMyOpenClass interface {
 	GetMyStr() string
 }
 
-var _ MyOpenClass = (*MyOpenClassImpl)(nil)
+var _ IMyOpenClass = MyOpenClass{}
 
-type MyOpenClassImpl struct {
+type MyOpenClass struct {
 	MyStr string `pkl:"myStr"`
 }
 
-func (rcv *MyOpenClassImpl) GetMyStr() string {
+func (rcv MyOpenClass) GetMyStr() string {
 	return rcv.MyStr
 }

@@ -7,19 +7,19 @@ import (
 	"github.com/apple/pkl-go/pkl"
 )
 
-type Override2 interface {
+type IOverride2 interface {
 	GetFoo() string
 }
 
-var _ Override2 = (*Override2Impl)(nil)
+var _ IOverride2 = Override2{}
 
-type Override2Impl struct {
+type Override2 struct {
 	// Doc comments
 	Foo string `pkl:"foo"`
 }
 
 // Doc comments
-func (rcv *Override2Impl) GetFoo() string {
+func (rcv Override2) GetFoo() string {
 	return rcv.Foo
 }
 
@@ -27,7 +27,7 @@ func (rcv *Override2Impl) GetFoo() string {
 func LoadFromPath(ctx context.Context, path string) (ret Override2, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return Override2{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -41,9 +41,9 @@ func LoadFromPath(ctx context.Context, path string) (ret Override2, err error) {
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a Override2
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (Override2, error) {
-	var ret Override2Impl
+	var ret Override2
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return Override2{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }
