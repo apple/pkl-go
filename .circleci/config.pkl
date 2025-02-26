@@ -88,6 +88,19 @@ jobs {
       }
     }
   }
+  ["test-license-headers"] {
+    docker {
+      new {
+        image = "ghcr.io/korandoru/hawkeye"
+      }
+    }
+    steps {
+      "checkout"
+      new RunStep {
+        command = "/bin/hawkeye check --fail-if-unknown"
+      }
+    }
+  }
   ["build-pkl-gen-go"] = (goJob) {
     steps {
       for (os in List("macos", "linux")) {
