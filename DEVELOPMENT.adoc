@@ -48,3 +48,14 @@ exec java -agentlib:jdwp=transport=dt_socket,server=n,address=127.0.0.1:5005,sus
 . Execute the process using pkl-go
 
 When the Pkl server execution reaches a defined breakpoint, it will pause and activate the debugger in IntelliJ.
+
+== Running hawkeye formatting
+
+This project uses https://github.com/korandoru/hawkeye[hawkeye] to format license headers.
+
+To run the formatter:
+
+[source,shell]
+----
+hawkeye format
+----

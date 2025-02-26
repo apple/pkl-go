@@ -63,6 +63,13 @@ jobs:
         path: test-results
     docker:
     - image: cimg/go:1.21
+  test-license-headers:
+    steps:
+    - checkout
+    - run:
+        command: /bin/hawkeye check --fail-if-unknown
+    docker:
+    - image: ghcr.io/korandoru/hawkeye
   build-pkl-gen-go:
     steps:
     - checkout
@@ -241,6 +248,9 @@ workflows:
     - test-pkl-0-27-1:
         requires:
         - hold
+    - test-license-headers:
+        requires:
+        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -250,16 +260,19 @@ workflows:
     - test-pkl-0-25-3
     - test-pkl-0-26-0
     - test-pkl-0-27-1
+    - test-license-headers
     - build-pkl-gen-go:
         requires:
         - test-pkl-0-25-3
         - test-pkl-0-26-0
         - test-pkl-0-27-1
+        - test-license-headers
     - build-pkl-package:
         requires:
         - test-pkl-0-25-3
         - test-pkl-0-26-0
         - test-pkl-0-27-1
+        - test-license-headers
     when:
       equal:
       - main
@@ -284,11 +297,18 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+    - test-license-headers:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - build-pkl-gen-go:
         requires:
         - test-pkl-0-25-3
         - test-pkl-0-26-0
         - test-pkl-0-27-1
+        - test-license-headers
         filters:
           branches:
             ignore: /.*/
@@ -299,6 +319,7 @@ workflows:
         - test-pkl-0-25-3
         - test-pkl-0-26-0
         - test-pkl-0-27-1
+        - test-license-headers
         filters:
           branches:
             ignore: /.*/

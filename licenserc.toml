@@ -1,0 +1,22 @@
+headerPath = "scripts/license-header.txt"
+
+includes = [
+    "*.go",
+    "*.pkl",
+    "*.sh",
+    "PklProject",
+]
+
+excludes = [
+    "pkl/test_fixtures/",
+    "codegen/snippet-tests",
+    "doc",
+    "*.pkl.go"
+]
+
+[git]
+attrs = 'enable'
+ignore = 'enable'
+
+[mapping.LINE_BLOCK_STYLE]
+extensions = ["go"]
