@@ -54,6 +54,13 @@ func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(op
 // because it lessens the overhead of each successive evaluator.
 func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
+	managerClosed := false
+	defer func() {
+		if !managerClosed {
+			manager.Close()
+		}
+	}()
+
 	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
@@ -73,6 +80,8 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklC
 	if err != nil {
 		return nil, err
 	}
+
+	managerClosed = true
 	return &simpleEvaluator{Evaluator: ev, manager: manager}, nil
 }
 
@@ -89,9 +98,18 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklC
 // because it lessens the overhead of each successive evaluator.
 func NewEvaluatorWithCommand(ctx context.Context, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
+	managerClosed := false
+	defer func() {
+		if !managerClosed {
+			manager.Close()
+		}
+	}()
+
 	ev, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
+
+	managerClosed = true
 	return &simpleEvaluator{Evaluator: ev, manager: manager}, nil
 }
