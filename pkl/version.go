@@ -130,10 +130,7 @@ func (s *semver) isLessThan(other *semver) bool {
 
 func (s *semver) String() string {
 	var builder strings.Builder
-	_, err := fmt.Fprintf(&builder, "%d.%d.%d", s.major, s.minor, s.patch)
-	if err != nil {
-		return ""
-	}
+	_, _ = fmt.Fprintf(&builder, "%d.%d.%d", s.major, s.minor, s.patch)
 	if s.prerelease != "" {
 		builder.WriteByte('-')
 		builder.WriteString(s.prerelease)
