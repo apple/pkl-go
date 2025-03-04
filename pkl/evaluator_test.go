@@ -92,7 +92,6 @@ func TestEvaluator(t *testing.T) {
 	projectDir := setupProject(t)
 
 	t.Run("EvaluateOutputText", func(t *testing.T) {
-		t.Parallel()
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputText(context.Background(), TextSource("foo { bar = 1 }"))
@@ -106,7 +105,6 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateOutputText - output format", func(t *testing.T) {
-		t.Parallel()
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
 			options.OutputFormat = "yaml"
 		})
@@ -118,7 +116,6 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateOutputFiles", func(t *testing.T) {
-		t.Parallel()
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputFiles(context.Background(), TextSource(`output {
@@ -137,7 +134,6 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateModule", func(t *testing.T) {
-		t.Parallel()
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
 			type MyModule struct {
@@ -155,7 +151,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom logger", func(t *testing.T) {
-		t.Parallel()
 		s := &stubLogger{}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
 			options.Logger = s
@@ -172,7 +167,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom resource reader", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualResourceReader{
 			scheme: "flintstone",
 			read: func(u url.URL) ([]byte, error) {
@@ -189,7 +183,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom resource reader error", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualResourceReader{
 			scheme: "flintstone",
 			read: func(url url.URL) ([]byte, error) {
@@ -207,7 +200,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom resource reader: globbing", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualResourceReader{
 			scheme: "flintstone",
 			read: func(u url.URL) ([]byte, error) {
@@ -256,7 +248,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom resource reader: glob error", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualResourceReader{
 			scheme: "flintstone",
 			read: func(u url.URL) ([]byte, error) {
@@ -278,7 +269,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom module reader", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualModuleReader{
 			scheme: "flintstone",
 			read: func(u url.URL) (string, error) {
@@ -295,7 +285,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom module reader error", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualModuleReader{
 			scheme: "flintstone",
 			read: func(u url.URL) (string, error) {
@@ -313,7 +302,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom module reader: triple-dot imports", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualModuleReader{
 			scheme:              "flintstone",
 			isGlobbable:         true,
@@ -345,7 +333,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom module reader: globbing", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualModuleReader{
 			scheme:              "flintstone",
 			isGlobbable:         true,
@@ -386,7 +373,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom module reader: glob error", func(t *testing.T) {
-		t.Parallel()
 		reader := &virtualModuleReader{
 			scheme:              "flintstone",
 			isGlobbable:         true,
@@ -408,7 +394,6 @@ bar: Int = 5
 	})
 
 	t.Run("custom fs", func(t *testing.T) {
-		t.Parallel()
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithFs(testFs, "testfs"))
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputText(context.Background(), UriSource("testfs:/test_fixtures/testfs/person.pkl"))
@@ -449,7 +434,6 @@ age = 43
 	})
 
 	t.Run("evaluate after close", func(t *testing.T) {
-		t.Parallel()
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
 			assert.NoError(t, ev.Close())
@@ -460,7 +444,6 @@ age = 43
 	})
 
 	t.Run("concurrent evaluations", func(t *testing.T) {
-		t.Parallel()
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if err != nil {
 			t.Fatal(err)
@@ -489,7 +472,6 @@ age = 43
 	})
 
 	t.Run("concurrent new evaluators", func(t *testing.T) {
-		t.Parallel()
 		cherr := make(chan error)
 		ch := make(chan Evaluator)
 		for i := 0; i < 5; i++ {
