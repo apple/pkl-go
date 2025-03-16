@@ -7,7 +7,7 @@ type Cat interface {
 	GetMeows() bool
 }
 
-var _ Cat = (*CatImpl)(nil)
+var _ Cat = CatImpl{}
 
 type CatImpl struct {
 	Meows bool `pkl:"meows"`
@@ -15,10 +15,10 @@ type CatImpl struct {
 	Name string `pkl:"name"`
 }
 
-func (rcv *CatImpl) GetMeows() bool {
+func (rcv CatImpl) GetMeows() bool {
 	return rcv.Meows
 }
 
-func (rcv *CatImpl) GetName() string {
+func (rcv CatImpl) GetName() string {
 	return rcv.Name
 }

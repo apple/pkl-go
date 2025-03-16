@@ -7,7 +7,7 @@ type B interface {
 	GetC() string
 }
 
-var _ B = (*BImpl)(nil)
+var _ B = BImpl{}
 
 type BImpl struct {
 	B string `pkl:"b"`
@@ -15,10 +15,10 @@ type BImpl struct {
 	C string `pkl:"c"`
 }
 
-func (rcv *BImpl) GetB() string {
+func (rcv BImpl) GetB() string {
 	return rcv.B
 }
 
-func (rcv *BImpl) GetC() string {
+func (rcv BImpl) GetC() string {
 	return rcv.C
 }

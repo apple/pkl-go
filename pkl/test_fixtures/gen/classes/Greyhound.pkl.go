@@ -7,14 +7,14 @@ type Greyhound interface {
 	GetCanRoach() bool
 }
 
-var _ Greyhound = (*GreyhoundImpl)(nil)
+var _ Greyhound = GreyhoundImpl{}
 
 type GreyhoundImpl struct {
-	*DogImpl
+	DogImpl
 
 	CanRoach bool `pkl:"canRoach"`
 }
 
-func (rcv *GreyhoundImpl) GetCanRoach() bool {
+func (rcv GreyhoundImpl) GetCanRoach() bool {
 	return rcv.CanRoach
 }
