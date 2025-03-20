@@ -49,11 +49,11 @@ type logger struct {
 }
 
 func (s logger) Trace(message string, frameUri string) {
-	_, _ = s.out.Write([]byte(FormatLogMessage("TRACE", message, frameUri)))
+	_, _ = io.WriteString(s.out, FormatLogMessage("TRACE", message, frameUri))
 }
 
 func (s logger) Warn(message string, frameUri string) {
-	_, _ = s.out.Write([]byte(FormatLogMessage("WARN", message, frameUri)))
+	_, _ = io.WriteString(s.out, FormatLogMessage("WARN", message, frameUri))
 }
 
 var _ Logger = (*logger)(nil)
