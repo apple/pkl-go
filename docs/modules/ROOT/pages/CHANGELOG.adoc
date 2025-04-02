@@ -1,30 +1,33 @@
 = Changelog
 
-[[release-0.9.1]]
-== 0.9.1 (2025-04-01)
+[[release-0.10.0]]
+== 0.10.0 (2025-04-03)
 
 === Additions
 
-* Bump go version to 1.23 (#129)
-* Add support for `tool` directive in `go.mod` (used by go 1.24)
+* Bump go version to 1.23 (https://github.com/apple/pkl-go/pull/129[#129]).
+* pkl-gen-go: Add support for `tool` directive in `go.mod` (used by go 1.24) (https://github.com/apple/pkl-go/pull/128[#128]).
+
+=== Changes
+
+* `EvaluateExpression` uses `any` instead of `interface{}` (https://github.com/apple/pkl-go/pull/113[#113]).
 
 === Miscellaneous
 
-* Add hawkeye formatting
-* `EvaluateExpression` uses `any` instead of `interface{}`
-* Refactor resource and module reader lookup methods for improved readability (#123)
+* Add license header formatting using hawkeye (https://github.com/apple/pkl-go/pull/124[#124]).
+* Refactor resource and module reader lookup methods for improved readability (https://github.com/apple/pkl-go/pull/123[#123]).
 
 === Fixes
 
-* Run evaluator tests in serial to avoid race conditions (#126)
+* Run evaluator tests in serial to avoid race conditions (https://github.com/apple/pkl-go/pull/126[#126]).
 
 === Contributors ❤️
 
 Thank you to all the contributors for this release!
 
 * https://github.com/beauhoyt[@beauhoyt]
+* https://github.com/hvhiggins[@hvhiggins]
 * https://github.com/kasugamirai[@kasugamirai]
-
 
 [[release-0.9.0]]
 == 0.9.0 (2024-12-18)
