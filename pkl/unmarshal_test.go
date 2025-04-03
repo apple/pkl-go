@@ -18,7 +18,10 @@ package pkl_test
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
+	"github.com/apple/pkl-go/pkl/test_fixtures/custom"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	unknowntype "github.com/apple/pkl-go/pkl/test_fixtures/gen/unknown_type"
@@ -83,6 +86,9 @@ var anies []byte
 
 //go:embed test_fixtures/msgpack/unknown_type.pkl.msgpack
 var unknownType []byte
+
+//go:embed test_fixtures/custom/house.pkl
+var customHousePkl []byte
 
 func TestUnmarshall_Primitives(t *testing.T) {
 	var res primitives.Primitives
@@ -440,4 +446,24 @@ func TestUnmarshal_UnknownType(t *testing.T) {
 	err := pkl.Unmarshal(unknownType, &res)
 	assert.Error(t, err)
 	assert.Equal(t, "cannot decode Pkl value of type `PcfRenderer` into Go type `interface {}`. Define a custom mapping for this using `pkl.RegisterMapping`", err.Error())
+}
+
+func TestUnmarshal_Custom(t *testing.T) {
+	evaluator, err := pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions)
+	require.NoError(t, err, "failed to create pkl evaluator")
+	defer evaluator.Close()
+
+	var res custom.CustomClasses
+	err = evaluator.EvaluateModule(context.Background(), pkl.TextSource(string(customHousePkl)), &res)
+	require.NoError(t, err, "failed to evaluate pkl module")
+
+	assert.Equal(t, custom.CustomClasses{
+		House: &custom.House{
+			Shape: custom.Shape{
+				Area: 2000,
+			},
+			Bedrooms:  3,
+			Bathrooms: 2,
+		},
+	}, res)
 }
