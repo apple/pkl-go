@@ -5,7 +5,7 @@ import "github.com/apple/pkl-go/pkl"
 
 func init() {
 	pkl.RegisterMapping("ExtendingOpenClass", ExtendingOpenClass{})
-	pkl.RegisterMapping("ExtendingOpenClass#MyClass", MyClassImpl{})
-	pkl.RegisterMapping("ExtendingOpenClass#MyOpenClass", MyOpenClassImpl{})
-	pkl.RegisterMapping("ExtendingOpenClass#MyClass2", MyClass2Impl{})
+	pkl.RegisterMapping("ExtendingOpenClass#MyClass", MyClass{})
+	pkl.RegisterMapping("ExtendingOpenClass#MyOpenClass", MyOpenClass{})
+	pkl.RegisterMapping("ExtendingOpenClass#MyClass2", MyClass2{})
 }

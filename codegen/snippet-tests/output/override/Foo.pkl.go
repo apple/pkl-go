@@ -1,6 +1,6 @@
 // Code generated from Pkl module `override`. DO NOT EDIT.
 package override
 
-type Foo interface {
+type IFoo interface {
 	GetMyProp() string
 }
