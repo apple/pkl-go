@@ -168,6 +168,6 @@ func Decode(decoder *msgpack.Decoder) (IncomingMessage, error) {
 		err = decoder.Decode(&resp)
 		return &resp, err
 	default:
-		panic(fmt.Sprintf("Unknown code: %d", int(c)))
+		panic(fmt.Sprintf("Unknown code: %d", c))
 	}
 }
