@@ -8,9 +8,9 @@ import (
 )
 
 type BugHolder struct {
-	Bug *Bug `pkl:"bug"`
+	Bug Bug `pkl:"bug"`
 
-	N蚊子 *Bug `pkl:"蚊子"`
+	N蚊子 Bug `pkl:"蚊子"`
 
 	ThisPerson ThisPerson `pkl:"thisPerson"`
 
@@ -18,10 +18,10 @@ type BugHolder struct {
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a BugHolder
-func LoadFromPath(ctx context.Context, path string) (ret *BugHolder, err error) {
+func LoadFromPath(ctx context.Context, path string) (ret BugHolder, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return BugHolder{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -34,10 +34,10 @@ func LoadFromPath(ctx context.Context, path string) (ret *BugHolder, err error) 
 }
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a BugHolder
-func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (*BugHolder, error) {
+func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (BugHolder, error) {
 	var ret BugHolder
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return BugHolder{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }

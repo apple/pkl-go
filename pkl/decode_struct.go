@@ -306,8 +306,15 @@ func getStructFields(typ reflect.Type) map[string]structField {
 		field := typ.Field(i)
 		// embedded
 		if field.Anonymous {
-			for k, v := range getStructFields(field.Type.Elem()) {
-				ret[k] = v
+			switch field.Type.Kind() {
+			case reflect.Ptr:
+				for k, v := range getStructFields(field.Type.Elem()) {
+					ret[k] = v
+				}
+			case reflect.Struct:
+				for k, v := range getStructFields(field.Type) {
+					ret[k] = v
+				}
 			}
 		} else {
 			opts := parseStructOpts(&field)
@@ -328,13 +335,22 @@ func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 	for i := 0; i < numFields; i++ {
 		field := typ.Field(i)
 		if field.Anonymous {
-			fieldValue := reflect.New(field.Type.Elem())
-			// Assertion: all embedded fields are pointers to structs.
-			structValue, err := d.getOutputValue(field.Type.Elem())
-			if err != nil {
-				return nil, err
+			var fieldValue reflect.Value
+			switch field.Type.Kind() {
+			case reflect.Ptr:
+				{
+					fieldValue = reflect.New(field.Type.Elem())
+					structValue, err := d.getOutputValue(field.Type.Elem())
+					if err != nil {
+						return nil, err
+					}
+					fieldValue.Elem().Set(*structValue)
+				}
+			case reflect.Struct:
+				{
+					fieldValue = reflect.New(field.Type).Elem()
+				}
 			}
-			fieldValue.Elem().Set(*structValue)
 			ret.FieldByName(field.Name).Set(fieldValue)
 		}
 	}

@@ -14,23 +14,23 @@ type ExtendModule interface {
 	GetBar() string
 }
 
-var _ ExtendModule = (*ExtendModuleImpl)(nil)
+var _ ExtendModule = ExtendModuleImpl{}
 
 type ExtendModuleImpl struct {
-	*openmodule.MyModuleImpl
+	openmodule.MyModuleImpl
 
 	Bar string `pkl:"bar"`
 }
 
-func (rcv *ExtendModuleImpl) GetBar() string {
+func (rcv ExtendModuleImpl) GetBar() string {
 	return rcv.Bar
 }
 
-// LoadFromPath loads the pkl module at the given path and evaluates it into a ExtendModule
-func LoadFromPath(ctx context.Context, path string) (ret ExtendModule, err error) {
+// LoadFromPath loads the pkl module at the given path and evaluates it into a ExtendModuleImpl
+func LoadFromPath(ctx context.Context, path string) (ret ExtendModuleImpl, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return ExtendModuleImpl{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -42,11 +42,11 @@ func LoadFromPath(ctx context.Context, path string) (ret ExtendModule, err error
 	return ret, err
 }
 
-// Load loads the pkl module at the given source and evaluates it with the given evaluator into a ExtendModule
-func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (ExtendModule, error) {
+// Load loads the pkl module at the given source and evaluates it with the given evaluator into a ExtendModuleImpl
+func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (ExtendModuleImpl, error) {
 	var ret ExtendModuleImpl
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return ExtendModuleImpl{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }
