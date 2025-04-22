@@ -15,7 +15,7 @@ type Lib4 struct {
 func LoadFromPath(ctx context.Context, path string) (ret Lib4, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return Lib4{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -30,8 +30,6 @@ func LoadFromPath(ctx context.Context, path string) (ret Lib4, err error) {
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a Lib4
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (Lib4, error) {
 	var ret Lib4
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return Lib4{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

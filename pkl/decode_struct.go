@@ -149,13 +149,8 @@ func (d *decoder) decodeObjectGeneric(moduleUri, name string) (*reflect.Value, e
 	return &ret, nil
 }
 
-func (d *decoder) decodeTyped(name string, typ reflect.Type) (*reflect.Value, error) {
-	if t, exists := d.schemas[name]; exists {
-		// if we have a known schema by name, use that type instead of the input typ.
-		// this is important if the Pkl value is a subtype of the input type, e.g.
-		// in polymorphic cases.
-		typ = t
-	} else if typ.Kind() != reflect.Struct {
+func (d *decoder) doDecodeTyped(name string, typ reflect.Type) (*reflect.Value, error) {
+	if typ.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("cannot decode Pkl value of type `%s` into Go type `%s`. Define a custom mapping for this using `pkl.RegisterMapping`", name, typ)
 	}
 	out, err := d.getOutputValue(typ)
@@ -173,6 +168,25 @@ func (d *decoder) decodeTyped(name string, typ reflect.Type) (*reflect.Value, er
 		}
 	}
 	return out, nil
+}
+
+func (d *decoder) decodeTyped(name string, typ reflect.Type) (*reflect.Value, error) {
+	if t, exists := d.schemas[name]; exists {
+		// if we have a known schema by name, use that type instead of the input type.
+		// this is important if the Pkl value is a subtype of the input type, e.g.
+		// in polymorphic cases.
+		typ = t
+	}
+	if typ.Kind() == reflect.Ptr {
+		underlying, err := d.doDecodeTyped(name, typ.Elem())
+		if err != nil {
+			return nil, err
+		}
+		ret := reflect.New(typ.Elem())
+		ret.Elem().Set(*underlying)
+		return &ret, nil
+	}
+	return d.doDecodeTyped(name, typ)
 }
 
 func (d *decoder) decodeDuration() (*reflect.Value, error) {

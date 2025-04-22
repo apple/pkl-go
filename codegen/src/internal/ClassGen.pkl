@@ -56,11 +56,11 @@ contents = new Listing {
   }
   when (isModule && !isAbstract) {
     ""
-    "// LoadFromPath loads the pkl module at the given path and evaluates it into a \(classInfo.struct.name)"
-    "func LoadFromPath(ctx context.Context, path string) (ret \(classInfo.struct.type.render(classInfo.goPackage)), err error) {"
+    "// LoadFromPath loads the pkl module at the given path and evaluates it into a \(classInfo.name)"
+    "func LoadFromPath(ctx context.Context, path string) (ret \(classInfo.type.render(classInfo.goPackage)), err error) {"
     "\tevaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)"
     "\tif err != nil {"
-    "\t\treturn \(classInfo.struct.type.render(classInfo.goPackage)){}, err"
+    "\t\treturn ret, err"
     "\t}"
     "\tdefer func() {"
     "\t\tcerr := evaluator.Close()"
@@ -72,13 +72,11 @@ contents = new Listing {
     "\treturn ret, err"
     "}"
     ""
-    "// Load loads the pkl module at the given source and evaluates it with the given evaluator into a \(classInfo.struct.name)"
-    "func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (\(classInfo.struct.type.render(classInfo.goPackage)), error) {"
+    "// Load loads the pkl module at the given source and evaluates it with the given evaluator into a \(classInfo.name)"
+    "func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (\(classInfo.type.render(classInfo.goPackage)), error) {"
     "\tvar ret \(classInfo.struct.name)"
-    "\tif err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {"
-    "\t\treturn \(classInfo.struct.name){}, err"
-    "\t}"
-    "\treturn ret, nil"
+    "\terr := evaluator.EvaluateModule(ctx, source, &ret)"
+    "\treturn ret, err"
     "}"
   }
   ""
@@ -187,15 +185,7 @@ local struct: String = new Listing {
     when (field.docComment != null) {
       utils.renderDocComment(field.docComment!!, "\t")
     }
-    when (field.type == classInfo.type) {
-      renderStructField(pklPropertyName, (field) {
-        type = new Type.Pointer {
-          elem = field.type
-        }
-      })
-    } else {
-      renderStructField(pklPropertyName, field)
-    }
+    renderStructField(pklPropertyName, field)
   }
   "}"
 }
@@ -218,13 +208,6 @@ local interface: String? =
           when (key != methodsToGenerate.keys.first) {
             ""
           }
-          let (field = if (field.type == classInfo.type)
-            (field) {
-              type = new Type.Pointer {
-                elem = field.type
-              }
-            } else field
-          )
           "\tGet\(field.name)() \(field.type.render(classInfo.goPackage))"
         }
         "}"
@@ -275,13 +258,6 @@ local function renderGetter(field: GoStructField): String = new Listing {
   when (field.docComment != null) {
     utils.renderDocComment(field.docComment!!, "")
   }
-  let (field = if (field.type == classInfo.type)
-      (field) {
-        type = new Type.Pointer {
-          elem = field.type
-        }
-      } else field
-  )
   "func (rcv \(classInfo.struct.type.render(classInfo.goPackage))) Get\(field.name)() \(field.type.render(classInfo.goPackage)) {"
   "\treturn rcv.\(field.name)"
   "}"

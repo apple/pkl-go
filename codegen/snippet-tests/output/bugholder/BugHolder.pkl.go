@@ -21,7 +21,7 @@ type BugHolder struct {
 func LoadFromPath(ctx context.Context, path string) (ret BugHolder, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return BugHolder{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -36,8 +36,6 @@ func LoadFromPath(ctx context.Context, path string) (ret BugHolder, err error) {
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a BugHolder
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (BugHolder, error) {
 	var ret BugHolder
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return BugHolder{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

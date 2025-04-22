@@ -39,7 +39,7 @@ type Collections struct {
 func LoadFromPath(ctx context.Context, path string) (ret Collections, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return Collections{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -54,8 +54,6 @@ func LoadFromPath(ctx context.Context, path string) (ret Collections, err error)
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a Collections
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (Collections, error) {
 	var ret Collections
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return Collections{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

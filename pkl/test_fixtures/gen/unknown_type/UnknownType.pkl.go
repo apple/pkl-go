@@ -15,7 +15,7 @@ type UnknownType struct {
 func LoadFromPath(ctx context.Context, path string) (ret UnknownType, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return UnknownType{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -30,8 +30,6 @@ func LoadFromPath(ctx context.Context, path string) (ret UnknownType, err error)
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a UnknownType
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (UnknownType, error) {
 	var ret UnknownType
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return UnknownType{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

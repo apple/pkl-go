@@ -15,7 +15,7 @@ type ExtendsAbstractClass struct {
 func LoadFromPath(ctx context.Context, path string) (ret ExtendsAbstractClass, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return ExtendsAbstractClass{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -30,8 +30,6 @@ func LoadFromPath(ctx context.Context, path string) (ret ExtendsAbstractClass, e
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a ExtendsAbstractClass
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (ExtendsAbstractClass, error) {
 	var ret ExtendsAbstractClass
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return ExtendsAbstractClass{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

@@ -117,7 +117,6 @@ func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
 }
 
 func (d *decoder) decodePointer(inType reflect.Type) (*reflect.Value, error) {
-	ret := reflect.New(inType.Elem())
 	code, err := d.dec.PeekCode()
 	if err != nil {
 		return nil, err
@@ -126,13 +125,18 @@ func (d *decoder) decodePointer(inType reflect.Type) (*reflect.Value, error) {
 		if err = d.dec.Skip(); err != nil {
 			return nil, err
 		}
-		ret = reflect.Zero(inType)
+		ret := reflect.Zero(inType)
 		return &ret, nil
 	}
 	val, err := d.Decode(inType.Elem())
 	if err != nil {
 		return nil, err
 	}
+	// if the decoded is already a pointer, we can just return it
+	if val.Kind() == reflect.Ptr {
+		return val, nil
+	}
+	ret := reflect.New(inType.Elem())
 	ret.Elem().Set(*val)
 	return &ret, nil
 }
@@ -206,13 +210,7 @@ func (d *decoder) decodePklObject(typ reflect.Type) (*reflect.Value, error) {
 	}
 	switch code {
 	case codeObject:
-		obj, err := d.decodeObject(typ)
-		if err != nil {
-			return nil, err
-		}
-		ret := reflect.New(obj.Type())
-		ret.Elem().Set(*obj)
-		return &ret, nil
+		return d.decodeObject(typ)
 	case codeMap:
 		fallthrough
 	case codeMapping:

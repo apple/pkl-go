@@ -43,7 +43,7 @@ var (
 )
 
 type TemplateValues struct {
-	*generatorsettings.GeneratorSettings
+	generatorsettings.GeneratorSettings
 	PklModulePath string
 }
 
@@ -78,7 +78,7 @@ func doFormat(src string) ([]byte, string, error) {
 	return formatted, cmp.Diff(src, strFormatted), nil
 }
 
-func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string, settings *generatorsettings.GeneratorSettings) error {
+func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string, settings generatorsettings.GeneratorSettings) error {
 	var filenames []string
 	err := evaluator.EvaluateExpression(context.Background(), pkl.FileSource(tmpFile.Name()), "output.files.toMap().keys.toList()", &filenames)
 	if err != nil {
@@ -105,7 +105,7 @@ func log(format string, a ...any) {
 func GenerateGo(
 	evaluator pkl.Evaluator,
 	pklModulePath string,
-	settings *generatorsettings.GeneratorSettings,
+	settings generatorsettings.GeneratorSettings,
 	silent bool,
 	outputPath string,
 ) error {
@@ -124,7 +124,7 @@ func GenerateGo(
 		}
 		log("Using custom generator script: \033[36m%s\033[0m\n", settings.GeneratorScriptPath)
 	}
-	if err = determineBasePath(settings); err != nil {
+	if err = determineBasePath(&settings); err != nil {
 		return err
 	}
 	tmpFile, err := os.CreateTemp(os.TempDir(), "pkl-gen-go.*.pkl")

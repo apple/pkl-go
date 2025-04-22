@@ -24,20 +24,20 @@ import (
 
 // needed for mapping Project.RawDependencies, because the value is defined as any.
 func init() {
-	RegisterMapping("pkl.Project", Project{})
-	RegisterMapping("pkl.Project#RemoteDependency", ProjectRemoteDependency{})
+	RegisterMapping("pkl.Project", &Project{})
+	RegisterMapping("pkl.Project#RemoteDependency", &ProjectRemoteDependency{})
 }
 
 // Project is the go representation of pkl.Project.
 type Project struct {
-	ProjectFileUri    string                    `pkl:"projectFileUri"`
-	Package           *ProjectPackage           `pkl:"package"`
-	EvaluatorSettings *ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
-	Tests             []string                  `pkl:"tests"`
-	Annotations       []Object                  `pkl:"annotations"`
+	ProjectFileUri    string                   `pkl:"projectFileUri"`
+	Package           *ProjectPackage          `pkl:"package"`
+	EvaluatorSettings ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
+	Tests             []string                 `pkl:"tests"`
+	Annotations       []Object                 `pkl:"annotations"`
 
 	// internal field; use Project.Dependencies instead.
-	// values are either *Project or *ProjectRemoteDependency
+	// values are either Project or ProjectRemoteDependency
 	RawDependencies map[string]any `pkl:"dependencies"`
 
 	dependencies *ProjectDependencies `pkl:"-"`
@@ -136,9 +136,9 @@ func LoadProject(context context.Context, path string) (*Project, error) {
 }
 
 func LoadProjectFromEvaluator(context context.Context, ev Evaluator, path string) (*Project, error) {
-	var proj Project
+	var proj *Project
 	if err := ev.EvaluateOutputValue(context, FileSource(path), &proj); err != nil {
 		return nil, err
 	}
-	return &proj, nil
+	return proj, nil
 }
