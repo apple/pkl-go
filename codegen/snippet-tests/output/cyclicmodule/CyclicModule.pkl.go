@@ -15,7 +15,7 @@ type CyclicModule struct {
 func LoadFromPath(ctx context.Context, path string) (ret CyclicModule, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return CyclicModule{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -30,8 +30,6 @@ func LoadFromPath(ctx context.Context, path string) (ret CyclicModule, err error
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a CyclicModule
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (CyclicModule, error) {
 	var ret CyclicModule
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return CyclicModule{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

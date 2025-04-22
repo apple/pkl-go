@@ -28,10 +28,10 @@ function generateType(
   seenMappings: List<GoMapping>
 ): Type =
   if (type is reflect.NullableType)
-  let (_elem = generateType(type.member, enclosing, seenMappings))
-  // No double pointers
-    if (_elem is Type.Pointer) _elem
-    else new Type.Pointer { elem = _elem }
+    let (_elem = generateType(type.member, enclosing, seenMappings))
+      // No double pointers
+      if (_elem is Type.Pointer) _elem
+      else new Type.Pointer { elem = _elem }
   else if (type is reflect.DeclaredType)
     generateDeclaredType(type, enclosing, seenMappings)
   else if (type is reflect.ModuleType)
@@ -152,31 +152,25 @@ mappedTypes: Mapping<Class|TypeAlias, Type> = new {
   [Boolean] = new Type.Declared { typeName = "bool" }
   [Null] = anyType
   [Any] = anyType
-  [Duration] = new Type.Pointer {
-    elem = new Type.Declared {
-      package = "pkl"
-      typeName = "Duration"
-      importPath = "github.com/apple/pkl-go/pkl"
-    }
+  [Duration] = new Type.Declared {
+    package = "pkl"
+    typeName = "Duration"
+    importPath = "github.com/apple/pkl-go/pkl"
   }
   [DurationUnit] = new Type.Declared {
     package = "pkl"
     typeName = "DurationUnit"
     importPath = "github.com/apple/pkl-go/pkl"
   }
-  [Dynamic] = new Type.Pointer {
-    elem = new Type.Declared {
-      package = "pkl"
-      typeName = "Object"
-      importPath = "github.com/apple/pkl-go/pkl"
-    }
+  [Dynamic] = new Type.Declared {
+    package = "pkl"
+    typeName = "Object"
+    importPath = "github.com/apple/pkl-go/pkl"
   }
-  [DataSize] = new Type.Pointer {
-    elem = new Type.Declared {
-      package = "pkl"
-      typeName = "DataSize"
-      importPath = "github.com/apple/pkl-go/pkl"
-    }
+  [DataSize] = new Type.Declared {
+    package = "pkl"
+    typeName = "DataSize"
+    importPath = "github.com/apple/pkl-go/pkl"
   }
   [DataSizeUnit] = new Type.Declared {
     package = "pkl"

@@ -15,7 +15,7 @@ type HiddenProperties struct {
 func LoadFromPath(ctx context.Context, path string) (ret HiddenProperties, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return HiddenProperties{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -30,8 +30,6 @@ func LoadFromPath(ctx context.Context, path string) (ret HiddenProperties, err e
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a HiddenProperties
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (HiddenProperties, error) {
 	var ret HiddenProperties
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return HiddenProperties{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

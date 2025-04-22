@@ -96,9 +96,9 @@ class Class extends GoMapping {
       || clazz.superclass.reflectee != Typed && clazz.superclass.reflectee != Module
     )
       new Interface {
-        name = "\(self.name)"
+        name = self.name
         type = new Type.Declared {
-          typeName = outer.name
+          typeName = self.name
           importPath = self.goPackage
           package = self.goPackageShort
         }

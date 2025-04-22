@@ -17,7 +17,7 @@ type ExtendingOpenClass struct {
 func LoadFromPath(ctx context.Context, path string) (ret ExtendingOpenClass, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return ExtendingOpenClass{}, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -32,8 +32,6 @@ func LoadFromPath(ctx context.Context, path string) (ret ExtendingOpenClass, err
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a ExtendingOpenClass
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (ExtendingOpenClass, error) {
 	var ret ExtendingOpenClass
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return ExtendingOpenClass{}, err
-	}
-	return ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }
