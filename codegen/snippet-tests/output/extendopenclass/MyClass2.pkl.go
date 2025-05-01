@@ -3,20 +3,20 @@ package extendopenclass
 
 import "github.com/apple/pkl-go/codegen/snippet-tests/output/support/lib3"
 
-type MyClass2 interface {
-	lib3.GoGoGo
+type IMyClass2 interface {
+	lib3.IGoGoGo
 
 	GetMyBoolean() bool
 }
 
-var _ MyClass2 = (*MyClass2Impl)(nil)
+var _ IMyClass2 = MyClass2{}
 
-type MyClass2Impl struct {
-	*lib3.GoGoGoImpl
+type MyClass2 struct {
+	lib3.GoGoGo
 
 	MyBoolean bool `pkl:"myBoolean"`
 }
 
-func (rcv *MyClass2Impl) GetMyBoolean() bool {
+func (rcv MyClass2) GetMyBoolean() bool {
 	return rcv.MyBoolean
 }

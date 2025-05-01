@@ -11,10 +11,10 @@ type Lib3 struct {
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Lib3
-func LoadFromPath(ctx context.Context, path string) (ret *Lib3, err error) {
+func LoadFromPath(ctx context.Context, path string) (ret Lib3, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return Lib3{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -27,10 +27,10 @@ func LoadFromPath(ctx context.Context, path string) (ret *Lib3, err error) {
 }
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a Lib3
-func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (*Lib3, error) {
+func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (Lib3, error) {
 	var ret Lib3
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return Lib3{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }

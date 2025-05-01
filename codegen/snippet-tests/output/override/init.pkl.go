@@ -5,5 +5,5 @@ import "github.com/apple/pkl-go/pkl"
 
 func init() {
 	pkl.RegisterMapping("override", Override{})
-	pkl.RegisterMapping("override#Bar", BarImpl{})
+	pkl.RegisterMapping("override#Bar", Bar{})
 }

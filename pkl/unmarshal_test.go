@@ -310,29 +310,29 @@ func TestUnmarshal_Dynamic(t *testing.T) {
 
 func TestUnmarshal_Classes(t *testing.T) {
 	expected := classes.Classes{
-		Animals: []classes.Animal{
-			&classes.GreyhoundImpl{
-				DogImpl: &classes.DogImpl{
+		Animals: []classes.IAnimal{
+			&classes.Greyhound{
+				Dog: classes.Dog{
 					Name:  "Uni",
 					Barks: false,
 					Breed: "Greyhound",
 				},
 				CanRoach: true,
 			},
-			&classes.CatImpl{
+			&classes.Cat{
 				Name:  "Millie",
 				Meows: true,
 			},
 		},
-		MyAnimal: &classes.GreyhoundImpl{
-			DogImpl: &classes.DogImpl{
+		MyAnimal: &classes.Greyhound{
+			Dog: classes.Dog{
 				Name:  "Uni",
 				Barks: false,
 				Breed: "Greyhound",
 			},
 			CanRoach: true,
 		},
-		House: &classes.House{
+		House: classes.House{
 			Area:      2000,
 			Bedrooms:  3,
 			Bathrooms: 2,
