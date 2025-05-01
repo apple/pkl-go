@@ -71,11 +71,16 @@ type GeneratorSettings struct {
 	//
 	// This corresponds to the `--project-dir` flag in the Pkl CLI.
 	// Relative paths are resolved against the enclosing file.
+	//
+	// Paths must use `/` as the path separator.
 	ProjectDir *string `pkl:"projectDir"`
 
 	// The cache directory for storing packages.
 	//
 	// This corresponds to the `--cache-dir` flag in the Pkl CLI.
+	// Relative paths are resolved against the enclosing file.
+	//
+	// Paths must use `/` as the path separator.
 	CacheDir *string `pkl:"cacheDir"`
 
 	// Print out the names of the files that will be generated, but skip writing anything to disk.
@@ -86,10 +91,10 @@ type GeneratorSettings struct {
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a GeneratorSettings
-func LoadFromPath(ctx context.Context, path string) (ret *GeneratorSettings, err error) {
+func LoadFromPath(ctx context.Context, path string) (ret GeneratorSettings, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return GeneratorSettings{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -102,10 +107,8 @@ func LoadFromPath(ctx context.Context, path string) (ret *GeneratorSettings, err
 }
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a GeneratorSettings
-func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (*GeneratorSettings, error) {
+func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (GeneratorSettings, error) {
 	var ret GeneratorSettings
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
-	}
-	return &ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

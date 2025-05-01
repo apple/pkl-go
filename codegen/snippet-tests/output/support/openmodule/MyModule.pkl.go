@@ -11,13 +11,13 @@ type MyModule interface {
 	GetFoo() string
 }
 
-var _ MyModule = (*MyModuleImpl)(nil)
+var _ MyModule = MyModuleImpl{}
 
 type MyModuleImpl struct {
 	Foo string `pkl:"foo"`
 }
 
-func (rcv *MyModuleImpl) GetFoo() string {
+func (rcv MyModuleImpl) GetFoo() string {
 	return rcv.Foo
 }
 
@@ -25,7 +25,7 @@ func (rcv *MyModuleImpl) GetFoo() string {
 func LoadFromPath(ctx context.Context, path string) (ret MyModule, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -40,8 +40,6 @@ func LoadFromPath(ctx context.Context, path string) (ret MyModule, err error) {
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a MyModule
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (MyModule, error) {
 	var ret MyModuleImpl
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
-	}
-	return &ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

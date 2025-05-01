@@ -2,5 +2,5 @@
 package lib4
 
 type MyLib4 struct {
-	Foo *Lib4 `pkl:"foo"`
+	Foo Lib4 `pkl:"foo"`
 }
