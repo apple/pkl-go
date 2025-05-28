@@ -197,7 +197,7 @@ func TestLoadProject(t *testing.T) {
 
 		t.Run("evaluatorSettings", func(t *testing.T) {
 			fals := false
-			expectedSettings := &ProjectEvaluatorSettings{
+			expectedSettings := ProjectEvaluatorSettings{
 				Timeout: Duration{
 					Value: 5,
 					Unit:  Minute,
@@ -278,7 +278,7 @@ func TestLoadProjectWithProxy(t *testing.T) {
 	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
 	if assert.NoError(t, err) {
 		t.Run("evaluatorSettings", func(t *testing.T) {
-			expectedSettings := &ProjectEvaluatorSettings{
+			expectedSettings := ProjectEvaluatorSettings{
 				Http: &ProjectEvaluatorSettingsHttp{
 					Proxy: &ProjectEvaluatorSettingsProxy{
 						Address: &[]string{"http://localhost:80"}[0],
@@ -313,7 +313,7 @@ func TestLoadProjectWithExternalReaders(t *testing.T) {
 	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
 	if assert.NoError(t, err) {
 		t.Run("evaluatorSettings", func(t *testing.T) {
-			expectedSettings := &ProjectEvaluatorSettings{
+			expectedSettings := ProjectEvaluatorSettings{
 				ExternalModuleReaders: map[string]ProjectEvaluatorSettingExternalReader{
 					"scheme1": {Executable: "reader1"},
 					"scheme2": {Executable: "reader2", Arguments: []string{"with", "args"}},

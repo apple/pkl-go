@@ -80,9 +80,9 @@ facts {
     generateType(reflect.uint32Type) == "uint32"
     generateType(reflect.uintType) == "uint"
     generateType(reflect.anyType) == "any"
-    generateType(reflect.dynamicType) == "*pkl.Object"
-    generateType(reflect.dataSizeType) == "*pkl.DataSize"
-    generateType(reflect.durationType) == "*pkl.Duration"
+    generateType(reflect.dynamicType) == "pkl.Object"
+    generateType(reflect.dataSizeType) == "pkl.DataSize"
+    generateType(reflect.durationType) == "pkl.Duration"
   }
   ["maps"] {
     generateType(reflectedMaps.properties["res1"].type) == "map[string]string"

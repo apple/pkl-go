@@ -15,9 +15,9 @@ type Bug struct {
 	Age *int `pkl:"age"`
 
 	// How long the bug holds its breath for
-	HoldsBreathFor *pkl.Duration `pkl:"holdsBreathFor"`
+	HoldsBreathFor pkl.Duration `pkl:"holdsBreathFor"`
 
-	Size *pkl.DataSize `pkl:"size"`
+	Size pkl.DataSize `pkl:"size"`
 
 	Kind bugkind.BugKind `pkl:"kind"`
 
@@ -27,5 +27,5 @@ type Bug struct {
 
 	Kind4 string `pkl:"kind4"`
 
-	BagOfStuff *pkl.Object `pkl:"bagOfStuff"`
+	BagOfStuff pkl.Object `pkl:"bagOfStuff"`
 }

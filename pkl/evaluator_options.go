@@ -404,9 +404,6 @@ var WithFs = func(fs fs.FS, scheme string) func(opts *EvaluatorOptions) {
 var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
 		evaluatorSettings := project.EvaluatorSettings
-		if evaluatorSettings == nil {
-			return
-		}
 		opts.Properties = evaluatorSettings.ExternalProperties
 		opts.Env = evaluatorSettings.Env
 		if evaluatorSettings.AllowedModules != nil {
