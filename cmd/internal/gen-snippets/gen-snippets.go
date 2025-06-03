@@ -55,7 +55,10 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 		panic(err)
 	}
 	codegenDir := filepath.Join(snippetsDir, "..")
-	settings, err := generatorsettings.LoadFromPath(context.Background(), "codegen/snippet-tests/generator-settings.pkl")
+	settings, err := generatorsettings.LoadFromPath(
+		context.Background(),
+		"codegen/snippet-tests/generator-settings.pkl",
+	)
 	if err != nil {
 		panic(err)
 	}

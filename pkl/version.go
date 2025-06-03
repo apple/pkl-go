@@ -23,7 +23,9 @@ import (
 	"strings"
 )
 
-var semverPattern = regexp.MustCompile(`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`)
+var semverPattern = regexp.MustCompile(
+	`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`,
+)
 
 var numericIdentifer = regexp.MustCompile(`^(0|[1-9]\d*)$`)
 
@@ -37,17 +39,17 @@ var pklVersion0_26 = mustParseSemver("0.26.0")
 var pklVersion0_27 = mustParseSemver("0.27.0")
 
 type semver struct {
-	major                 int
-	minor                 int
-	patch                 int
 	prerelease            string
 	build                 string
 	prereleaseIdentifiers []prereleaseIdentifier
+	major                 int
+	minor                 int
+	patch                 int
 }
 
 type prereleaseIdentifier struct {
-	numericId      int
 	alphaNumericId string
+	numericId      int
 }
 
 func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {

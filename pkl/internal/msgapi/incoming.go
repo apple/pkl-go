@@ -44,73 +44,82 @@ var (
 type CreateEvaluatorResponse struct {
 	incomingMessageImpl
 
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Error       string `msgpack:"error"`
+	Error string `msgpack:"error"`
+
+	RequestId   int64 `msgpack:"requestId"`
+	EvaluatorId int64 `msgpack:"evaluatorId"`
 }
 
 type EvaluateResponse struct {
 	incomingMessageImpl
 
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Result      []byte `msgpack:"result"`
-	Error       string `msgpack:"error"`
+	Error  string `msgpack:"error"`
+	Result []byte `msgpack:"result"`
+
+	RequestId   int64 `msgpack:"requestId"`
+	EvaluatorId int64 `msgpack:"evaluatorId"`
 }
 
 type ReadResource struct {
 	incomingMessageImpl
 
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Uri         string `msgpack:"uri"`
+	Uri string `msgpack:"uri"`
+
+	RequestId   int64 `msgpack:"requestId"`
+	EvaluatorId int64 `msgpack:"evaluatorId"`
 }
 
 type ReadModule struct {
 	incomingMessageImpl
 
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Uri         string `msgpack:"uri"`
+	Uri string `msgpack:"uri"`
+
+	RequestId   int64 `msgpack:"requestId"`
+	EvaluatorId int64 `msgpack:"evaluatorId"`
 }
 
 type Log struct {
 	incomingMessageImpl
 
-	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Level       int    `msgpack:"level"`
-	Message     string `msgpack:"message"`
-	FrameUri    string `msgpack:"frameUri"`
+	Message  string `msgpack:"message"`
+	FrameUri string `msgpack:"frameUri"`
+
+	EvaluatorId int64 `msgpack:"evaluatorId"`
+	Level       int   `msgpack:"level"`
 }
 
 type ListResources struct {
 	incomingMessageImpl
 
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Uri         string `msgpack:"uri"`
+	Uri string `msgpack:"uri"`
+
+	RequestId   int64 `msgpack:"requestId"`
+	EvaluatorId int64 `msgpack:"evaluatorId"`
 }
 
 type ListModules struct {
 	incomingMessageImpl
 
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Uri         string `msgpack:"uri"`
+	Uri string `msgpack:"uri"`
+
+	RequestId   int64 `msgpack:"requestId"`
+	EvaluatorId int64 `msgpack:"evaluatorId"`
 }
 
 type InitializeModuleReader struct {
 	incomingMessageImpl
 
-	RequestId int64  `msgpack:"requestId"`
-	Scheme    string `msgpack:"scheme"`
+	Scheme string `msgpack:"scheme"`
+
+	RequestId int64 `msgpack:"requestId"`
 }
 
 type InitializeResourceReader struct {
 	incomingMessageImpl
 
-	RequestId int64  `msgpack:"requestId"`
-	Scheme    string `msgpack:"scheme"`
+	Scheme string `msgpack:"scheme"`
+
+	RequestId int64 `msgpack:"requestId"`
 }
 
 type CloseExternalProcess struct {

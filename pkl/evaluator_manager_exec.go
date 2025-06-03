@@ -63,15 +63,15 @@ func NewEvaluatorManagerWithCommand(pklCommand []string) EvaluatorManager {
 }
 
 type execEvaluator struct {
-	cmd    *exec.Cmd
-	in     chan msgapi.IncomingMessage
-	out    chan msgapi.OutgoingMessage
-	closed chan error
-	// exited is a flag that indicates evaluator was closed explicitly
-	exited      atomicBool
+	cmd         *exec.Cmd
+	in          chan msgapi.IncomingMessage
+	out         chan msgapi.OutgoingMessage
+	closed      chan error
 	version     *semver
-	pklCommand  []string
 	processDone chan struct{}
+	pklCommand  []string
+	// exited is a flag that indicates evaluator was closed explicitly
+	exited atomicBool
 }
 
 func (e *execEvaluator) inChan() chan msgapi.IncomingMessage {
@@ -100,7 +100,11 @@ func (e *execEvaluator) getVersion() (*semver, error) {
 	}
 	matches := pklVersionRegex.FindStringSubmatch(string(versionCmdOut))
 	if len(matches) < 2 {
-		return nil, fmt.Errorf("failed to get version information from Pkl. Ran `%s`, and got stdout \"%s\"", strings.Join(command.Args, " "), versionCmdOut)
+		return nil, fmt.Errorf(
+			"failed to get version information from Pkl. Ran `%s`, and got stdout \"%s\"",
+			strings.Join(command.Args, " "),
+			versionCmdOut,
+		)
 	}
 	version, err := parseSemver(matches[1])
 	if err != nil {

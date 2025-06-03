@@ -178,7 +178,11 @@ func TestLoadProject(t *testing.T) {
 	project, err := LoadProject(context.Background(), tempDir+"/hawks/PklProject")
 	if assert.NoError(t, err) {
 		t.Run("projectFileUri", func(t *testing.T) {
-			assert.Equal(t, fmt.Sprintf("file://%s/hawks/PklProject", tempDir), project.ProjectFileUri)
+			assert.Equal(
+				t,
+				fmt.Sprintf("file://%s/hawks/PklProject", tempDir),
+				project.ProjectFileUri,
+			)
 		})
 
 		t.Run("annotations", func(t *testing.T) {

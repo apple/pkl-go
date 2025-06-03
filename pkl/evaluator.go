@@ -63,13 +63,13 @@ type Evaluator interface {
 }
 
 type evaluator struct {
-	evaluatorId     int64
 	logger          Logger
 	manager         *evaluatorManager
 	pendingRequests *sync.Map
-	closed          bool
 	resourceReaders []ResourceReader
 	moduleReaders   []ModuleReader
+	evaluatorId     int64
+	closed          bool
 }
 
 var _ Evaluator = (*evaluator)(nil)
@@ -88,13 +88,26 @@ func (e *evaluator) EvaluateOutputValue(ctx context.Context, source *ModuleSourc
 	return e.EvaluateExpression(ctx, source, "output.value", out)
 }
 
-func (e *evaluator) EvaluateOutputFiles(ctx context.Context, source *ModuleSource) (map[string]string, error) {
+func (e *evaluator) EvaluateOutputFiles(
+	ctx context.Context,
+	source *ModuleSource,
+) (map[string]string, error) {
 	var out map[string]string
-	err := e.EvaluateExpression(ctx, source, "output.files.toMap().mapValues((_, it) -> it.text)", &out)
+	err := e.EvaluateExpression(
+		ctx,
+		source,
+		"output.files.toMap().mapValues((_, it) -> it.text)",
+		&out,
+	)
 	return out, err
 }
 
-func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource, expr string, out any) error {
+func (e *evaluator) EvaluateExpression(
+	ctx context.Context,
+	source *ModuleSource,
+	expr string,
+	out any,
+) error {
 	bytes, err := e.EvaluateExpressionRaw(ctx, source, expr)
 	if err != nil {
 		return err
@@ -102,7 +115,11 @@ func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource
 	return Unmarshal(bytes, out)
 }
 
-func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSource, expr string) ([]byte, error) {
+func (e *evaluator) EvaluateExpressionRaw(
+	ctx context.Context,
+	source *ModuleSource,
+	expr string,
+) ([]byte, error) {
 	if e.Closed() {
 		return nil, fmt.Errorf("evaluator is closed")
 	}
@@ -146,7 +163,8 @@ func (e *evaluator) Closed() bool {
 func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
 	c, exists := e.pendingRequests.Load(resp.RequestId)
 	if !exists {
-		log.Default().Printf("warn: received a message for an unknown request id: %d", resp.RequestId)
+		log.Default().
+			Printf("warn: received a message for an unknown request id: %d", resp.RequestId)
 		return
 	}
 	ch := c.(chan *msgapi.EvaluateResponse)
