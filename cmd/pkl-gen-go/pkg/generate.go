@@ -78,9 +78,19 @@ func doFormat(src string) ([]byte, string, error) {
 	return formatted, cmp.Diff(src, strFormatted), nil
 }
 
-func generateDryRun(evaluator pkl.Evaluator, tmpFile *os.File, outputPath string, settings *generatorsettings.GeneratorSettings) error {
+func generateDryRun(
+	evaluator pkl.Evaluator,
+	tmpFile *os.File,
+	outputPath string,
+	settings *generatorsettings.GeneratorSettings,
+) error {
 	var filenames []string
-	err := evaluator.EvaluateExpression(context.Background(), pkl.FileSource(tmpFile.Name()), "output.files.toMap().keys.toList()", &filenames)
+	err := evaluator.EvaluateExpression(
+		context.Background(),
+		pkl.FileSource(tmpFile.Name()),
+		"output.files.toMap().keys.toList()",
+		&filenames,
+	)
 	if err != nil {
 		return err
 	}
@@ -143,7 +153,10 @@ func GenerateGo(
 	if settings.DryRun {
 		return generateDryRun(evaluator, tmpFile, outputPath, settings)
 	}
-	files, err := evaluator.EvaluateOutputFiles(context.Background(), pkl.FileSource(tmpFile.Name()))
+	files, err := evaluator.EvaluateOutputFiles(
+		context.Background(),
+		pkl.FileSource(tmpFile.Name()),
+	)
 	if err != nil {
 		return err
 	}
@@ -151,7 +164,11 @@ func GenerateGo(
 	for filename, contents := range files {
 		if settings.BasePath != "" {
 			if !strings.HasPrefix(filename, settings.BasePath) {
-				log("Skipping codegen for file \033[36m%s\033[0m because it does not exist in base path \033[36m%s\033[0m\n", filename, settings.BasePath)
+				log(
+					"Skipping codegen for file \033[36m%s\033[0m because it does not exist in base path \033[36m%s\033[0m\n",
+					filename,
+					settings.BasePath,
+				)
 				continue
 			}
 			filename = strings.TrimPrefix(filename, settings.BasePath)
@@ -159,7 +176,11 @@ func GenerateGo(
 
 		formatted, diff, err := doFormat(contents)
 		if err != nil {
-			log("[warning] Attempted to format file %s but it produced an unexpected error. Error: %s\n", filename, err.Error())
+			log(
+				"[warning] Attempted to format file %s but it produced an unexpected error. Error: %s\n",
+				filename,
+				err.Error(),
+			)
 			formatted = []byte(contents)
 		}
 		if diff != "" {

@@ -40,11 +40,19 @@ func (t testFs) Open(name string) (fs.File, error) {
 
 func evaluateCollections(evaluator pkl.Evaluator, fixturesDir string) {
 	for _, expr := range []string{"res1", "res2", "res9"} {
-		outBytes, err := evaluator.EvaluateExpressionRaw(context.Background(), pkl.FileSource(fixturesDir, "collections.pkl"), expr)
+		outBytes, err := evaluator.EvaluateExpressionRaw(
+			context.Background(),
+			pkl.FileSource(fixturesDir, "collections.pkl"),
+			expr,
+		)
 		if err != nil {
 			panic(err)
 		}
-		outPath := filepath.Join(fixturesDir, "msgpack", fmt.Sprintf("collections.%s.msgpack", expr))
+		outPath := filepath.Join(
+			fixturesDir,
+			"msgpack",
+			fmt.Sprintf("collections.%s.msgpack", expr),
+		)
 		if err = os.WriteFile(outPath, outBytes, 0o666); err != nil {
 			panic(err)
 		}
@@ -61,7 +69,11 @@ func makeMsgpack(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntr
 		if file.IsDir() {
 			continue
 		}
-		outBytes, err := evaluator.EvaluateExpressionRaw(context.Background(), pkl.UriSource("pklgo:/pkl/test_fixtures/"+file.Name()), "")
+		outBytes, err := evaluator.EvaluateExpressionRaw(
+			context.Background(),
+			pkl.UriSource("pklgo:/pkl/test_fixtures/"+file.Name()),
+			"",
+		)
 		if err != nil {
 			panic(err)
 		}
@@ -82,7 +94,10 @@ func makeGoCode(evaluator pkl.Evaluator, fixturesDir string, files []os.DirEntry
 	if err := os.RemoveAll(genDir); err != nil {
 		panic(err)
 	}
-	settings, err := generatorsettings.LoadFromPath(context.Background(), "codegen/snippet-tests/generator-settings.pkl")
+	settings, err := generatorsettings.LoadFromPath(
+		context.Background(),
+		"codegen/snippet-tests/generator-settings.pkl",
+	)
 	if err != nil {
 		panic(err)
 	}

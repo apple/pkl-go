@@ -135,7 +135,8 @@ var Version = "development"
 
 func init() {
 	info, ok := debug.ReadBuildInfo()
-	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" || Version != "development" {
+	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" ||
+		Version != "development" {
 		return
 	}
 	Version = strings.TrimPrefix(info.Main.Version, "v")
@@ -161,7 +162,12 @@ func generatorSettingsSource() *pkl.ModuleSource {
 		dirPath := filepath.Dir(filename)
 		return pkl.FileSource(dirPath, "../../codegen/src/GeneratorSettings.pkl")
 	}
-	return pkl.UriSource(fmt.Sprintf("package://pkg.pkl-lang.org/pkl-go/pkl.golang@%s#/GeneratorSettings.pkl", Version))
+	return pkl.UriSource(
+		fmt.Sprintf(
+			"package://pkg.pkl-lang.org/pkl-go/pkl.golang@%s#/GeneratorSettings.pkl",
+			Version,
+		),
+	)
 }
 
 // mimick logic for finding project dir in the pkl CLI.
@@ -189,7 +195,11 @@ func findProjectDir(projectDirFlag string) string {
 
 // Loads the settings for controlling codegen.
 // Uses a Pkl evaluator that is separate from what's used for actually running codegen.
-func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, cacheDirFlag string) (*generatorsettings.GeneratorSettings, error) {
+func loadGeneratorSettings(
+	generatorSettingsPath string,
+	projectDirFlag string,
+	cacheDirFlag string,
+) (*generatorsettings.GeneratorSettings, error) {
 	projectDir := findProjectDir(projectDirFlag)
 	var evaluator pkl.Evaluator
 	var err error
@@ -199,7 +209,12 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, 
 		}
 	}
 	if projectDir != "" {
-		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, pkl.PreconfiguredOptions, opts)
+		evaluator, err = pkl.NewProjectEvaluator(
+			context.Background(),
+			projectDir,
+			pkl.PreconfiguredOptions,
+			opts,
+		)
 	} else {
 		evaluator, err = pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions, opts)
 	}
@@ -241,17 +256,57 @@ func init() {
 	var dryRun bool
 	var projectDir string
 	var cacheDir string
-	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file")
+	flags.StringVar(
+		&generatorSettingsPath,
+		"generator-settings",
+		"",
+		"The path to a generator settings file",
+	)
 	flags.StringVar(&generateScript, "generate-script", "", "The Generate.pkl script to use")
-	flags.StringToStringVar(&mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
+	flags.StringToStringVar(
+		&mappings,
+		"mapping",
+		nil,
+		"The mapping of a Pkl module name to a Go package name",
+	)
 	flags.StringVar(&basePath, "base-path", "", "The base path used to determine relative output")
-	flags.StringVar(&outputPath, "output-path", "", "The output directory to write generated sources into")
-	flags.BoolVar(&suppressWarnings, "suppress-format-warning", false, "Suppress warnings around formatting issues")
-	flags.StringSliceVar(&allowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
-	flags.StringSliceVar(&allowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
-	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
+	flags.StringVar(
+		&outputPath,
+		"output-path",
+		"",
+		"The output directory to write generated sources into",
+	)
+	flags.BoolVar(
+		&suppressWarnings,
+		"suppress-format-warning",
+		false,
+		"Suppress warnings around formatting issues",
+	)
+	flags.StringSliceVar(
+		&allowedModules,
+		"allowed-modules",
+		nil,
+		"URI patterns that determine which modules can be loaded and evaluated",
+	)
+	flags.StringSliceVar(
+		&allowedResources,
+		"allowed-resources",
+		nil,
+		"URI patterns that determine which resources can be loaded and evaluated",
+	)
+	flags.StringVar(
+		&projectDir,
+		"project-dir",
+		"",
+		"The project directory to load dependency and evaluator settings from",
+	)
 	flags.StringVar(&cacheDir, "cache-dir", "", "The cache directory for storing packages")
-	flags.BoolVar(&dryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
+	flags.BoolVar(
+		&dryRun,
+		"dry-run",
+		false,
+		"Print out the names of the files that will be generated, but don't write any files",
+	)
 	flags.BoolVar(&printVersion, "version", false, "Print the version and exit")
 	var err error
 	if err = flags.Parse(os.Args); err != nil && !errors.Is(err, pflag.ErrHelp) {

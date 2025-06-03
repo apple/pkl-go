@@ -55,7 +55,10 @@ func TestExternalReaderE2E(t *testing.T) {
 	if !ok {
 		panic("can't find caller")
 	}
-	projectRoot := filepath.Join(filepath.Dir(filename), "../cmd/internal/test-external-reader/test-external-reader.go")
+	projectRoot := filepath.Join(
+		filepath.Dir(filename),
+		"../cmd/internal/test-external-reader/test-external-reader.go",
+	)
 
 	evaluator, err := manager.NewEvaluator(
 		context.Background(),
@@ -69,7 +72,10 @@ func TestExternalReaderE2E(t *testing.T) {
 		return
 	}
 
-	output, err := evaluator.EvaluateOutputText(context.Background(), FileSource(tempDir+"/test.pkl"))
+	output, err := evaluator.EvaluateOutputText(
+		context.Background(),
+		FileSource(tempDir+"/test.pkl"),
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, output, `fib5 = 5
 fib10 = 55

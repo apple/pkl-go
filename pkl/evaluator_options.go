@@ -28,20 +28,39 @@ import (
 
 // EvaluatorOptions is the set of options available to control Pkl evaluation.
 type EvaluatorOptions struct {
+
+	// Logger is the logging interface for messages emitted by the Pkl evaluator.
+	Logger Logger
+
 	// Properties is the set of properties available to the `prop:` resource reader.
 	Properties map[string]string
 
 	// Env is the set of environment variables available to the `env:` resource reader.
 	Env map[string]string
 
-	// ModulePaths is the set of directories, ZIP archives, or JAR archives to search when
-	// resolving `modulepath`: resources and modules.
+	// DeclaredProjectDepenedencies is set of dependencies available to modules within ProjectBaseURI.
 	//
-	// This option must be non-emptyMirror if ModuleReaderModulePath or ResourceModulePath are used.
-	ModulePaths []string
+	// When importing dependencies, a PklProject.deps.json file must exist within ProjectBaseURI
+	// that contains the project's resolved dependencies.
+	DeclaredProjectDependencies *ProjectDependencies
 
-	// Logger is the logging interface for messages emitted by the Pkl evaluator.
-	Logger Logger
+	// Settings for controlling how Pkl talks over HTTP(S).
+	//
+	// Added in Pkl 0.26.
+	// If the underlying Pkl does not support HTTP options, NewEvaluator will return with an error.
+	Http *Http
+
+	// ExternalModuleReaders registers external commands that implement module reader schemes.
+	//
+	// Added in Pkl 0.27.
+	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
+	ExternalModuleReaders map[string]ExternalReader
+
+	// ExternalResourceReaders registers external commands that implement resource reader schemes.
+	//
+	// Added in Pkl 0.27.
+	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
+	ExternalResourceReaders map[string]ExternalReader
 
 	// OutputFormat controls the renderer to be used when rendering the `output.text`
 	// property of a module.
@@ -56,24 +75,6 @@ type EvaluatorOptions struct {
 	//   - `"xml"`
 	//   - `"yaml"`
 	OutputFormat string
-
-	// AllowedModules defines URI patterns that determine which modules are permitted to be loaded and evaluated.
-	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
-	//
-	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
-	AllowedModules []string
-
-	// AllowedResources defines URI patterns that determine which resources are permitted to be loaded and evaluated.
-	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
-	//
-	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
-	AllowedResources []string
-
-	// ResourceReaders are the resource readers to be used by the evaluator.
-	ResourceReaders []ResourceReader
-
-	// ModuleReaders are the set of custom module readers to be used by the evaluator.
-	ModuleReaders []ModuleReader
 
 	// CacheDir is the directory where `package:` modules are cached.
 	//
@@ -106,34 +107,34 @@ type EvaluatorOptions struct {
 	// or EvaluatorManager.NewProjectEvaluator.
 	ProjectBaseURI string
 
-	// DeclaredProjectDepenedencies is set of dependencies available to modules within ProjectBaseURI.
+	// ModulePaths is the set of directories, ZIP archives, or JAR archives to search when
+	// resolving `modulepath`: resources and modules.
 	//
-	// When importing dependencies, a PklProject.deps.json file must exist within ProjectBaseURI
-	// that contains the project's resolved dependencies.
-	DeclaredProjectDependencies *ProjectDependencies
+	// This option must be non-emptyMirror if ModuleReaderModulePath or ResourceModulePath are used.
+	ModulePaths []string
 
-	// Settings for controlling how Pkl talks over HTTP(S).
+	// AllowedModules defines URI patterns that determine which modules are permitted to be loaded and evaluated.
+	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
 	//
-	// Added in Pkl 0.26.
-	// If the underlying Pkl does not support HTTP options, NewEvaluator will return with an error.
-	Http *Http
+	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
+	AllowedModules []string
 
-	// ExternalModuleReaders registers external commands that implement module reader schemes.
+	// AllowedResources defines URI patterns that determine which resources are permitted to be loaded and evaluated.
+	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
 	//
-	// Added in Pkl 0.27.
-	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
-	ExternalModuleReaders map[string]ExternalReader
+	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
+	AllowedResources []string
 
-	// ExternalResourceReaders registers external commands that implement resource reader schemes.
-	//
-	// Added in Pkl 0.27.
-	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
-	ExternalResourceReaders map[string]ExternalReader
+	// ResourceReaders are the resource readers to be used by the evaluator.
+	ResourceReaders []ResourceReader
+
+	// ModuleReaders are the set of custom module readers to be used by the evaluator.
+	ModuleReaders []ModuleReader
 }
 
 type ProjectRemoteDependency struct {
-	PackageUri string     `pkl:"uri"`
 	Checksums  *Checksums `pkl:"checksums"`
+	PackageUri string     `pkl:"uri"`
 }
 
 func (dep *ProjectRemoteDependency) toMessage() *msgapi.ProjectOrDependency {
@@ -156,11 +157,10 @@ func (checksums *Checksums) toMessage() *msgapi.Checksums {
 }
 
 type ProjectLocalDependency struct {
-	PackageUri string
+	Dependencies *ProjectDependencies
+	PackageUri   string
 
 	ProjectFileUri string
-
-	Dependencies *ProjectDependencies
 }
 
 func (dep *ProjectLocalDependency) toMessage() *msgapi.ProjectOrDependency {
@@ -182,7 +182,10 @@ func (p *ProjectDependencies) toMessage() map[string]*msgapi.ProjectOrDependency
 	if p == nil {
 		return nil
 	}
-	ret := make(map[string]*msgapi.ProjectOrDependency, len(p.LocalDependencies)+len(p.RemoteDependencies))
+	ret := make(
+		map[string]*msgapi.ProjectOrDependency,
+		len(p.LocalDependencies)+len(p.RemoteDependencies),
+	)
 	for name, dep := range p.LocalDependencies {
 		ret[name] = dep.toMessage()
 	}
@@ -193,15 +196,15 @@ func (p *ProjectDependencies) toMessage() map[string]*msgapi.ProjectOrDependency
 }
 
 type Http struct {
-	// PEM format certificates to trust when making HTTP requests.
-	//
-	// If empty, Pkl will trust its own built-in certificates.
-	CaCertificates []byte
 
 	// Configuration of the HTTP proxy to use.
 	//
 	// If nil, uses the operating system's proxy configuration.
 	Proxy *Proxy
+	// PEM format certificates to trust when making HTTP requests.
+	//
+	// If empty, Pkl will trust its own built-in certificates.
+	CaCertificates []byte
 }
 
 func (http *Http) toMessage() *msgapi.Http {
@@ -319,7 +322,10 @@ var WithOsEnv = func(opts *EvaluatorOptions) {
 	}
 }
 
-func buildEvaluatorOptions(version *semver, fns ...func(*EvaluatorOptions)) (*EvaluatorOptions, error) {
+func buildEvaluatorOptions(
+	version *semver,
+	fns ...func(*EvaluatorOptions),
+) (*EvaluatorOptions, error) {
 	o := &EvaluatorOptions{}
 	for _, f := range fns {
 		f(o)
@@ -329,20 +335,43 @@ func buildEvaluatorOptions(version *semver, fns ...func(*EvaluatorOptions)) (*Ev
 	if o.Http != nil && pklVersion0_26.isGreaterThan(version) {
 		return nil, fmt.Errorf("http options are not supported on Pkl versions lower than 0.26")
 	}
-	if (len(o.ExternalModuleReaders) > 0 || len(o.ExternalResourceReaders) > 0) && pklVersion0_27.isGreaterThan(version) {
-		return nil, fmt.Errorf("external reader options are not supported on Pkl versions lower than 0.27")
+	if (len(o.ExternalModuleReaders) > 0 || len(o.ExternalResourceReaders) > 0) &&
+		pklVersion0_27.isGreaterThan(version) {
+		return nil, fmt.Errorf(
+			"external reader options are not supported on Pkl versions lower than 0.27",
+		)
 	}
 	return o, nil
 }
 
 // WithDefaultAllowedResources enables reading http, https, file, env, prop, modulepath, and package resources.
 var WithDefaultAllowedResources = func(opts *EvaluatorOptions) {
-	opts.AllowedResources = append(opts.AllowedResources, "http:", "https:", "file:", "env:", "prop:", "modulepath:", "package:", "projectpackage:")
+	opts.AllowedResources = append(
+		opts.AllowedResources,
+		"http:",
+		"https:",
+		"file:",
+		"env:",
+		"prop:",
+		"modulepath:",
+		"package:",
+		"projectpackage:",
+	)
 }
 
 // WithDefaultAllowedModules enables reading stdlib, repl, file, http, https, modulepath, and package modules.
 var WithDefaultAllowedModules = func(opts *EvaluatorOptions) {
-	opts.AllowedModules = append(opts.AllowedModules, "pkl:", "repl:", "file:", "http:", "https:", "modulepath:", "package:", "projectpackage:")
+	opts.AllowedModules = append(
+		opts.AllowedModules,
+		"pkl:",
+		"repl:",
+		"file:",
+		"http:",
+		"https:",
+		"modulepath:",
+		"package:",
+		"projectpackage:",
+	)
 }
 
 // WithDefaultCacheDir sets the cache directory to Pkl's default location.
@@ -431,7 +460,10 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 			}
 		}
 		if evaluatorSettings.ExternalModuleReaders != nil {
-			opts.ExternalModuleReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalModuleReaders))
+			opts.ExternalModuleReaders = make(
+				map[string]ExternalReader,
+				len(evaluatorSettings.ExternalModuleReaders),
+			)
 			for scheme, reader := range evaluatorSettings.ExternalModuleReaders {
 				opts.ExternalModuleReaders[scheme] = ExternalReader(reader)
 				if evaluatorSettings.AllowedModules == nil { // if no explicit allowed modules are set in the project, allow declared external module readers
@@ -440,7 +472,10 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 			}
 		}
 		if evaluatorSettings.ExternalResourceReaders != nil {
-			opts.ExternalResourceReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalResourceReaders))
+			opts.ExternalResourceReaders = make(
+				map[string]ExternalReader,
+				len(evaluatorSettings.ExternalResourceReaders),
+			)
 			for scheme, reader := range evaluatorSettings.ExternalResourceReaders {
 				opts.ExternalResourceReaders[scheme] = ExternalReader(reader)
 				if evaluatorSettings.AllowedResources == nil { // if no explicit allowed resources are set in the project, allow declared external resource readers

@@ -55,7 +55,11 @@ type EvaluatorManager interface {
 	//
 	// When using project dependencies, they must first be resolved using the `pkl project resolve`
 	// CLI command.
-	NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error)
+	NewProjectEvaluator(
+		ctx context.Context,
+		projectDir string,
+		opts ...func(options *EvaluatorOptions),
+	) (Evaluator, error)
 }
 
 type evaluatorManager struct {
@@ -82,7 +86,10 @@ type evaluatorManagerImpl interface {
 
 var _ EvaluatorManager = (*evaluatorManager)(nil)
 
-func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func (m *evaluatorManager) NewEvaluator(
+	ctx context.Context,
+	opts ...func(options *EvaluatorOptions),
+) (Evaluator, error) {
 	// Prevent concurrent calls to NewEvaluator because only the first call should call the `init` routine.
 	m.newEvaluatorMutex.Lock()
 	defer m.newEvaluatorMutex.Unlock()
@@ -141,12 +148,20 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	}
 }
 
-func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func (m *evaluatorManager) NewProjectEvaluator(
+	ctx context.Context,
+	projectDir string,
+	opts ...func(options *EvaluatorOptions),
+) (Evaluator, error) {
 	projectEvaluator, err := NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
-	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, path.Join(projectDir, "PklProject"))
+	project, err := LoadProjectFromEvaluator(
+		ctx,
+		projectEvaluator,
+		path.Join(projectDir, "PklProject"),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +191,8 @@ func (m *evaluatorManager) Close() error {
 func (m *evaluatorManager) getEvaluator(evaluatorId int64) *evaluator {
 	v, exists := m.evaluators.Load(evaluatorId)
 	if !exists {
-		log.Default().Printf("warn: received a message for an unknown evaluator id: %d", evaluatorId)
+		log.Default().
+			Printf("warn: received a message for an unknown evaluator id: %d", evaluatorId)
 		return nil
 	}
 	return v.(*evaluator)
