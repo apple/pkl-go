@@ -1,4 +1,4 @@
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 // Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 
 package main
 
@@ -207,11 +207,12 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, 
 		panic(err)
 	}
 	var source *pkl.ModuleSource
-	if generatorSettingsPath != "" {
+	switch {
+	case generatorSettingsPath != "":
 		source = pkl.FileSource(generatorSettingsPath)
-	} else if fileExists("generator-settings.pkl") {
+	case fileExists("generator-settings.pkl"):
 		source = pkl.FileSource("generator-settings.pkl")
-	} else {
+	default:
 		source = generatorSettingsSource()
 	}
 	s, err := generatorsettings.Load(context.Background(), evaluator, source)

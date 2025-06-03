@@ -1,4 +1,4 @@
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 // Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//===----------------------------------------------------------------------===//
+// ===----------------------------------------------------------------------===//
 
 package pkl_test
 
@@ -253,11 +253,11 @@ func TestUnmarshal_Nullables(t *testing.T) {
 		Res22: &map[string]string{"foo": "bar"},
 		Res23: nil,
 		// can't test this due to https://github.com/stretchr/testify/issues/1143
-		//Res24: &map[*string]*string{
-		//	&[]string{"foo"}[0]:  &[]string{"bar"}[0],
-		//	nil:                  nil,
-		//	&[]string{"foo2"}[0]: nil,
-		//},
+		// Res24: &map[*string]*string{
+		// 	&[]string{"foo"}[0]:  &[]string{"bar"}[0],
+		// 	nil:                  nil,
+		// 	&[]string{"foo2"}[0]: nil,
+		// },
 		Res25: nil,
 		Res26: &[]*int{
 			&[]int{1}[0],
