@@ -7,14 +7,14 @@ type C interface {
 	GetC() string
 }
 
-var _ C = (*CImpl)(nil)
+var _ C = CImpl{}
 
 type CImpl struct {
-	*BImpl
+	BImpl
 
 	C string `pkl:"c"`
 }
 
-func (rcv *CImpl) GetC() string {
+func (rcv CImpl) GetC() string {
 	return rcv.C
 }

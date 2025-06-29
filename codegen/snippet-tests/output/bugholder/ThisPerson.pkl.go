@@ -4,25 +4,25 @@ package bugholder
 type ThisPerson interface {
 	Person
 
-	GetMyself() ThisPerson
+	GetMyself() *ThisPerson
 
 	GetSomeoneElse() Person
 }
 
-var _ ThisPerson = (*ThisPersonImpl)(nil)
+var _ ThisPerson = ThisPersonImpl{}
 
 type ThisPersonImpl struct {
-	*PersonImpl
+	PersonImpl
 
-	Myself ThisPerson `pkl:"myself"`
+	Myself *ThisPerson `pkl:"myself"`
 
 	SomeoneElse Person `pkl:"someoneElse"`
 }
 
-func (rcv *ThisPersonImpl) GetMyself() ThisPerson {
+func (rcv ThisPersonImpl) GetMyself() *ThisPerson {
 	return rcv.Myself
 }
 
-func (rcv *ThisPersonImpl) GetSomeoneElse() Person {
+func (rcv ThisPersonImpl) GetSomeoneElse() Person {
 	return rcv.SomeoneElse
 }
