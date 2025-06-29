@@ -1,16 +1,16 @@
 // Code generated from Pkl module `lib`. DO NOT EDIT.
 package lib
 
-type MyClass interface {
+type IMyClass interface {
 	GetThing() string
 }
 
-var _ MyClass = (*MyClassImpl)(nil)
+var _ IMyClass = MyClass{}
 
-type MyClassImpl struct {
+type MyClass struct {
 	Thing string `pkl:"thing"`
 }
 
-func (rcv *MyClassImpl) GetThing() string {
+func (rcv MyClass) GetThing() string {
 	return rcv.Thing
 }

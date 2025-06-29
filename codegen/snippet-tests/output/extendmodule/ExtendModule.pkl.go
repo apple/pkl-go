@@ -8,21 +8,21 @@ import (
 	"github.com/apple/pkl-go/pkl"
 )
 
-type ExtendModule interface {
-	openmodule.MyModule
+type IExtendModule interface {
+	openmodule.IMyModule
 
 	GetBar() string
 }
 
-var _ ExtendModule = (*ExtendModuleImpl)(nil)
+var _ IExtendModule = ExtendModule{}
 
-type ExtendModuleImpl struct {
-	*openmodule.MyModuleImpl
+type ExtendModule struct {
+	openmodule.MyModule
 
 	Bar string `pkl:"bar"`
 }
 
-func (rcv *ExtendModuleImpl) GetBar() string {
+func (rcv ExtendModule) GetBar() string {
 	return rcv.Bar
 }
 
@@ -30,7 +30,7 @@ func (rcv *ExtendModuleImpl) GetBar() string {
 func LoadFromPath(ctx context.Context, path string) (ret ExtendModule, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return ExtendModule{}, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -44,9 +44,9 @@ func LoadFromPath(ctx context.Context, path string) (ret ExtendModule, err error
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a ExtendModule
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (ExtendModule, error) {
-	var ret ExtendModuleImpl
+	var ret ExtendModule
 	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
+		return ExtendModule{}, err
 	}
-	return &ret, nil
+	return ret, nil
 }
