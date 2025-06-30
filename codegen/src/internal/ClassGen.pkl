@@ -93,7 +93,7 @@ local superClass: GoMapping.Class? = mappings.findOrNull((c) -> c is GoMapping.C
 local fields: Map<String, GoStructField> = getFields(clazz, mappings)
 
 local imports =
-  fields.values
+  (if (isAbstract) fields.values.filter((f) -> !f.isInherited) else fields.values)
     .flatMap((f) -> f.type.imports)
     .filter((i) -> i != classInfo.goPackage).distinct
   + (if (superClass != null && superClass.goPackage != classInfo.goPackage) List(superClass.goPackage) else List())
