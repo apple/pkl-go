@@ -31,8 +31,8 @@ xx | local fields: Map<String, GoStructField> = getFields(clazz, mappings)
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.golang.internal.ClassGen#fields (file://<codegen_dir>/src/internal/ClassGen.pkl)
 
-xx | fields.values
-     ^^^^^^
+xx | (if (isAbstract) fields.values.filter((f) -> !f.isInherited) else fields.values)
+                                                                       ^^^^^^
 at pkl.golang.internal.ClassGen#imports (file://<codegen_dir>/src/internal/ClassGen.pkl)
 
 xx | when (!imports.isEmpty) {
