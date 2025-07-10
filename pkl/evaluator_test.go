@@ -86,9 +86,25 @@ func getOpenPort() int {
 	return port
 }
 
-func TestEvaluator(t *testing.T) {
-	manager := NewEvaluatorManager()
+func evaluatorFactory() map[string]func() EvaluatorManager {
+	return map[string]func() EvaluatorManager{
+		"exec":   NewEvaluatorManager,
+		"native": NewEvaluatorManagerWithNative,
+	}
+}
 
+func TestEvaluator(t *testing.T) {
+	implementations := evaluatorFactory()
+
+	for name, factory := range implementations {
+		t.Run(name, func(t *testing.T) {
+			manager := factory()
+			commonEvaluatorTests(t, manager)
+		})
+	}
+}
+
+func commonEvaluatorTests(t *testing.T, manager EvaluatorManager) {
 	projectDir := setupProject(t)
 
 	t.Run("EvaluateOutputText", func(t *testing.T) {
@@ -502,7 +518,7 @@ age = 43
 			t.Fatal(err)
 		}
 		if pklVersion0_26.isGreaterThan(version) {
-			t.SkipNow()
+			t.Skip("evaluator is older than 0.26")
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
 			options.Http = &Http{
@@ -524,7 +540,7 @@ age = 43
 			t.Fatal(err)
 		}
 		if version.isGreaterThan(pklVersion0_25) {
-			t.SkipNow()
+			t.Skip("evaluator is greater than 0.25")
 		}
 		_, err = manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
 			options.Http = &Http{
