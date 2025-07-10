@@ -192,9 +192,11 @@ func (d *DataSize) String() string {
 
 // ToUnit converts this DataSize to the specified unit.
 func (d *DataSize) ToUnit(unit DataSizeUnit) DataSize {
+	valueBytes := d.Value * float64(d.Unit)
+	value := valueBytes / float64(unit)
 	return DataSize{
 		Unit:  unit,
-		Value: d.Value / float64(unit),
+		Value: value,
 	}
 }
 
