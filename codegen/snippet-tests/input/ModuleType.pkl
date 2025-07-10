@@ -21,10 +21,10 @@ import ".../src/go.pkl"
 
 myStr: String
 
-foo: module
+foo: module?
 
 lib: lib4.MyLib4
 
-fooAgain: Myself
+fooAgain: Myself?
 
 typealias Myself = module

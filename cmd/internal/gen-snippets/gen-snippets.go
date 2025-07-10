@@ -55,7 +55,12 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 		panic(err)
 	}
 	codegenDir := filepath.Join(snippetsDir, "..")
-	settings, err := generatorsettings.LoadFromPath(context.Background(), "codegen/snippet-tests/generator-settings.pkl")
+
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("Can't find runtime caller")
+	}
+	settings, err := generatorsettings.LoadFromPath(context.Background(), filepath.Join(filename, "../../../../codegen/snippet-tests/generator-settings.pkl"))
 	if err != nil {
 		panic(err)
 	}
@@ -72,6 +77,7 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 			basename := strings.TrimSuffix(filepath.Base(file.Name()), ".pkl")
 			errContents := strings.ReplaceAll(err.Error(), codegenDir, "<codegen_dir>")
 			errContents = stripLineNumbers(errContents)
+			os.MkdirAll(outputDir, os.ModePerm)
 			if err = os.WriteFile(filepath.Join(outputDir, basename), []byte(errContents), 0o666); err != nil {
 				panic(err)
 			}

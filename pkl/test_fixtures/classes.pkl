@@ -24,6 +24,11 @@ animals: Listing<Animal> = new {
   new Cat { name = "Millie"; meows = true }
 }
 
+nullableAnimals: Listing<Animal?> = new {
+  null
+  new Greyhound { name = "Uni"; barks = false; canRoach = true }
+}
+
 myAnimal: Animal = new Greyhound {
   name = "Uni"
   barks = false
