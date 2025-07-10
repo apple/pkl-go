@@ -9,14 +9,14 @@ type MyClass2 interface {
 	GetMyBoolean() bool
 }
 
-var _ MyClass2 = (*MyClass2Impl)(nil)
+var _ MyClass2 = MyClass2Impl{}
 
 type MyClass2Impl struct {
-	*lib3.GoGoGoImpl
+	lib3.GoGoGoImpl
 
 	MyBoolean bool `pkl:"myBoolean"`
 }
 
-func (rcv *MyClass2Impl) GetMyBoolean() bool {
+func (rcv MyClass2Impl) GetMyBoolean() bool {
 	return rcv.MyBoolean
 }
