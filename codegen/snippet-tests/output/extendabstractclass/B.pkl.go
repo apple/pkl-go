@@ -1,24 +1,10 @@
 // Code generated from Pkl module `ExtendsAbstractClass`. DO NOT EDIT.
 package extendabstractclass
 
+import "github.com/apple/pkl-go/codegen/snippet-tests/output/support/lib2/cities"
+
 type B interface {
 	A
 
-	GetC() string
-}
-
-var _ B = (*BImpl)(nil)
-
-type BImpl struct {
-	B string `pkl:"b"`
-
-	C string `pkl:"c"`
-}
-
-func (rcv *BImpl) GetB() string {
-	return rcv.B
-}
-
-func (rcv *BImpl) GetC() string {
-	return rcv.C
+	GetE() cities.Cities
 }

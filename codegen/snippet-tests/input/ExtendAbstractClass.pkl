@@ -17,14 +17,22 @@
 module ExtendsAbstractClass
 
 import ".../src/go.pkl"
+import "support/lib3.pkl"
+import "support/lib2.pkl"
 
 abstract class A {
   b: String
+  c: lib3.GoGoGo
 }
 
-class B extends A {
+abstract class B extends A {
+  b = "hello"
+  e: lib2.Cities
+}
+
+class C extends B {
   b = "hi"
-  c: String
+  d: String
 }
 
 a: A
