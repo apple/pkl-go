@@ -1,2 +1,2 @@
-*.pkl linguist-language=Groovy
+PklProject linguist-language=Pkl
 *.msgpack binary
