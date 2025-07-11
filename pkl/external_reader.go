@@ -74,7 +74,9 @@ var WithExternalClientStreams = func(requestReader io.Reader, responseWriter io.
 }
 
 // NewExternalReaderClient creates a new ExternalReaderClient.
-func NewExternalReaderClient(opts ...func(options *ExternalReaderClientOptions)) (ExternalReaderClient, error) {
+func NewExternalReaderClient(
+	opts ...func(options *ExternalReaderClientOptions),
+) (ExternalReaderClient, error) {
 	o := ExternalReaderClientOptions{}
 	for _, f := range opts {
 		f(&o)
@@ -96,10 +98,10 @@ func NewExternalReaderClient(opts ...func(options *ExternalReaderClientOptions))
 }
 
 type externalReaderClient struct {
-	ExternalReaderClientOptions
 	in     chan msgapi.IncomingMessage
 	out    chan msgapi.OutgoingMessage
 	closed chan error
+	ExternalReaderClientOptions
 	exited atomicBool
 }
 
@@ -111,7 +113,11 @@ func (r *externalReaderClient) Run() error {
 		internal.Debug("Registered module reader of type %T for scheme %q", reader, reader.Scheme())
 	}
 	for _, reader := range r.ResourceReaders {
-		internal.Debug("Registered resource reader of type %T for scheme %q", reader, reader.Scheme())
+		internal.Debug(
+			"Registered resource reader of type %T for scheme %q",
+			reader,
+			reader.Scheme(),
+		)
 	}
 
 	go r.readIncomingMessages()
@@ -205,7 +211,9 @@ func (r *externalReaderClient) handleInitializeModuleReader(msg *msgapi.Initiali
 	}
 }
 
-func (r *externalReaderClient) handleInitializeResourceReader(msg *msgapi.InitializeResourceReader) {
+func (r *externalReaderClient) handleInitializeResourceReader(
+	msg *msgapi.InitializeResourceReader,
+) {
 	for _, reader := range r.ResourceReaders {
 		if reader.Scheme() == msg.Scheme {
 			r.out <- &msgapi.InitializeResourceReaderResponse{
@@ -280,7 +288,10 @@ func (r *externalReaderClient) handleReadModule(msg *msgapi.ReadModule) {
 }
 
 func (r *externalReaderClient) handleListResources(msg *msgapi.ListResources) {
-	response := &msgapi.ListResourcesResponse{EvaluatorId: msg.EvaluatorId, RequestId: msg.RequestId}
+	response := &msgapi.ListResourcesResponse{
+		EvaluatorId: msg.EvaluatorId,
+		RequestId:   msg.RequestId,
+	}
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()

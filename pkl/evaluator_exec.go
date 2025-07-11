@@ -37,7 +37,11 @@ func NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) 
 //
 // When using project dependencies, they must first be resolved using the `pkl project resolve`
 // CLI command.
-func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func NewProjectEvaluator(
+	ctx context.Context,
+	projectDir string,
+	opts ...func(options *EvaluatorOptions),
+) (Evaluator, error) {
 	return NewProjectEvaluatorWithCommand(ctx, projectDir, nil, opts...)
 }
 
@@ -52,7 +56,12 @@ func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(op
 //
 // If creating multiple evaluators, prefer using EvaluatorManager.NewProjectEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
-func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func NewProjectEvaluatorWithCommand(
+	ctx context.Context,
+	projectDir string,
+	pklCmd []string,
+	opts ...func(options *EvaluatorOptions),
+) (Evaluator, error) {
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
 	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
@@ -87,7 +96,11 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklC
 //
 // If creating multiple evaluators, prefer using EvaluatorManager.NewEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
-func NewEvaluatorWithCommand(ctx context.Context, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func NewEvaluatorWithCommand(
+	ctx context.Context,
+	pklCmd []string,
+	opts ...func(options *EvaluatorOptions),
+) (Evaluator, error) {
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
 	ev, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {

@@ -439,5 +439,9 @@ func TestUnmarshal_UnknownType(t *testing.T) {
 	var res unknowntype.UnknownType
 	err := pkl.Unmarshal(unknownType, &res)
 	assert.Error(t, err)
-	assert.Equal(t, "cannot decode Pkl value of type `PcfRenderer` into Go type `interface {}`. Define a custom mapping for this using `pkl.RegisterMapping`", err.Error())
+	assert.Equal(
+		t,
+		"cannot decode Pkl value of type `PcfRenderer` into Go type `interface {}`. Define a custom mapping for this using `pkl.RegisterMapping`",
+		err.Error(),
+	)
 }

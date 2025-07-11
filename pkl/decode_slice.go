@@ -30,7 +30,12 @@ func (d *decoder) decodeSlice(inType reflect.Type) (*reflect.Value, error) {
 		return nil, fmt.Errorf("expected array length 2 but got %d", length)
 	}
 	if code != codeList && code != codeListing {
-		return nil, fmt.Errorf("invalid code for slices: %d. Expected %d or %d", code, codeList, codeListing)
+		return nil, fmt.Errorf(
+			"invalid code for slices: %d. Expected %d or %d",
+			code,
+			codeList,
+			codeListing,
+		)
 	}
 	return d.decodeSliceImpl(inType)
 }

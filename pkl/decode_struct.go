@@ -260,7 +260,8 @@ func (d *decoder) decodeStructField(fields map[string]structField, out *reflect.
 	}
 	sf, exists := fields[propertyName]
 	if !exists {
-		log.Default().Printf("warn: Cannot find field on Go struct `%s` matching Pkl property `%s`. Ensure the Go structs are up to date with Pkl classes either through codegen or manually adding `pkl` tags.", out.Type().String(), propertyName)
+		log.Default().
+			Printf("warn: Cannot find field on Go struct `%s` matching Pkl property `%s`. Ensure the Go structs are up to date with Pkl classes either through codegen or manually adding `pkl` tags.", out.Type().String(), propertyName)
 		return d.dec.Skip()
 	}
 	code, err := d.dec.PeekCode()

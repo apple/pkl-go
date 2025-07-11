@@ -105,9 +105,13 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateOutputText - output format", func(t *testing.T) {
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
-			options.OutputFormat = "yaml"
-		})
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			func(options *EvaluatorOptions) {
+				options.OutputFormat = "yaml"
+			},
+		)
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputText(context.Background(), TextSource("foo { bar = 1 }"))
 			assert.NoError(t, err)
@@ -152,11 +156,18 @@ bar: Int = 5
 
 	t.Run("custom logger", func(t *testing.T) {
 		s := &stubLogger{}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
-			options.Logger = s
-		})
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			func(options *EvaluatorOptions) {
+				options.Logger = s
+			},
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource("foo { bar = trace(\"bar\") }"))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource("foo { bar = trace(\"bar\") }"),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, "foo {\n  bar = \"bar\"\n}\n", out)
 			if assert.Len(t, s.traces, 1) {
@@ -173,9 +184,16 @@ bar: Int = 5
 				return []byte("Fred Flintstone"), nil
 			},
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithResourceReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read("flintstone:fred").text`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`foo = read("flintstone:fred").text`),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, "foo = \"Fred Flintstone\"\n", out)
 			assert.NoError(t, ev.Close())
@@ -189,9 +207,16 @@ bar: Int = 5
 				return nil, fmt.Errorf("cannot find resource %s", &url)
 			},
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithResourceReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read("flintstone:fred").text`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`foo = read("flintstone:fred").text`),
+			)
 			assert.Empty(t, out)
 			assert.Error(t, err)
 			assert.IsType(t, &EvalError{}, err)
@@ -221,9 +246,16 @@ bar: Int = 5
 			},
 			isGlobbable: true,
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithResourceReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`flintstones = read*("flintstone:*")`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`flintstones = read*("flintstone:*")`),
+			)
 			assert.Nil(t, err)
 			assert.Equal(t, `flintstones {
   ["flintstone:barney"] {
@@ -258,9 +290,16 @@ bar: Int = 5
 			},
 			isGlobbable: true,
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithResourceReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`flintstones = read*("flintstone:*")`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`flintstones = read*("flintstone:*")`),
+			)
 			assert.Empty(t, out)
 			assert.Error(t, err, "IOException: something went wrong")
 			assert.Zero(t, out)
@@ -275,9 +314,16 @@ bar: Int = 5
 				return `foo = 1`, nil
 			},
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithModuleReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`result = import("flintstone:fred").foo`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`result = import("flintstone:fred").foo`),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, "result = 1\n", out)
 			assert.NoError(t, ev.Close())
@@ -291,9 +337,16 @@ bar: Int = 5
 				return "", fmt.Errorf("no idea where %s is", &u)
 			},
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithModuleReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`result = import("flintstone:fred").foo`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`result = import("flintstone:fred").foo`),
+			)
 			assert.Empty(t, out)
 			assert.Error(t, err)
 			assert.Contains(t, err.Error(), "no idea where flintstone:fred is")
@@ -321,9 +374,16 @@ bar: Int = 5
 				return "", nil
 			},
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithModuleReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), UriSource("flintstone:/foo/bar/baz.pkl"))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				UriSource("flintstone:/foo/bar/baz.pkl"),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, `res {
   bar = 1
@@ -356,9 +416,16 @@ bar: Int = 5
 				}, nil
 			},
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithModuleReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`res = import*("flintstone:/**.pkl")`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`res = import*("flintstone:/**.pkl")`),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, `res {
   ["flintstone:/bar.pkl"] {
@@ -385,28 +452,48 @@ bar: Int = 5
 				return nil, fmt.Errorf("i failed")
 			},
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithModuleReader(reader),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`res = import*("flintstone:/**.pkl")`))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`res = import*("flintstone:/**.pkl")`),
+			)
 			assert.Error(t, err)
 			assert.Zero(t, out)
 		}
 	})
 
 	t.Run("custom fs", func(t *testing.T) {
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithFs(testFs, "testfs"))
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			WithFs(testFs, "testfs"),
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), UriSource("testfs:/test_fixtures/testfs/person.pkl"))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				UriSource("testfs:/test_fixtures/testfs/person.pkl"),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, `name = "Barney"
 age = 43
 `, out)
-			out, err = ev.EvaluateOutputText(context.Background(), UriSource("testfs:/test_fixtures/testfs/subdir/person.pkl"))
+			out, err = ev.EvaluateOutputText(
+				context.Background(),
+				UriSource("testfs:/test_fixtures/testfs/subdir/person.pkl"),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, `name = "Fred"
 age = 43
 `, out)
-			out, err = ev.EvaluateOutputText(context.Background(), TextSource(`result = import*("testfs:/**.pkl")`))
+			out, err = ev.EvaluateOutputText(
+				context.Background(),
+				TextSource(`result = import*("testfs:/**.pkl")`),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, `result {
   ["testfs:/test_fixtures/testfs/person.pkl"] {
@@ -425,9 +512,16 @@ age = 43
 	t.Run("EvaluatorManager.NewProjectEvaluator", func(t *testing.T) {
 		// TODO(oss): re-enable this test after repos are public
 		t.SkipNow()
-		ev, err := manager.NewProjectEvaluator(context.Background(), projectDir, PreconfiguredOptions)
+		ev, err := manager.NewProjectEvaluator(
+			context.Background(),
+			projectDir,
+			PreconfiguredOptions,
+		)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), FileSource(projectDir, "main.pkl"))
+			out, err := ev.EvaluateOutputText(
+				context.Background(),
+				FileSource(projectDir, "main.pkl"),
+			)
 			assert.NoError(t, err)
 			assert.Equal(t, "uri = \"https://www.example.com\"\n", out)
 		}
@@ -451,7 +545,10 @@ age = 43
 		ch := make(chan string)
 		for i := 0; i < 5; i++ {
 			go func(j int) {
-				res, _ := ev.EvaluateOutputText(context.Background(), TextSource(fmt.Sprintf("foo = %d", j)))
+				res, _ := ev.EvaluateOutputText(
+					context.Background(),
+					TextSource(fmt.Sprintf("foo = %d", j)),
+				)
 				ch <- res
 			}(i)
 		}
@@ -504,13 +601,17 @@ age = 43
 		if pklVersion0_26.isGreaterThan(version) {
 			t.SkipNow()
 		}
-		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
-			options.Http = &Http{
-				Proxy: &Proxy{
-					Address: fmt.Sprintf("http://localhost:%d", getOpenPort()),
-				},
-			}
-		})
+		ev, err := manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			func(options *EvaluatorOptions) {
+				options.Http = &Http{
+					Proxy: &Proxy{
+						Address: fmt.Sprintf("http://localhost:%d", getOpenPort()),
+					},
+				}
+			},
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -526,14 +627,22 @@ age = 43
 		if version.isGreaterThan(pklVersion0_25) {
 			t.SkipNow()
 		}
-		_, err = manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
-			options.Http = &Http{
-				Proxy: &Proxy{
-					Address: fmt.Sprintf("http://localhost:%d", getOpenPort()),
-				},
-			}
-		})
-		assert.ErrorContains(t, err, "http options are not supported on Pkl versions lower than 0.26")
+		_, err = manager.NewEvaluator(
+			context.Background(),
+			PreconfiguredOptions,
+			func(options *EvaluatorOptions) {
+				options.Http = &Http{
+					Proxy: &Proxy{
+						Address: fmt.Sprintf("http://localhost:%d", getOpenPort()),
+					},
+				}
+			},
+		)
+		assert.ErrorContains(
+			t,
+			err,
+			"http options are not supported on Pkl versions lower than 0.26",
+		)
 	})
 
 	t.Cleanup(func() {
