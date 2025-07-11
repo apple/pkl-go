@@ -58,3 +58,40 @@ func TestDataSize_String(t *testing.T) {
 		})
 	}
 }
+
+func TestDataSize_ConvertToUnit(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    DataSize
+		expected DataSize
+	}{
+		{
+			name: "bytes_to_gigabytes",
+			input: DataSize{
+				Value: 1.0,
+				Unit:  Bytes,
+			},
+			expected: DataSize{
+				Value: 0.000_000_001,
+				Unit:  Gigabytes,
+			},
+		},
+		{
+			name: "megabytes_to_bytes",
+			input: DataSize{
+				Value: 1.0,
+				Unit:  Megabytes,
+			},
+			expected: DataSize{
+				Value: 1_000_000,
+				Unit:  Bytes,
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := test.input.ToUnit(test.expected.Unit)
+			assert.Equal(t, test.expected, got)
+		})
+	}
+}
