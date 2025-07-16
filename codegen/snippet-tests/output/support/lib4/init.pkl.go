@@ -4,6 +4,6 @@ package lib4
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("lib4#MyLib4", MyLib4{})
-	pkl.RegisterMapping("lib4", Lib4{})
+	pkl.RegisterStrictMapping("lib4#MyLib4", MyLib4{})
+	pkl.RegisterStrictMapping("lib4", Lib4{})
 }

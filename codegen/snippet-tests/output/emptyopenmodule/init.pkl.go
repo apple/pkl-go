@@ -4,5 +4,5 @@ package emptyopenmodule
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("EmptyOpenModule", EmptyOpenModuleImpl{})
+	pkl.RegisterStrictMapping("EmptyOpenModule", EmptyOpenModuleImpl{})
 }

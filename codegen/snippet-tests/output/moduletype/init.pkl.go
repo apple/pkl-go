@@ -4,5 +4,5 @@ package moduletype
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("ModuleType", ModuleType{})
+	pkl.RegisterStrictMapping("ModuleType", ModuleType{})
 }

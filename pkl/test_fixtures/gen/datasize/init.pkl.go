@@ -4,5 +4,5 @@ package datasize
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("datasize", Datasize{})
+	pkl.RegisterStrictMapping("datasize", Datasize{})
 }

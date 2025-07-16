@@ -4,5 +4,5 @@ package generatorsettings
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("pkl.golang.GeneratorSettings", GeneratorSettings{})
+	pkl.RegisterStrictMapping("pkl.golang.GeneratorSettings", GeneratorSettings{})
 }
