@@ -5,5 +5,5 @@ import "github.com/apple/pkl-go/pkl"
 
 func init() {
 	pkl.RegisterStrictMapping("ExtendsAbstractClass", ExtendsAbstractClass{})
-	pkl.RegisterStrictMapping("ExtendsAbstractClass#B", BImpl{})
+	pkl.RegisterStrictMapping("ExtendsAbstractClass#C", CImpl{})
 }

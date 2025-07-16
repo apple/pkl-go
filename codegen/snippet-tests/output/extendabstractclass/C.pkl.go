@@ -12,7 +12,7 @@ type C interface {
 	GetD() string
 }
 
-var _ C = (*CImpl)(nil)
+var _ C = CImpl{}
 
 type CImpl struct {
 	B string `pkl:"b"`
@@ -24,18 +24,18 @@ type CImpl struct {
 	C lib3.GoGoGo `pkl:"c"`
 }
 
-func (rcv *CImpl) GetB() string {
+func (rcv CImpl) GetB() string {
 	return rcv.B
 }
 
-func (rcv *CImpl) GetD() string {
+func (rcv CImpl) GetD() string {
 	return rcv.D
 }
 
-func (rcv *CImpl) GetE() cities.Cities {
+func (rcv CImpl) GetE() cities.Cities {
 	return rcv.E
 }
 
-func (rcv *CImpl) GetC() lib3.GoGoGo {
+func (rcv CImpl) GetC() lib3.GoGoGo {
 	return rcv.C
 }
