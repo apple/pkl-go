@@ -24,8 +24,8 @@ import (
 
 // needed for mapping Project.RawDependencies, because the value is defined as any.
 func init() {
-	RegisterMapping("pkl.Project", &Project{})
-	RegisterMapping("pkl.Project#RemoteDependency", &ProjectRemoteDependency{})
+	RegisterStrictMapping("pkl.Project", &Project{})
+	RegisterStrictMapping("pkl.Project#RemoteDependency", &ProjectRemoteDependency{})
 }
 
 // Project is the go representation of pkl.Project.
