@@ -205,7 +205,7 @@ type Http struct {
 
 	// HTTP URI rewrite rules.
 	//
-	// Added in Pkl 0.27.
+	// Added in Pkl 0.29.
 	// If the underlying Pkl does not support HTTP rewrites, NewEvaluator will return an error.
 	//
 	// Each key-value pair designates a source prefix to a target prefix.
