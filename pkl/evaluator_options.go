@@ -202,6 +202,23 @@ type Http struct {
 	//
 	// If nil, uses the operating system's proxy configuration.
 	Proxy *Proxy
+
+	// HTTP URI rewrite rules.
+	//
+	// Added in Pkl 0.27.
+	// If the underlying Pkl does not support HTTP rewrites, NewEvaluator will return an error.
+	//
+	// Each key-value pair designates a source prefix to a target prefix.
+	// Each rewrite rule must start with `http://` or `https://`, and end with `/`.
+	//
+	// This option is often used for setting up package mirroring.
+	//
+	// The following example will rewrite a request https://example.com/foo/bar to https://my.other.website/foo/bar:
+	//
+	//		Rewrites: map[string]string{
+	//			"https://example.com/": "https://my.other.website/"
+	//		}
+	Rewrites map[string]string
 }
 
 func (http *Http) toMessage() *msgapi.Http {
@@ -211,6 +228,7 @@ func (http *Http) toMessage() *msgapi.Http {
 	return &msgapi.Http{
 		CaCertificates: http.CaCertificates,
 		Proxy:          http.Proxy.toMessage(),
+		Rewrites:       http.Rewrites,
 	}
 }
 
@@ -425,6 +443,9 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 				if evaluatorSettings.Http.Proxy.Address != nil {
 					opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
 				}
+			}
+			if evaluatorSettings.Http.Rewrites != nil {
+				opts.Http.Rewrites = *evaluatorSettings.Http.Rewrites
 			}
 		}
 		if evaluatorSettings.ExternalModuleReaders != nil {
