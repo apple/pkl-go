@@ -43,7 +43,7 @@ contents = new Listing {
     interface
     when (!isAbstract) {
       ""
-      "var _ \(classInfo.interface.name) = (\(classInfo.struct.type.render(classInfo.goPackage)))(nil)"
+      "var _ \(classInfo.interface.name) = \(classInfo.struct.type.render(classInfo.goPackage)){}"
     }
   }
   when (!isAbstract) {
@@ -60,7 +60,7 @@ contents = new Listing {
     "func LoadFromPath(ctx context.Context, path string) (ret \(classInfo.type.render(classInfo.goPackage)), err error) {"
     "\tevaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)"
     "\tif err != nil {"
-    "\t\treturn nil, err"
+    "\t\treturn ret, err"
     "\t}"
     "\tdefer func() {"
     "\t\tcerr := evaluator.Close()"
@@ -75,10 +75,8 @@ contents = new Listing {
     "// Load loads the pkl module at the given source and evaluates it with the given evaluator into a \(classInfo.name)"
     "func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (\(classInfo.type.render(classInfo.goPackage)), error) {"
     "\tvar ret \(classInfo.struct.name)"
-    "\tif err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {"
-    "\t\treturn nil, err"
-    "\t}"
-    "\treturn &ret, nil"
+    "\terr := evaluator.EvaluateModule(ctx, source, &ret)"
+    "\treturn ret, err"
     "}"
   }
   ""
@@ -201,7 +199,7 @@ local interface: String? =
       new Listing {
         "type \(classInfo.interface.name) interface {"
         when (superClass != null) {
-          "\t\(superClass.type.render(classInfo.goPackage))"
+          "\t\(superClass.interface.type.render(classInfo.goPackage))"
           when (!methodsToGenerate.isEmpty) {
             ""
           }

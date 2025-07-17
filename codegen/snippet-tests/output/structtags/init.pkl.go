@@ -4,5 +4,5 @@ package structtags
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("StructTags", StructTags{})
+	pkl.RegisterStrictMapping("StructTags", StructTags{})
 }

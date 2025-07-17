@@ -4,5 +4,5 @@ package moduleusinglib
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("ModuleUsingLib", ModuleUsingLib{})
+	pkl.RegisterStrictMapping("ModuleUsingLib", ModuleUsingLib{})
 }

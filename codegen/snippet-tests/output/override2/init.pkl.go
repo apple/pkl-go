@@ -4,6 +4,6 @@ package override2
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("Override2", Override2Impl{})
-	pkl.RegisterMapping("Override2#MySubclass", MySubclassImpl{})
+	pkl.RegisterStrictMapping("Override2", Override2Impl{})
+	pkl.RegisterStrictMapping("Override2#MySubclass", MySubclassImpl{})
 }

@@ -4,5 +4,5 @@ package hiddenproperties
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("HiddenProperties", HiddenProperties{})
+	pkl.RegisterStrictMapping("HiddenProperties", HiddenProperties{})
 }

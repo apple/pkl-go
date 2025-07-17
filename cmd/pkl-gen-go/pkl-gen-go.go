@@ -121,7 +121,7 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 }
 
 var (
-	settings         *generatorsettings.GeneratorSettings
+	settings         generatorsettings.GeneratorSettings
 	suppressWarnings bool
 	outputPath       string
 	printVersion     bool
@@ -189,7 +189,7 @@ func findProjectDir(projectDirFlag string) string {
 
 // Loads the settings for controlling codegen.
 // Uses a Pkl evaluator that is separate from what's used for actually running codegen.
-func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, cacheDirFlag string) (*generatorsettings.GeneratorSettings, error) {
+func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, cacheDirFlag string) (generatorsettings.GeneratorSettings, error) {
 	projectDir := findProjectDir(projectDirFlag)
 	var evaluator pkl.Evaluator
 	var err error
@@ -216,7 +216,7 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, 
 	}
 	s, err := generatorsettings.Load(context.Background(), evaluator, source)
 	if err != nil {
-		return nil, err
+		return s, err
 	}
 	settingsFilePath := path.Dir(source.Uri.Path)
 	if s.ProjectDir != nil && !path.IsAbs(*s.ProjectDir) {

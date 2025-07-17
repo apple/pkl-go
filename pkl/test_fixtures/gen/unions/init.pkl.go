@@ -4,5 +4,5 @@ package unions
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("unions", Unions{})
+	pkl.RegisterStrictMapping("unions", Unions{})
 }

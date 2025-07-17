@@ -25,5 +25,5 @@ class Cyclic {
 
   b: Int
 
-  myself: Cyclic
+  myself: Cyclic?
 }

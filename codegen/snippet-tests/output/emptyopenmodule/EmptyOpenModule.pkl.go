@@ -10,7 +10,7 @@ import (
 type EmptyOpenModule interface {
 }
 
-var _ EmptyOpenModule = (*EmptyOpenModuleImpl)(nil)
+var _ EmptyOpenModule = EmptyOpenModuleImpl{}
 
 type EmptyOpenModuleImpl struct {
 }
@@ -19,7 +19,7 @@ type EmptyOpenModuleImpl struct {
 func LoadFromPath(ctx context.Context, path string) (ret EmptyOpenModule, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -34,8 +34,6 @@ func LoadFromPath(ctx context.Context, path string) (ret EmptyOpenModule, err er
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a EmptyOpenModule
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (EmptyOpenModule, error) {
 	var ret EmptyOpenModuleImpl
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
-	}
-	return &ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }

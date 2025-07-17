@@ -4,6 +4,6 @@ package extendabstractclass
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("ExtendsAbstractClass", ExtendsAbstractClass{})
-	pkl.RegisterMapping("ExtendsAbstractClass#C", CImpl{})
+	pkl.RegisterStrictMapping("ExtendsAbstractClass", ExtendsAbstractClass{})
+	pkl.RegisterStrictMapping("ExtendsAbstractClass#C", CImpl{})
 }

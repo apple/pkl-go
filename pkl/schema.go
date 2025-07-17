@@ -20,9 +20,19 @@ import "reflect"
 
 var schemas = make(map[string]reflect.Type)
 
-// RegisterMapping associates the type given the Pkl name to the corresponding Go type.
+// RegisterStrictMapping associates the type given the Pkl name to the corresponding Go type.
+//
+//goland:noinspection GoUnusedExportedFunction
+func RegisterStrictMapping(name string, value any) {
+	schemas[name] = reflect.TypeOf(value)
+}
+
+// RegisterMapping is like RegisterStrictMapping, but casts it to a pointer.
+//
+// This method exists to preserve compatibility with legacy generated code, where object types were generated as
+// pointers.
 //
 //goland:noinspection GoUnusedExportedFunction
 func RegisterMapping(name string, value any) {
-	schemas[name] = reflect.TypeOf(value)
+	schemas[name] = reflect.PointerTo(reflect.TypeOf(value))
 }

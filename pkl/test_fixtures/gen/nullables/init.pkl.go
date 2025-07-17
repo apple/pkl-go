@@ -4,6 +4,6 @@ package nullables
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("nullables", Nullables{})
-	pkl.RegisterMapping("nullables#MyClass", MyClass{})
+	pkl.RegisterStrictMapping("nullables", Nullables{})
+	pkl.RegisterStrictMapping("nullables#MyClass", MyClass{})
 }

@@ -169,31 +169,31 @@ func TestUnmarshall_Collections(t *testing.T) {
 func TestUnmarshal_Duration(t *testing.T) {
 	var res duration.Duration
 	expected := duration.Duration{
-		Res1: &pkl.Duration{
+		Res1: pkl.Duration{
 			Value: 1,
 			Unit:  pkl.Nanosecond,
 		},
-		Res2: &pkl.Duration{
+		Res2: pkl.Duration{
 			Value: 2,
 			Unit:  pkl.Microsecond,
 		},
-		Res3: &pkl.Duration{
+		Res3: pkl.Duration{
 			Value: 3,
 			Unit:  pkl.Millisecond,
 		},
-		Res4: &pkl.Duration{
+		Res4: pkl.Duration{
 			Value: 4,
 			Unit:  pkl.Second,
 		},
-		Res5: &pkl.Duration{
+		Res5: pkl.Duration{
 			Value: 5,
 			Unit:  pkl.Minute,
 		},
-		Res6: &pkl.Duration{
+		Res6: pkl.Duration{
 			Value: 6,
 			Unit:  pkl.Hour,
 		},
-		Res7: &pkl.Duration{
+		Res7: pkl.Duration{
 			Value: 7,
 			Unit:  pkl.Day,
 		},
@@ -207,17 +207,17 @@ func TestUnmarshal_Duration(t *testing.T) {
 func TestUnmarshal_DataSize(t *testing.T) {
 	var res datasize.Datasize
 	expected := datasize.Datasize{
-		Res1:  &pkl.DataSize{Value: 1, Unit: pkl.Bytes},
-		Res2:  &pkl.DataSize{Value: 2, Unit: pkl.Kilobytes},
-		Res3:  &pkl.DataSize{Value: 3, Unit: pkl.Megabytes},
-		Res4:  &pkl.DataSize{Value: 4, Unit: pkl.Gigabytes},
-		Res5:  &pkl.DataSize{Value: 5, Unit: pkl.Terabytes},
-		Res6:  &pkl.DataSize{Value: 6, Unit: pkl.Petabytes},
-		Res7:  &pkl.DataSize{Value: 7, Unit: pkl.Kibibytes},
-		Res8:  &pkl.DataSize{Value: 8, Unit: pkl.Mebibytes},
-		Res9:  &pkl.DataSize{Value: 9, Unit: pkl.Gibibytes},
-		Res10: &pkl.DataSize{Value: 10, Unit: pkl.Tebibytes},
-		Res11: &pkl.DataSize{Value: 11, Unit: pkl.Pebibytes},
+		Res1:  pkl.DataSize{Value: 1, Unit: pkl.Bytes},
+		Res2:  pkl.DataSize{Value: 2, Unit: pkl.Kilobytes},
+		Res3:  pkl.DataSize{Value: 3, Unit: pkl.Megabytes},
+		Res4:  pkl.DataSize{Value: 4, Unit: pkl.Gigabytes},
+		Res5:  pkl.DataSize{Value: 5, Unit: pkl.Terabytes},
+		Res6:  pkl.DataSize{Value: 6, Unit: pkl.Petabytes},
+		Res7:  pkl.DataSize{Value: 7, Unit: pkl.Kibibytes},
+		Res8:  pkl.DataSize{Value: 8, Unit: pkl.Mebibytes},
+		Res9:  pkl.DataSize{Value: 9, Unit: pkl.Gibibytes},
+		Res10: pkl.DataSize{Value: 10, Unit: pkl.Tebibytes},
+		Res11: pkl.DataSize{Value: 11, Unit: pkl.Pebibytes},
 		Res12: pkl.Megabytes,
 	}
 	if assert.NoError(t, pkl.Unmarshal(datasizeInput, &res)) {
@@ -279,25 +279,25 @@ func TestUnmarshal_Nullables(t *testing.T) {
 func TestUnmarshal_Dynamic(t *testing.T) {
 	var res dynamic.Dynamic
 	expected := dynamic.Dynamic{
-		Res1: &pkl.Object{
+		Res1: pkl.Object{
 			ModuleUri: "pkl:base",
 			Name:      "Dynamic",
 			Properties: map[string]any{
-				"res2": &pkl.Object{
+				"res2": pkl.Object{
 					ModuleUri:  "pkl:base",
 					Name:       "Dynamic",
 					Properties: map[string]any{"res3": 5},
 					Entries:    map[any]any{},
 					Elements:   []any{},
 				},
-				"res5": &dynamic.MyClass{MyValue: 8},
+				"res5": dynamic.MyClass{MyValue: 8},
 			},
 			Entries: map[any]any{
 				"res4": 6,
 				5:      9,
 			},
 			Elements: []any{
-				&dynamic.MyClass{
+				dynamic.MyClass{
 					MyValue: 7,
 				},
 			},
@@ -309,30 +309,36 @@ func TestUnmarshal_Dynamic(t *testing.T) {
 }
 
 func TestUnmarshal_Classes(t *testing.T) {
+	var greyhound = classes.GreyhoundImpl{
+		DogImpl: classes.DogImpl{
+			Name:  "Uni",
+			Barks: false,
+			Breed: "Greyhound",
+		},
+		CanRoach: true,
+	}
+	var animal classes.Animal = greyhound
 	expected := classes.Classes{
 		Animals: []classes.Animal{
-			&classes.GreyhoundImpl{
-				DogImpl: &classes.DogImpl{
-					Name:  "Uni",
-					Barks: false,
-					Breed: "Greyhound",
-				},
-				CanRoach: true,
-			},
-			&classes.CatImpl{
+			greyhound,
+			classes.CatImpl{
 				Name:  "Millie",
 				Meows: true,
 			},
 		},
-		MyAnimal: &classes.GreyhoundImpl{
-			DogImpl: &classes.DogImpl{
+		NullableAnimals: []*classes.Animal{
+			nil,
+			&animal,
+		},
+		MyAnimal: classes.GreyhoundImpl{
+			DogImpl: classes.DogImpl{
 				Name:  "Uni",
 				Barks: false,
 				Breed: "Greyhound",
 			},
 			CanRoach: true,
 		},
-		House: &classes.House{
+		House: classes.House{
 			Area:      2000,
 			Bedrooms:  3,
 			Bathrooms: 2,
@@ -420,15 +426,15 @@ func TestUnmarshal_AnyType(t *testing.T) {
 	}
 	assert.Equal(t, any2.Any{
 		Res1: []any{
-			&any2.Person{
+			any2.Person{
 				Name: "Barney",
 			},
 		},
-		Res2: &any2.Person{
+		Res2: any2.Person{
 			Name: "Bobby",
 		},
 		Res3: map[any]any{
-			"Wilma": &any2.Person{
+			"Wilma": any2.Person{
 				Name: "Wilma",
 			},
 		},

@@ -4,6 +4,6 @@ package dynamic
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("dynamic", Dynamic{})
-	pkl.RegisterMapping("dynamic#MyClass", MyClass{})
+	pkl.RegisterStrictMapping("dynamic", Dynamic{})
+	pkl.RegisterStrictMapping("dynamic#MyClass", MyClass{})
 }

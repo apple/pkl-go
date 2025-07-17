@@ -94,7 +94,7 @@ local initFile: String =
     ""
     "func init() {"
     for (struct in structs) {
-        #"\#tpkl.RegisterMapping(\#(utils.toGoString(struct.clazz.reflectee.toString())), \#(struct.name){})"#
+        #"\#tpkl.RegisterStrictMapping(\#(utils.toGoString(struct.clazz.reflectee.toString())), \#(struct.name){})"#
     }
     "}"
     ""

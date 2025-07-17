@@ -443,6 +443,46 @@ age = 43
 		}
 	})
 
+	t.Run("evaluate into legacy pointer-style types", func(t *testing.T) {
+		type TestLegacyBar struct {
+			Name string `pkl:"name"`
+		}
+
+		type TestLegacyType struct {
+			SomeDuration *Duration             `pkl:"someDuration"`
+			SomePair     *Pair[string, string] `pkl:"somePair"`
+			Bar          *TestLegacyBar        `pkl:"bar"`
+		}
+
+		RegisterMapping("TestLegacyType", TestLegacyType{})
+		RegisterMapping("TestLegacyType#Bar", TestLegacyBar{})
+		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+		if assert.NoError(t, err) {
+			var out *TestLegacyType
+			err = ev.EvaluateModule(context.Background(), TextSource(`
+module TestLegacyType
+
+someDuration = 5.min
+
+somePair = Pair("one", "two")
+
+bar = new Bar { name = "Barney" } 
+
+class Bar {
+  name: String
+}
+`), &out)
+			assert.NoError(t, err)
+			assert.Equal(t, &TestLegacyType{
+				SomeDuration: &Duration{5, Minute},
+				SomePair:     &Pair[string, string]{"one", "two"},
+				Bar: &TestLegacyBar{
+					Name: "Barney",
+				},
+			}, out)
+		}
+	})
+
 	t.Run("concurrent evaluations", func(t *testing.T) {
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if err != nil {

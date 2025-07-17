@@ -4,9 +4,9 @@ package classes
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterMapping("classes", Classes{})
-	pkl.RegisterMapping("classes#House", House{})
-	pkl.RegisterMapping("classes#Dog", DogImpl{})
-	pkl.RegisterMapping("classes#Greyhound", GreyhoundImpl{})
-	pkl.RegisterMapping("classes#Cat", CatImpl{})
+	pkl.RegisterStrictMapping("classes", Classes{})
+	pkl.RegisterStrictMapping("classes#House", House{})
+	pkl.RegisterStrictMapping("classes#Dog", DogImpl{})
+	pkl.RegisterStrictMapping("classes#Greyhound", GreyhoundImpl{})
+	pkl.RegisterStrictMapping("classes#Cat", CatImpl{})
 }

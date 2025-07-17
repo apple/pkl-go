@@ -5,12 +5,12 @@ type GoGoGo interface {
 	GetDuck() string
 }
 
-var _ GoGoGo = (*GoGoGoImpl)(nil)
+var _ GoGoGo = GoGoGoImpl{}
 
 type GoGoGoImpl struct {
 	Duck string `pkl:"duck"`
 }
 
-func (rcv *GoGoGoImpl) GetDuck() string {
+func (rcv GoGoGoImpl) GetDuck() string {
 	return rcv.Duck
 }

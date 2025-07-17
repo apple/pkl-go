@@ -13,16 +13,16 @@ type ModuleType struct {
 
 	Foo *ModuleType `pkl:"foo"`
 
-	Lib *lib4.MyLib4 `pkl:"lib"`
+	Lib lib4.MyLib4 `pkl:"lib"`
 
 	FooAgain *ModuleType `pkl:"fooAgain"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a ModuleType
-func LoadFromPath(ctx context.Context, path string) (ret *ModuleType, err error) {
+func LoadFromPath(ctx context.Context, path string) (ret ModuleType, err error) {
 	evaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)
 	if err != nil {
-		return nil, err
+		return ret, err
 	}
 	defer func() {
 		cerr := evaluator.Close()
@@ -35,10 +35,8 @@ func LoadFromPath(ctx context.Context, path string) (ret *ModuleType, err error)
 }
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a ModuleType
-func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (*ModuleType, error) {
+func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (ModuleType, error) {
 	var ret ModuleType
-	if err := evaluator.EvaluateModule(ctx, source, &ret); err != nil {
-		return nil, err
-	}
-	return &ret, nil
+	err := evaluator.EvaluateModule(ctx, source, &ret)
+	return ret, err
 }
