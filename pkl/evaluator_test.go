@@ -41,7 +41,7 @@ func setupProject(t *testing.T) string {
 amends "pkl:Project"
 
 dependencies {
-  ["uri"] { uri = "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.0" }
+  ["uri"] { uri = "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.3" }
 }
 `), 0o644)
 	_ = os.WriteFile(tempDir+"/PklProject.deps.json", []byte(`
@@ -50,9 +50,9 @@ dependencies {
   "resolvedDependencies": {
     "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1": {
       "type": "remote",
-      "uri": "projectpackage://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.0",
+      "uri": "projectpackage://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.3",
       "checksums": {
-        "sha256": "12a42da6a2933a802cc79cea7f5541513b5106070ca5f1236009ebefeb3d81b3"
+        "sha256": "0b1db5755fa0c7651d5c62e0d5ef8a9ed4ed6411fe31769d06714600162e1589"
       }
     }
   }
@@ -582,8 +582,6 @@ class Bar {
 }
 
 func TestNewProjectEvaluator(t *testing.T) {
-	// TODO(oss): re-enable this test after repos are public
-	t.SkipNow()
 	projectDir := setupProject(t)
 	ev, err := NewProjectEvaluator(context.Background(), projectDir, PreconfiguredOptions)
 	if assert.NoError(t, err) {
