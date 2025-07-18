@@ -95,8 +95,9 @@ type ProjectOrDependency struct {
 }
 
 type Http struct {
-	CaCertificates []byte `msgpack:"caCertificates,omitempty"`
-	Proxy          *Proxy `msgpack:"proxy,omitempty"`
+	CaCertificates []byte            `msgpack:"caCertificates,omitempty"`
+	Proxy          *Proxy            `msgpack:"proxy,omitempty"`
+	Rewrites       map[string]string `msgpack:"rewrites"`
 }
 
 type Proxy struct {
