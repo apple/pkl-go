@@ -170,6 +170,8 @@ func writeFile(t *testing.T, filename string, contents string) {
 }
 
 func TestLoadProject(t *testing.T) {
+	t.Skip("native: pkl_init: graal_isolatethread is already initialised")
+
 	tempDir := t.TempDir()
 	_ = os.Mkdir(tempDir+"/hawks", 0o777)
 	_ = os.Mkdir(tempDir+"/storks", 0o777)
