@@ -86,25 +86,8 @@ func getOpenPort() int {
 	return port
 }
 
-func evaluatorFactory() map[string]func() EvaluatorManager {
-	return map[string]func() EvaluatorManager{
-		"exec":   NewEvaluatorManager,
-		"native": NewEvaluatorManagerWithNative,
-	}
-}
-
 func TestEvaluator(t *testing.T) {
-	implementations := evaluatorFactory()
-
-	for name, factory := range implementations {
-		t.Run(name, func(t *testing.T) {
-			manager := factory()
-			commonEvaluatorTests(t, manager)
-		})
-	}
-}
-
-func commonEvaluatorTests(t *testing.T, manager EvaluatorManager) {
+	manager := NewEvaluatorManager()
 	projectDir := setupProject(t)
 
 	t.Run("EvaluateOutputText", func(t *testing.T) {

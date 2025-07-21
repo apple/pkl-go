@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-//go:build !native
+//go:build native
 
 package pkl
 
@@ -29,7 +29,12 @@ import (
 // If creating multiple evaluators, prefer using EvaluatorManager.NewEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
 func NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	return NewEvaluatorWithCommand(ctx, nil, opts...)
+	manager := NewEvaluatorManager()
+	ev, err := manager.NewEvaluator(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &simpleEvaluator{Evaluator: ev, manager: manager}, nil
 }
 
 // NewProjectEvaluator is an easy way to create an evaluator that is configured by the specified
@@ -40,22 +45,7 @@ func NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) 
 // When using project dependencies, they must first be resolved using the `pkl project resolve`
 // CLI command.
 func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	return NewProjectEvaluatorWithCommand(ctx, projectDir, nil, opts...)
-}
-
-// NewProjectEvaluatorWithCommand is like NewProjectEvaluator, but also accepts the Pkl command to run.
-//
-// The first element in pklCmd is treated as the command to run.
-// Any additional elements are treated as arguments to be passed to the process.
-// pklCmd is treated as the base command that spawns Pkl.
-// For example, the below snippet spawns the command /opt/bin/pkl.
-//
-//	NewProjectEvaluatorWithCommand(context.Background(), "/path/to/my/project", []string{"/opt/bin/pkl"})
-//
-// If creating multiple evaluators, prefer using EvaluatorManager.NewProjectEvaluator instead,
-// because it lessens the overhead of each successive evaluator.
-func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	manager := NewEvaluatorManagerWithCommand(pklCmd)
+	manager := NewEvaluatorManager()
 	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
@@ -72,26 +62,6 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklC
 	}
 	newOpts = append(newOpts, opts...)
 	ev, err := manager.NewEvaluator(ctx, newOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return &simpleEvaluator{Evaluator: ev, manager: manager}, nil
-}
-
-// NewEvaluatorWithCommand is like NewEvaluator, but also accepts the Pkl command to run.
-//
-// The first element in pklCmd is treated as the command to run.
-// Any additional elements are treated as arguments to be passed to the process.
-// pklCmd is treated as the base command that spawns Pkl.
-// For example, the below snippet spawns the command /opt/bin/pkl.
-//
-//	NewEvaluatorWithCommand(context.Background(), []string{"/opt/bin/pkl"})
-//
-// If creating multiple evaluators, prefer using EvaluatorManager.NewEvaluator instead,
-// because it lessens the overhead of each successive evaluator.
-func NewEvaluatorWithCommand(ctx context.Context, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	manager := NewEvaluatorManagerWithCommand(pklCmd)
-	ev, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

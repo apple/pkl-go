@@ -1,3 +1,5 @@
+//go:build native
+
 package pkl
 
 import (
@@ -15,8 +17,8 @@ import (
 
 var _ evaluatorManagerImpl = (*nativeEvaluator)(nil)
 
-// NewEvaluatorManagerWithNative creates a new EvaluatorManager using the `libpkl` native bindings.
-func NewEvaluatorManagerWithNative() EvaluatorManager {
+// NewEvaluatorManager creates a new EvaluatorManager using the `libpkl` native bindings.
+func NewEvaluatorManager() EvaluatorManager {
 	m := &evaluatorManager{
 		impl: &nativeEvaluator{
 			in:       make(chan msgapi.IncomingMessage),

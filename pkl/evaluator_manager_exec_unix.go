@@ -14,8 +14,8 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-//go:build unix
-// +build unix
+//go:build unix && !native
+// +build unix,!native
 
 package pkl
 
