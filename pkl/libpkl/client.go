@@ -3,7 +3,7 @@
 package libpkl
 
 /*
-#cgo LDFLAGS: -L/Users/kushal/Projects/pkl/pkl/libpkl/build/native-libs/macos-aarch64 -lpkl -lpkl_internal
+#cgo LDFLAGS: -lpkl -lpkl_internal
 #include <stdlib.h>
 #include <pkl.h>
 
