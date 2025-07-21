@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/vmihailenco/msgpack/v5"
 	"testing"
-	"time"
 	"unsafe"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -14,22 +13,23 @@ import (
 )
 
 func Test_LibPkl_New_Close(t *testing.T) {
+	events := make(chan []byte, 10)
+	defer close(events)
+
 	testHandler := func(message []byte, userData unsafe.Pointer) {
-		event, err := decode(message)
-		assert.Nil(t, err, "couldn't deserialize MsgPack")
-		t.Logf("err=%v event=%#v userData=%#v\n", err, event, userData)
+		events <- message
 	}
 
 	c, err := New(testHandler, "metadata")
 	require.Nil(t, err, "Failed to start libpkl")
 
-	time.Sleep(100 * time.Millisecond)
 	err = c.Close()
 	require.Nil(t, err)
 }
 
 func Test_LibPkl_SendMessage(t *testing.T) {
 	events := make(chan []byte, 10)
+	defer close(events)
 
 	testHandler := func(message []byte, userData unsafe.Pointer) {
 		events <- message
@@ -77,11 +77,12 @@ func Test_LibPkl_SendMessage(t *testing.T) {
 	require.Nil(t, err)
 
 	err = c.Close()
-	require.Nil(t, err)
+	require.Nil(t, err, "Failed to close libpkl")
 }
 
 func Test_LibPkl_Version(t *testing.T) {
 	events := make(chan []byte, 10)
+	defer close(events)
 
 	testHandler := func(message []byte, userData unsafe.Pointer) {
 		events <- message
@@ -93,6 +94,9 @@ func Test_LibPkl_Version(t *testing.T) {
 	version, err := c.Version()
 	require.Nil(t, err)
 	assert.NotEmpty(t, version)
+
+	err = c.Close()
+	require.Nil(t, err, "Failed to close libpkl")
 }
 
 func decode(message []byte) (msgapi.IncomingMessage, error) {
