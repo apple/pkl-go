@@ -99,6 +99,25 @@ func Test_LibPkl_Version(t *testing.T) {
 	require.Nil(t, err, "Failed to close libpkl")
 }
 
+func Test_LibPkl_Version_Err_On_Closed(t *testing.T) {
+	events := make(chan []byte, 10)
+	defer close(events)
+
+	testHandler := func(message []byte, userData unsafe.Pointer) {
+		events <- message
+	}
+
+	c, err := New(testHandler, "metadata")
+	require.Nil(t, err, "Failed to start libpkl")
+
+	err = c.Close()
+	require.Nil(t, err, "Failed to close libpkl")
+
+	version, err := c.Version()
+	require.NotNil(t, err, "expected an error when trying to get version on closed libpkl")
+	assert.Empty(t, version)
+}
+
 func decode(message []byte) (msgapi.IncomingMessage, error) {
 	r := bytes.NewBuffer(message)
 	dec := msgpack.NewDecoder(r)
