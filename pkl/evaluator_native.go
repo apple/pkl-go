@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-//go:build native
+//go:build libpkl
 
 package pkl
 
