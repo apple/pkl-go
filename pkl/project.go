@@ -82,7 +82,8 @@ type ProjectEvaluatorSettings struct {
 
 // ProjectEvaluatorSettingsHttp is the Go representation of pkl.EvaluatorSettings.Http
 type ProjectEvaluatorSettingsHttp struct {
-	Proxy *ProjectEvaluatorSettingsProxy `pkl:"proxy"`
+	Proxy    *ProjectEvaluatorSettingsProxy `pkl:"proxy"`
+	Rewrites *map[string]string             `pkl:"rewrites"`
 }
 
 // ProjectEvaluatorSettingsProxy is the Go representation of pkl.EvaluatorSettings.Proxy

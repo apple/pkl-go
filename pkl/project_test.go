@@ -162,6 +162,17 @@ package {
 }
 `
 
+const project5Contents = `
+amends "pkl:Project"
+
+evaluatorSettings {
+  http {
+    rewrites {
+      ["https://example.com/"] = "https://example.example/"
+    }
+  }
+}`
+
 func writeFile(t *testing.T, filename string, contents string) {
 	if err := os.WriteFile(filename, []byte(contents), 0o777); err != nil {
 		t.Logf("Failed to write file %s: %s", filename, err)
@@ -321,6 +332,35 @@ func TestLoadProjectWithExternalReaders(t *testing.T) {
 				ExternalResourceReaders: map[string]ProjectEvaluatorSettingExternalReader{
 					"scheme3": {Executable: "reader3"},
 					"scheme4": {Executable: "reader4", Arguments: []string{"with", "args"}},
+				},
+			}
+			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
+		})
+	}
+}
+
+func TestLoadProjectWithRewrites(t *testing.T) {
+	manager := NewEvaluatorManager()
+	version, err := manager.(*evaluatorManager).getVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if version.isLessThan(pklVersion0_29) {
+		t.SkipNow()
+	}
+
+	tempDir := t.TempDir()
+	_ = os.Mkdir(tempDir+"/pigeons", 0o777)
+	writeFile(t, tempDir+"/pigeons/PklProject", project5Contents)
+
+	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
+	if assert.NoError(t, err) {
+		t.Run("evaluatorSettings", func(t *testing.T) {
+			expectedSettings := ProjectEvaluatorSettings{
+				Http: &ProjectEvaluatorSettingsHttp{
+					Rewrites: &map[string]string{
+						"https://example.com/": "https://example.example/",
+					},
 				},
 			}
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
