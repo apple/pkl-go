@@ -55,7 +55,6 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 		panic(err)
 	}
 	codegenDir := filepath.Join(snippetsDir, "..")
-
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("Can't find runtime caller")

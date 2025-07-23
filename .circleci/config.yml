@@ -14,8 +14,6 @@ jobs:
           go install github.com/jstemmer/go-junit-report/v2@latest
           echo "Running Pkl unit tests"
           $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-          echo "Running Pkl snippet tests"
-          ./scripts/test_snippets.sh
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -34,8 +32,6 @@ jobs:
           go install github.com/jstemmer/go-junit-report/v2@latest
           echo "Running Pkl unit tests"
           $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-          echo "Running Pkl snippet tests"
-          ./scripts/test_snippets.sh
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -54,8 +50,6 @@ jobs:
           go install github.com/jstemmer/go-junit-report/v2@latest
           echo "Running Pkl unit tests"
           $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-          echo "Running Pkl snippet tests"
-          ./scripts/test_snippets.sh
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -74,8 +68,33 @@ jobs:
           go install github.com/jstemmer/go-junit-report/v2@latest
           echo "Running Pkl unit tests"
           $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
+          echo "Running Go unit tests"
+          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+        name: go test
+    - store_test_results:
+        path: test-results
+    docker:
+    - image: cimg/go:1.21
+  test-pkl-0-29-0:
+    steps:
+    - checkout
+    - run:
+        command: |-
+          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.29.0/pkl-linux-amd64'
+          chmod +x pkl.bin
+          export PKL_EXEC=$(pwd)/pkl.bin
+
           echo "Running Pkl snippet tests"
           ./scripts/test_snippets.sh
+        name: snippet test
+    - run:
+        command: |-
+          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.29.0/pkl-linux-amd64'
+          chmod +x pkl.bin
+          export PKL_EXEC=$(pwd)/pkl.bin
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          echo "Running Pkl unit tests"
+          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -176,7 +195,7 @@ jobs:
     - checkout
     - run:
         command: |-
-          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.28.2/pkl-linux-amd64'
+          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.29.0/pkl-linux-amd64'
           chmod +x pkl.bin
           ./pkl.bin project package codegen/src/ --output-path out/pkl-package/
         name: Creating Pkl package
@@ -271,6 +290,9 @@ workflows:
     - test-pkl-0-28-2:
         requires:
         - hold
+    - test-pkl-0-29-0:
+        requires:
+        - hold
     - test-license-headers:
         requires:
         - hold
@@ -284,6 +306,7 @@ workflows:
     - test-pkl-0-26-0
     - test-pkl-0-27-1
     - test-pkl-0-28-2
+    - test-pkl-0-29-0
     - test-license-headers
     - build-pkl-gen-go:
         requires:
@@ -291,6 +314,7 @@ workflows:
         - test-pkl-0-26-0
         - test-pkl-0-27-1
         - test-pkl-0-28-2
+        - test-pkl-0-29-0
         - test-license-headers
     - build-pkl-package:
         requires:
@@ -298,6 +322,7 @@ workflows:
         - test-pkl-0-26-0
         - test-pkl-0-27-1
         - test-pkl-0-28-2
+        - test-pkl-0-29-0
         - test-license-headers
     when:
       equal:
@@ -329,6 +354,12 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+    - test-pkl-0-29-0:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - test-license-headers:
         filters:
           branches:
@@ -341,6 +372,7 @@ workflows:
         - test-pkl-0-26-0
         - test-pkl-0-27-1
         - test-pkl-0-28-2
+        - test-pkl-0-29-0
         - test-license-headers
         filters:
           branches:
@@ -353,6 +385,7 @@ workflows:
         - test-pkl-0-26-0
         - test-pkl-0-27-1
         - test-pkl-0-28-2
+        - test-pkl-0-29-0
         - test-license-headers
         filters:
           branches:

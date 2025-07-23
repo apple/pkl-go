@@ -38,6 +38,7 @@ local pklDistributions: Listing<PklDistribution> = new {
   new { version = "0.26.0" }
   new { version = "0.27.1" }
   new { version = "0.28.2" }
+  new { version = "0.29.0" }
 }
 
 release = (buildWorkflow) {
@@ -68,6 +69,20 @@ jobs {
   for (distribution in pklDistributions) {
     ["test-pkl-\(distribution.version.replaceAll(".", "-"))"] = (goJob) {
       steps {
+        when (distribution == pklDistributions.last) {
+          // snippet tests depend on Pkl 0.29 or higher.
+          new RunStep {
+            name = "snippet test"
+            command = """
+              curl -L -o pkl.bin '\(distribution.downloadUrl)'
+              chmod +x pkl.bin
+              export PKL_EXEC=$(pwd)/pkl.bin
+
+              echo "Running Pkl snippet tests"
+              ./scripts/test_snippets.sh
+              """
+          }
+        }
         new RunStep {
           name = "go test"
           command = """
@@ -77,8 +92,6 @@ jobs {
             go install github.com/jstemmer/go-junit-report/v2@latest
             echo "Running Pkl unit tests"
             $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
-            echo "Running Pkl snippet tests"
-            ./scripts/test_snippets.sh
             echo "Running Go unit tests"
             go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
             """

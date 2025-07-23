@@ -160,6 +160,7 @@ func TestUnmarshall_Collections(t *testing.T) {
 			First:  1,
 			Second: &[]int{2}[0],
 		},
+		Res14: []byte{1, 2, 3, 4, 255},
 	}
 	if assert.NoError(t, pkl.Unmarshal(collectionsInput, &res)) {
 		assert.Equal(t, expected, res)

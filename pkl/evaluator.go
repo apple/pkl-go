@@ -38,12 +38,22 @@ type Evaluator interface {
 	// EvaluateOutputText evaluates the `output.text` property of the given module.
 	EvaluateOutputText(ctx context.Context, source *ModuleSource) (string, error)
 
+	// EvaluateOutputBytes evaluates the `output.bytes` property of the given module.
+	//
+	// Supported on Pkl 0.29 and higher.
+	EvaluateOutputBytes(ctx context.Context, source *ModuleSource) ([]byte, error)
+
 	// EvaluateOutputValue evaluates the `output.value` property of the given module,
 	// and writes to the value pointed by out.
 	EvaluateOutputValue(ctx context.Context, source *ModuleSource, out any) error
 
-	// EvaluateOutputFiles evaluates the `output.files` property of the given module.
+	// EvaluateOutputFiles evaluates the `output.files` property of the given module, giving the text of each file.
 	EvaluateOutputFiles(ctx context.Context, source *ModuleSource) (map[string]string, error)
+
+	// EvaluateOutputFileBytes evaluates the `output.files` property of the given module, giving the bytes of each file.
+	//
+	// Supported on Pkl 0.29 and higher.
+	EvaluateOutputFileBytes(ctx context.Context, source *ModuleSource) (map[string][]byte, error)
 
 	// EvaluateExpression evaluates the provided expression on the given module source, and writes
 	// the result into the value pointed by out.
@@ -84,6 +94,12 @@ func (e *evaluator) EvaluateOutputText(ctx context.Context, source *ModuleSource
 	return out, err
 }
 
+func (e *evaluator) EvaluateOutputBytes(ctx context.Context, source *ModuleSource) ([]byte, error) {
+	var out []byte
+	err := e.EvaluateExpression(ctx, source, "output.bytes", &out)
+	return out, err
+}
+
 func (e *evaluator) EvaluateOutputValue(ctx context.Context, source *ModuleSource, out any) error {
 	return e.EvaluateExpression(ctx, source, "output.value", out)
 }
@@ -91,6 +107,12 @@ func (e *evaluator) EvaluateOutputValue(ctx context.Context, source *ModuleSourc
 func (e *evaluator) EvaluateOutputFiles(ctx context.Context, source *ModuleSource) (map[string]string, error) {
 	var out map[string]string
 	err := e.EvaluateExpression(ctx, source, "output.files.toMap().mapValues((_, it) -> it.text)", &out)
+	return out, err
+}
+
+func (e *evaluator) EvaluateOutputFileBytes(ctx context.Context, source *ModuleSource) (map[string][]byte, error) {
+	var out map[string][]byte
+	err := e.EvaluateExpression(ctx, source, "output.files.toMap().mapValues((_, it) -> it.bytes)", &out)
 	return out, err
 }
 
