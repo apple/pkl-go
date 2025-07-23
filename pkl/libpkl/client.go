@@ -135,19 +135,6 @@ func (c *PklClient) SendMessage(message []byte) error {
 	return nil
 }
 
-func (c *PklClient) Version() (string, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if c.closed {
-		return "", fmt.Errorf("pkl client is closed")
-	}
-
-	version := C.GoString(C.pkl_version(c.pexec))
-
-	return strings.Clone(version), nil
-}
-
 // Close cleans up resources
 func (c *PklClient) Close() error {
 	c.mu.Lock()
@@ -167,4 +154,9 @@ func (c *PklClient) Close() error {
 	handlerMap.Delete(c.id)
 
 	return nil
+}
+
+func Version() string {
+	version := C.GoString(C.pkl_version())
+	return strings.Clone(version)
 }

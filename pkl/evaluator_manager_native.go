@@ -35,22 +35,13 @@ var _ evaluatorManagerImpl = (*nativeEvaluator)(nil)
 
 // NewEvaluatorManager creates a new EvaluatorManager using the `libpkl` native bindings.
 func NewEvaluatorManager() EvaluatorManager {
-	n := &nativeEvaluator{
-		in:       make(chan msgapi.IncomingMessage),
-		out:      make(chan msgapi.OutgoingMessage),
-		received: make(chan []byte),
-		closed:   make(chan error),
-	}
-
-	c, err := libpkl.New(n.responseHandler)
-	if err != nil {
-		panic(fmt.Sprintf("Couldn't initialise libpkl C bindings: %e", err))
-	}
-
-	n.client = c
-
 	m := &evaluatorManager{
-		impl:              n,
+		impl: &nativeEvaluator{
+			in:       make(chan msgapi.IncomingMessage),
+			out:      make(chan msgapi.OutgoingMessage),
+			received: make(chan []byte),
+			closed:   make(chan error),
+		},
 		interrupts:        &sync.Map{},
 		evaluators:        &sync.Map{},
 		pendingEvaluators: &sync.Map{},
@@ -74,6 +65,13 @@ type nativeEvaluator struct {
 }
 
 func (n *nativeEvaluator) init() error {
+	c, err := libpkl.New(n.responseHandler)
+	if err != nil {
+		panic(fmt.Sprintf("Couldn't initialise libpkl C bindings: %e", err))
+	}
+
+	n.client = c
+
 	go n.handleSendMessages()
 
 	return nil
@@ -87,10 +85,11 @@ func (n *nativeEvaluator) deinit() error {
 	close(n.out)
 	close(n.received)
 
-	// TODO: Figure out how to close the native library down cleanly as part of the tests.
-	return n.client.Close()
+	if n.client == nil {
+		return nil
+	}
 
-	return nil
+	return n.client.Close()
 }
 
 func (n *nativeEvaluator) inChan() chan msgapi.IncomingMessage { return n.in }
@@ -100,15 +99,11 @@ func (n *nativeEvaluator) outChan() chan msgapi.OutgoingMessage { return n.out }
 func (n *nativeEvaluator) closedChan() chan error { return n.closed }
 
 func (n *nativeEvaluator) getVersion() (*semver, error) {
-	if n.exited.get() || n.client == nil {
+	if n.exited.get() {
 		return nil, fmt.Errorf("evaluator is closed")
 	}
 
-	version, err := n.client.Version()
-	if err != nil {
-		return nil, err
-	}
-
+	version := libpkl.Version()
 	parsed, err := parseSemver(version)
 	if err != nil {
 		return nil, err
