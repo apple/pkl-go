@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const externalReaderTest1 = `
@@ -38,16 +39,16 @@ fibErrC = test.catch(() -> read("fib:-10"))
 `
 
 func TestExternalReaderE2E(t *testing.T) {
-	t.Skip("native: panic: runtime error: invalid memory address or nil pointer dereference [recovered]")
-
 	manager := NewEvaluatorManager()
 	defer manager.Close()
+
+	_, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+	require.Nil(t, err)
+
 	version, err := manager.(*evaluatorManager).getVersion()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 	if pklVersion0_27.isGreaterThan(version) {
-		t.SkipNow()
+		t.Skip("evaluator is less than 0.27")
 	}
 
 	tempDir := t.TempDir()

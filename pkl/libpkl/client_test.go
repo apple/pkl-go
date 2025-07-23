@@ -38,7 +38,7 @@ func Test_LibPkl_New_Close(t *testing.T) {
 		events <- message
 	}
 
-	c, err := New(testHandler, "metadata")
+	c, err := New(testHandler)
 	require.Nil(t, err, "Failed to start libpkl")
 
 	err = c.Close()
@@ -53,7 +53,7 @@ func Test_LibPkl_SendMessage(t *testing.T) {
 		events <- message
 	}
 
-	c, err := New(testHandler, "metadata")
+	c, err := New(testHandler)
 	require.Nil(t, err, "Failed to start libpkl")
 
 	create := &msgapi.CreateEvaluator{
@@ -106,7 +106,7 @@ func Test_LibPkl_Version(t *testing.T) {
 		events <- message
 	}
 
-	c, err := New(testHandler, "metadata")
+	c, err := New(testHandler)
 	require.Nil(t, err, "Failed to start libpkl")
 
 	version, err := c.Version()
@@ -125,7 +125,7 @@ func Test_LibPkl_Version_Err_On_Closed(t *testing.T) {
 		events <- message
 	}
 
-	c, err := New(testHandler, "metadata")
+	c, err := New(testHandler)
 	require.Nil(t, err, "Failed to start libpkl")
 
 	err = c.Close()

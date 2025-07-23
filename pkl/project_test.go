@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const project1Contents = `
@@ -186,12 +187,15 @@ func TestLoadProject(t *testing.T) {
 		t.Run("annotations", func(t *testing.T) {
 			manager := NewEvaluatorManager()
 			defer manager.Close()
+
+			_, err = manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+			require.Nil(t, err)
+
 			version, err := manager.(*evaluatorManager).getVersion()
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.Nil(t, err)
+
 			if version.isLessThan(pklVersion0_27) {
-				t.SkipNow()
+				t.Skip("evaluator is less than 0.27")
 			}
 			assert.Len(t, project.Annotations, 1)
 			assert.Equal(t, project.Annotations[0].Properties["minPklVersion"], "0.25.0")
@@ -264,15 +268,16 @@ func TestLoadProject(t *testing.T) {
 }
 
 func TestLoadProjectWithProxy(t *testing.T) {
-	t.Skip("native: panic: runtime error: invalid memory address or nil pointer dereference [recovered]")
-
 	manager := NewEvaluatorManager()
+	defer manager.Close()
+
+	_, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+	require.Nil(t, err)
+
 	version, err := manager.(*evaluatorManager).getVersion()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 	if pklVersion0_26.isGreaterThan(version) {
-		t.SkipNow()
+		t.Skip("evaluator is less than 0.26")
 	}
 
 	tempDir := t.TempDir()
@@ -309,7 +314,7 @@ func TestLoadProjectWithExternalReaders(t *testing.T) {
 		t.Fatal(err)
 	}
 	if pklVersion0_27.isGreaterThan(version) {
-		t.SkipNow()
+		t.Skip("evaluator is less than 0.27")
 	}
 
 	tempDir := t.TempDir()
