@@ -95,6 +95,7 @@ facts {
     generateType(reflectedSlices.properties["res2"].type) == "[]map[string]string"
     generateType(reflectedSlices.properties["res3"].type) == "[]string"
     generateType(reflectedSlices.properties["res4"].type) == "[]map[string]string"
+    generateType(reflect.bytesType) == "[]byte"
   }
   ["pointers"] {
     generateType(reflectedNullables.properties["res1"].type) == "*string"

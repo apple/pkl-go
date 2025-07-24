@@ -66,8 +66,6 @@ function generateDeclaredType(
     if (mapped != null) mapped.type
     else if (mappedTypes.containsKey(reflectee))
       mappedTypes[reflectee]
-    else if (mappedTypes.containsKey(reflectee.toString()))
-      mappedTypes[reflectee.toString()]
     else if (referent is reflect.TypeAlias)
       generateType(referent.referent, enclosing, seenMappings)
     else if (reflectee == List || reflectee == Listing)
@@ -139,7 +137,7 @@ local function builtInType(typ: String): Type.Declared = new { typeName = typ }
 
 local anyType: Type.Declared = builtInType("any")
 
-mappedTypes: Mapping<Class|TypeAlias|String, Type> = new {
+mappedTypes: Mapping<Class|TypeAlias, Type> = new {
   [Int] = new Type.Declared { typeName = "int" }
   [Int8] = new Type.Declared { typeName = "int8" }
   [Int16] = new Type.Declared { typeName = "int16" }
@@ -180,7 +178,7 @@ mappedTypes: Mapping<Class|TypeAlias|String, Type> = new {
     importPath = "github.com/apple/pkl-go/pkl"
   }
   // introduced in Pkl 0.29
-  ["Bytes"] = new Type.Slice {
+  [Bytes] = new Type.Slice {
     elem = new Type.Declared { typeName = "byte" }
   }
 }
