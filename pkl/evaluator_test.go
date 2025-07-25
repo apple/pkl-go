@@ -116,6 +116,13 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateOutputBytes", func(t *testing.T) {
+		version, err := manager.(*evaluatorManager).getVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version.isLessThan(pklVersion0_29) {
+			t.SkipNow()
+		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputBytes(context.Background(), TextSource("output { bytes = Bytes(1, 2, 3, 255) }"))
@@ -144,6 +151,13 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateOutputFilesBytes", func(t *testing.T) {
+		version, err := manager.(*evaluatorManager).getVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version.isLessThan(pklVersion0_29) {
+			t.SkipNow()
+		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputFilesBytes(context.Background(), TextSource(`output {
