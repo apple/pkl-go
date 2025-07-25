@@ -41,6 +41,6 @@ xx | for (_, package in packages) {
                         ^^^^^^^^
 at pkl.golang.Generator#output.files (file://<codegen_dir>/src/Generator.pkl)
 
-x | output.files.toMap().mapValues((_, it) -> it.text)
+x | output.files?.toMap()?.mapValues((_, it) -> it.text) ?? Map()
     ^^^^^^^^^^^^
 at  (repl:text)

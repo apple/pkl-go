@@ -43,10 +43,10 @@ xxx | text = gen.contents
              ^^^^^^^^^^^^
 at pkl.golang.internal.Package#output.files[#1].text (file://<codegen_dir>/src/internal/Package.pkl)
 
-x | output.files.toMap().mapValues((_, it) -> it.text)
-                                              ^^^^^^^
+x | output.files?.toMap()?.mapValues((_, it) -> it.text) ?? Map()
+                                                ^^^^^^^
 at repl:text.<function#1> (repl:text)
 
-x | output.files.toMap().mapValues((_, it) -> it.text)
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | output.files?.toMap()?.mapValues((_, it) -> it.text) ?? Map()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at  (repl:text)
