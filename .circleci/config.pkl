@@ -33,12 +33,11 @@ local class PklDistribution {
   fixed downloadUrl: String = "https://github.com/apple/pkl/releases/download/\(version)/pkl-linux-amd64"
 }
 
+local pklLatest: PklDistribution = new { version = "0.29.0" }
+
 local pklDistributions: Listing<PklDistribution> = new {
   new { version = "0.25.3" }
-  new { version = "0.26.0" }
-  new { version = "0.27.1" }
-  new { version = "0.28.2" }
-  new { version = "0.29.0" }
+  pklLatest
 }
 
 release = (buildWorkflow) {

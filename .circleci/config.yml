@@ -22,63 +22,6 @@ jobs:
         path: test-results
     docker:
     - image: cimg/go:1.21
-  test-pkl-0-26-0:
-    steps:
-    - checkout
-    - run:
-        command: |-
-          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.26.0/pkl-linux-amd64'
-          chmod +x pkl.bin
-        name: Download Pkl
-    - run:
-        command: |-
-          export PKL_EXEC=$(pwd)/pkl.bin
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Go unit tests"
-          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
-        name: go test
-    - store_test_results:
-        path: test-results
-    docker:
-    - image: cimg/go:1.21
-  test-pkl-0-27-1:
-    steps:
-    - checkout
-    - run:
-        command: |-
-          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.27.1/pkl-linux-amd64'
-          chmod +x pkl.bin
-        name: Download Pkl
-    - run:
-        command: |-
-          export PKL_EXEC=$(pwd)/pkl.bin
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Go unit tests"
-          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
-        name: go test
-    - store_test_results:
-        path: test-results
-    docker:
-    - image: cimg/go:1.21
-  test-pkl-0-28-2:
-    steps:
-    - checkout
-    - run:
-        command: |-
-          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.28.2/pkl-linux-amd64'
-          chmod +x pkl.bin
-        name: Download Pkl
-    - run:
-        command: |-
-          export PKL_EXEC=$(pwd)/pkl.bin
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Go unit tests"
-          go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
-        name: go test
-    - store_test_results:
-        path: test-results
-    docker:
-    - image: cimg/go:1.21
   test-pkl-0-29-0:
     steps:
     - checkout
@@ -287,15 +230,6 @@ workflows:
     - test-pkl-0-25-3:
         requires:
         - hold
-    - test-pkl-0-26-0:
-        requires:
-        - hold
-    - test-pkl-0-27-1:
-        requires:
-        - hold
-    - test-pkl-0-28-2:
-        requires:
-        - hold
     - test-pkl-0-29-0:
         requires:
         - hold
@@ -309,25 +243,16 @@ workflows:
   main:
     jobs:
     - test-pkl-0-25-3
-    - test-pkl-0-26-0
-    - test-pkl-0-27-1
-    - test-pkl-0-28-2
     - test-pkl-0-29-0
     - test-license-headers
     - build-pkl-gen-go:
         requires:
         - test-pkl-0-25-3
-        - test-pkl-0-26-0
-        - test-pkl-0-27-1
-        - test-pkl-0-28-2
         - test-pkl-0-29-0
         - test-license-headers
     - build-pkl-package:
         requires:
         - test-pkl-0-25-3
-        - test-pkl-0-26-0
-        - test-pkl-0-27-1
-        - test-pkl-0-28-2
         - test-pkl-0-29-0
         - test-license-headers
     when:
@@ -342,24 +267,6 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
-    - test-pkl-0-26-0:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - test-pkl-0-27-1:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
-    - test-pkl-0-28-2:
-        filters:
-          branches:
-            ignore: /.*/
-          tags:
-            only: /^v?\d+\.\d+\.\d+$/
     - test-pkl-0-29-0:
         filters:
           branches:
@@ -375,9 +282,6 @@ workflows:
     - build-pkl-gen-go:
         requires:
         - test-pkl-0-25-3
-        - test-pkl-0-26-0
-        - test-pkl-0-27-1
-        - test-pkl-0-28-2
         - test-pkl-0-29-0
         - test-license-headers
         filters:
@@ -388,9 +292,6 @@ workflows:
     - build-pkl-package:
         requires:
         - test-pkl-0-25-3
-        - test-pkl-0-26-0
-        - test-pkl-0-27-1
-        - test-pkl-0-28-2
         - test-pkl-0-29-0
         - test-license-headers
         filters:
