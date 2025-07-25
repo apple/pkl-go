@@ -1,5 +1,55 @@
 = Changelog
 
+[[release-0.11.0]]
+== 0.11.0 (2025-07-28)
+
+=== Additions
+
+* Add support for interop with `Bytes` introduced in Pkl 0.29 (https://github.com/apple/pkl-go/pull/150[#150]).
+** `Bytes` maps to type `[]byte` during codegen.
+** Add methods `Evaluator.EvaluateOutputBytes` and `Evaluator.EvaluateOutputFilesBytes`.
+* Add support for HTTP rewrites (https://github.com/apple/pkl-go/pull/147[#147]).
++
+As part of this change, this adds field `EvaluatorOptions.Rewrites` and `ProjectEvaluatorSettingsHttp.Rewrites`.
+* Add method `pkl.RegisterStrictMapping` (https://github.com/apple/pkl-go/pull/136[#136]).
+
+=== Changes
+
+* Change `pkl-gen-go` to generate non-pointers for object types (https://github.com/apple/pkl-go/pull/136[#136]).
++
+Currently, `pkl-gen-go` will generate pointers for object types (values backed by a Go struct).
+At the same time, it will also generate pointers for Pkl nullable types.
+As a result, it's not possible to tell whether an object is nullable or not just by looking at the Go type.
+To address this, all object types are generated as their plain type, without pointers.
++
+Code generated with older versions of `pkl-gen-go` will continue to work as-is.
++
+Thanks to https://github.com/thomaspurchas[@thomaspurchas] for their contributions to this feature!
+
+=== Fixes
+
+* Fix abstract class extending another abstract class (https://github.com/apple/pkl-go/pull/140[#140]).
+* Incorrect conversion logic in `DataSize.ToUnit` method (https://github.com/apple/pkl-go/issues/145[#145]).
+
+=== Breaking Changes
+
+* `pkl-gen-go` now requires Pkl 0.29.
+
+=== Miscellaneous
+
+* Code improvements (https://github.com/apple/pkl-go/pull/127[#127], https://github.com/apple/pkl-go/pull/133[#133], https://github.com/apple/pkl-go/pull/143[#143]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/alexeyxo[@alexeyxo]
+* https://github.com/bioball[@bioball]
+* https://github.com/dovys[@dovys]
+* https://github.com/kasugamirai[@kasugamirai]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/thomaspurchas[@thomaspurchas]
+
 [[release-0.10.0]]
 == 0.10.0 (2025-04-03)
 
