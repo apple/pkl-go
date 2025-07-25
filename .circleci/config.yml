@@ -10,7 +10,8 @@ jobs:
         command: |-
           curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64'
           chmod +x pkl.bin
-        name: Download Pkl
+          mkdir test-results
+        name: Setup
     - run:
         command: |-
           export PKL_EXEC=$(pwd)/pkl.bin
@@ -29,7 +30,8 @@ jobs:
         command: |-
           curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.29.0/pkl-linux-amd64'
           chmod +x pkl.bin
-        name: Download Pkl
+          mkdir test-results
+        name: Setup
     - run:
         command: |-
           export PKL_EXEC=$(pwd)/pkl.bin

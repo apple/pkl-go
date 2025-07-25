@@ -69,10 +69,11 @@ jobs {
     ["test-pkl-\(distribution.version.replaceAll(".", "-"))"] = (goJob) {
       steps {
         new RunStep {
-          name = "Download Pkl"
+          name = "Setup"
           command = """
             curl -L -o pkl.bin '\(distribution.downloadUrl)'
             chmod +x pkl.bin
+            mkdir test-results
             """
         }
         when (distribution == pklDistributions.last) {
