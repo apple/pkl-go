@@ -10,10 +10,11 @@ jobs:
         command: |-
           curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.25.3/pkl-linux-amd64'
           chmod +x pkl.bin
+        name: Download Pkl
+    - run:
+        command: |-
           export PKL_EXEC=$(pwd)/pkl.bin
           go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -28,10 +29,11 @@ jobs:
         command: |-
           curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.26.0/pkl-linux-amd64'
           chmod +x pkl.bin
+        name: Download Pkl
+    - run:
+        command: |-
           export PKL_EXEC=$(pwd)/pkl.bin
           go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -46,10 +48,11 @@ jobs:
         command: |-
           curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.27.1/pkl-linux-amd64'
           chmod +x pkl.bin
+        name: Download Pkl
+    - run:
+        command: |-
           export PKL_EXEC=$(pwd)/pkl.bin
           go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -64,10 +67,11 @@ jobs:
         command: |-
           curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.28.2/pkl-linux-amd64'
           chmod +x pkl.bin
+        name: Download Pkl
+    - run:
+        command: |-
           export PKL_EXEC=$(pwd)/pkl.bin
           go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test
@@ -82,19 +86,21 @@ jobs:
         command: |-
           curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.29.0/pkl-linux-amd64'
           chmod +x pkl.bin
+        name: Download Pkl
+    - run:
+        command: |-
           export PKL_EXEC=$(pwd)/pkl.bin
 
           echo "Running Pkl snippet tests"
           ./scripts/test_snippets.sh
+
+          echo "Running Pkl unit tests"
+          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
         name: snippet test
     - run:
         command: |-
-          curl -L -o pkl.bin 'https://github.com/apple/pkl/releases/download/0.29.0/pkl-linux-amd64'
-          chmod +x pkl.bin
           export PKL_EXEC=$(pwd)/pkl.bin
           go install github.com/jstemmer/go-junit-report/v2@latest
-          echo "Running Pkl unit tests"
-          $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
           echo "Running Go unit tests"
           go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
         name: go test

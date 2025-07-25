@@ -143,10 +143,10 @@ func TestEvaluator(t *testing.T) {
 		}
 	})
 
-	t.Run("EvaluateOutputFileBytes", func(t *testing.T) {
+	t.Run("EvaluateOutputFilesBytes", func(t *testing.T) {
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputFileBytes(context.Background(), TextSource(`output {
+			out, err := ev.EvaluateOutputFilesBytes(context.Background(), TextSource(`output {
   files {
     ["foo.txt"] { text = "foo text" }
     ["bar.txt"] { text = "bar text" }

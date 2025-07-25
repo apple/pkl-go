@@ -53,7 +53,7 @@ type Evaluator interface {
 	// EvaluateOutputFileBytes evaluates the `output.files` property of the given module, giving the bytes of each file.
 	//
 	// Supported on Pkl 0.29 and higher.
-	EvaluateOutputFileBytes(ctx context.Context, source *ModuleSource) (map[string][]byte, error)
+	EvaluateOutputFilesBytes(ctx context.Context, source *ModuleSource) (map[string][]byte, error)
 
 	// EvaluateExpression evaluates the provided expression on the given module source, and writes
 	// the result into the value pointed by out.
@@ -106,13 +106,13 @@ func (e *evaluator) EvaluateOutputValue(ctx context.Context, source *ModuleSourc
 
 func (e *evaluator) EvaluateOutputFiles(ctx context.Context, source *ModuleSource) (map[string]string, error) {
 	var out map[string]string
-	err := e.EvaluateExpression(ctx, source, "output.files.toMap().mapValues((_, it) -> it.text)", &out)
+	err := e.EvaluateExpression(ctx, source, "output.files?.toMap()?.mapValues((_, it) -> it.text) ?? Map()", &out)
 	return out, err
 }
 
-func (e *evaluator) EvaluateOutputFileBytes(ctx context.Context, source *ModuleSource) (map[string][]byte, error) {
+func (e *evaluator) EvaluateOutputFilesBytes(ctx context.Context, source *ModuleSource) (map[string][]byte, error) {
 	var out map[string][]byte
-	err := e.EvaluateExpression(ctx, source, "output.files.toMap().mapValues((_, it) -> it.bytes)", &out)
+	err := e.EvaluateExpression(ctx, source, "output.files?.toMap()?.mapValues((_, it) -> it.bytes) ?? Map()", &out)
 	return out, err
 }
 
