@@ -27,6 +27,7 @@ import (
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
 )
 
+//goland:noinspection GoUnusedConst
 const (
 	codeObject               = 0x1
 	codeMap                  = 0x2
@@ -41,6 +42,8 @@ const (
 	codeRegex                = 0xB
 	codeClass                = 0xC
 	codeTypeAlias            = 0xD
+	codeFunction             = 0xE
+	codeBytes                = 0xF
 	codeObjectMemberProperty = 0x10
 	codeObjectMemberEntry    = 0x11
 	codeObjectMemberElement  = 0x12

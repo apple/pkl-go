@@ -74,8 +74,8 @@ function generateDeclaredType(
       generateMapping(type, enclosing, seenMappings)
     else if (reflectee == Set)
       generateSet(type, enclosing, seenMappings)
-     else if (reflectee == Pair)
-       generatePair(type, enclosing, seenMappings)
+    else if (reflectee == Pair)
+      generatePair(type, enclosing, seenMappings)
     else throw("Cannot generate type \(type.referent.name) as Go.")
 
 function generateListing(
@@ -176,5 +176,9 @@ mappedTypes: Mapping<Class|TypeAlias, Type> = new {
     package = "pkl"
     typeName = "DataSizeUnit"
     importPath = "github.com/apple/pkl-go/pkl"
+  }
+  // introduced in Pkl 0.29
+  [Bytes] = new Type.Slice {
+    elem = new Type.Declared { typeName = "byte" }
   }
 }

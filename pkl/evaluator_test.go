@@ -115,6 +115,23 @@ func TestEvaluator(t *testing.T) {
 		}
 	})
 
+	t.Run("EvaluateOutputBytes", func(t *testing.T) {
+		version, err := manager.(*evaluatorManager).getVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version.isLessThan(pklVersion0_29) {
+			t.SkipNow()
+		}
+		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+		if assert.NoError(t, err) {
+			out, err := ev.EvaluateOutputBytes(context.Background(), TextSource("output { bytes = Bytes(1, 2, 3, 255) }"))
+			assert.NoError(t, err)
+			assert.Equal(t, []byte{1, 2, 3, 255}, out)
+			assert.NoError(t, ev.Close())
+		}
+	})
+
 	t.Run("EvaluateOutputFiles", func(t *testing.T) {
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
@@ -129,6 +146,33 @@ func TestEvaluator(t *testing.T) {
 				"foo.txt": "foo text",
 				"bar.txt": "bar text",
 			}, out)
+			assert.NoError(t, ev.Close())
+		}
+	})
+
+	t.Run("EvaluateOutputFilesBytes", func(t *testing.T) {
+		version, err := manager.(*evaluatorManager).getVersion()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if version.isLessThan(pklVersion0_29) {
+			t.SkipNow()
+		}
+		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+		if assert.NoError(t, err) {
+			out, err := ev.EvaluateOutputFilesBytes(context.Background(), TextSource(`output {
+  files {
+    ["foo.txt"] { text = "foo text" }
+    ["bar.txt"] { text = "bar text" }
+  }
+}`))
+			assert.NoError(t, err)
+			assert.Equal(
+				t,
+				map[string][]uint8{
+					"bar.txt": {0x62, 0x61, 0x72, 0x20, 0x74, 0x65, 0x78, 0x74},
+					"foo.txt": {0x66, 0x6f, 0x6f, 0x20, 0x74, 0x65, 0x78, 0x74}},
+				out)
 			assert.NoError(t, ev.Close())
 		}
 	})

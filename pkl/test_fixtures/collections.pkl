@@ -54,3 +54,6 @@ res11: Pair<Int, Float> = Pair(1, 5.0)
 res12: Pair = Pair("hello", "goodbye")
 
 res13: Pair<Int, Int?> = Pair(1, 2)
+
+// introduced in Pkl 0.29
+res14: Bytes = Bytes(1, 2, 3, 4, 255)
