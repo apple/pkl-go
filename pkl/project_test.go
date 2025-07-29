@@ -194,6 +194,7 @@ func TestLoadProject(t *testing.T) {
 
 		t.Run("annotations", func(t *testing.T) {
 			manager := NewEvaluatorManager()
+			//goland:noinspection GoUnhandledErrorResult
 			defer manager.Close()
 			version, err := manager.(*evaluatorManager).getVersion()
 			if err != nil {
@@ -365,5 +366,18 @@ func TestLoadProjectWithRewrites(t *testing.T) {
 			}
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
 		})
+	}
+}
+
+func TestLoadProjectFromEvaluator2(t *testing.T) {
+	ev, err := NewEvaluator(context.Background(), PreconfiguredOptions)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
+	//goland:noinspection GoUnhandledErrorResult
+	defer ev.Close()
+	project, err := LoadProjectFromEvaluator2(context.Background(), ev, TextSource(`amends "pkl:Project"`))
+	if assert.NoError(t, err) {
+		assert.NotNil(t, project)
 	}
 }
