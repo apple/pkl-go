@@ -467,8 +467,6 @@ age = 43
 	})
 
 	t.Run("EvaluatorManager.NewProjectEvaluator", func(t *testing.T) {
-		// TODO(oss): re-enable this test after repos are public
-		t.SkipNow()
 		ev, err := manager.NewProjectEvaluator(context.Background(), projectDir, PreconfiguredOptions)
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputText(context.Background(), FileSource(projectDir, "main.pkl"))

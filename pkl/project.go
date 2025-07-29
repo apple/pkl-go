@@ -18,7 +18,6 @@ package pkl
 
 import (
 	"context"
-
 	"github.com/apple/pkl-go/pkl/internal"
 )
 
@@ -136,9 +135,15 @@ func LoadProject(context context.Context, path string) (*Project, error) {
 	return LoadProjectFromEvaluator(context, ev, path)
 }
 
+// LoadProjectFromEvaluator is like LoadProject, but uses the already provisioned evaluator.
 func LoadProjectFromEvaluator(context context.Context, ev Evaluator, path string) (*Project, error) {
+	return LoadProjectFromEvaluator2(context, ev, FileSource(path))
+}
+
+// LoadProjectFromEvaluator2 is like LoadProjectFromEvaluator, but accepts a ModuleSource for the project source.
+func LoadProjectFromEvaluator2(context context.Context, ev Evaluator, projectSource *ModuleSource) (*Project, error) {
 	var proj *Project
-	if err := ev.EvaluateOutputValue(context, FileSource(path), &proj); err != nil {
+	if err := ev.EvaluateOutputValue(context, projectSource, &proj); err != nil {
 		return nil, err
 	}
 	return proj, nil

@@ -56,6 +56,13 @@ type EvaluatorManager interface {
 	// When using project dependencies, they must first be resolved using the `pkl project resolve`
 	// CLI command.
 	NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error)
+
+	// NewProjectEvaluator2 behaves like NewProjectEvaluator, except it accepts a ModuleSource for the project source.
+	NewProjectEvaluator2(
+		ctx context.Context,
+		projectSource *ModuleSource,
+		opts ...func(options *EvaluatorOptions),
+	) (Evaluator, error)
 }
 
 type evaluatorManager struct {
@@ -142,11 +149,15 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 }
 
 func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	return m.NewProjectEvaluator2(ctx, FileSource(path.Join(projectDir, "PklProject")), opts...)
+}
+
+func (m *evaluatorManager) NewProjectEvaluator2(ctx context.Context, projectSource *ModuleSource, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
 	projectEvaluator, err := NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
-	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, path.Join(projectDir, "PklProject"))
+	project, err := LoadProjectFromEvaluator2(ctx, projectEvaluator, projectSource)
 	if err != nil {
 		return nil, err
 	}
