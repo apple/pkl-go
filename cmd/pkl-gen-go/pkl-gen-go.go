@@ -118,6 +118,45 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 	if settings.CacheDir != nil {
 		opts.CacheDir = *settings.CacheDir
 	}
+	if cacerts, err := cacertsFromHomeDir(); len(cacerts) > 0 && err == nil {
+		opts.Http = &pkl.Http{
+			CaCertificates: cacerts,
+		}
+	} else if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "[warn] Failed to load cacerts: "+err.Error())
+	}
+}
+
+// load certs from ~/.pkl/cacerts if exists.
+func cacertsFromHomeDir() ([]byte, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, err
+	}
+	cacertsDir := filepath.Join(home, ".pkl", "cacerts")
+	stat, err := os.Stat(cacertsDir)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if stat.IsDir() {
+		var ret []byte
+		files, err := os.ReadDir(cacertsDir)
+		if err != nil {
+			return nil, err
+		}
+		for i := range files {
+			bytes, err := os.ReadFile(filepath.Join(cacertsDir, files[i].Name()))
+			if err != nil {
+				return nil, err
+			}
+			ret = append(ret, bytes...)
+		}
+		return ret, nil
+	}
+	return nil, nil
 }
 
 var (
