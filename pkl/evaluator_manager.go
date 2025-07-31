@@ -19,6 +19,7 @@ package pkl
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"path"
 	"sync"
@@ -300,6 +301,7 @@ func (m *evaluatorManager) closeErr(e error) error {
 		ev := v.(*evaluator)
 		// if an error occurs, still try to keep closing.
 		if cerr := ev.Close(); cerr != nil {
+			fmt.Printf("closeErr=%#v\n", cerr)
 			err = cerr
 		}
 		return true
