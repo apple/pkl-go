@@ -453,6 +453,7 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 			for scheme, reader := range evaluatorSettings.ExternalModuleReaders {
 				opts.ExternalModuleReaders[scheme] = ExternalReader(reader)
 				if evaluatorSettings.AllowedModules == nil { // if no explicit allowed modules are set in the project, allow declared external module readers
+					WithDefaultAllowedModules(opts)
 					opts.AllowedModules = append(opts.AllowedModules, scheme+":")
 				}
 			}
@@ -462,6 +463,7 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 			for scheme, reader := range evaluatorSettings.ExternalResourceReaders {
 				opts.ExternalResourceReaders[scheme] = ExternalReader(reader)
 				if evaluatorSettings.AllowedResources == nil { // if no explicit allowed resources are set in the project, allow declared external resource readers
+					WithDefaultAllowedResources(opts)
 					opts.AllowedResources = append(opts.AllowedResources, scheme+":")
 				}
 			}

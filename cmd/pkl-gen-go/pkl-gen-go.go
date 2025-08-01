@@ -119,9 +119,10 @@ func evaluatorOptions(opts *pkl.EvaluatorOptions) {
 		opts.CacheDir = *settings.CacheDir
 	}
 	if cacerts, err := cacertsFromHomeDir(); len(cacerts) > 0 && err == nil {
-		opts.Http = &pkl.Http{
-			CaCertificates: cacerts,
+		if opts.Http == nil {
+			opts.Http = &pkl.Http{}
 		}
+		opts.Http.CaCertificates = cacerts
 	} else if err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, "[warn] Failed to load cacerts: "+err.Error())
 	}
@@ -238,9 +239,9 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, 
 		}
 	}
 	if projectDir != "" {
-		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, pkl.PreconfiguredOptions, opts)
+		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions, opts)
 	} else {
-		evaluator, err = pkl.NewEvaluator(context.Background(), pkl.PreconfiguredOptions, opts)
+		evaluator, err = pkl.NewEvaluator(context.Background(), evaluatorOptions, opts)
 	}
 	if err != nil {
 		panic(err)
