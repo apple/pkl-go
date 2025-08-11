@@ -104,7 +104,7 @@ func newEvaluator() (pkl.Evaluator, error) {
 	if projectDir == nil {
 		return pkl.NewEvaluator(context.Background(), evaluatorOptions)
 	}
-	return pkl.NewProjectEvaluator(context.Background(), *projectDir, evaluatorOptions)
+	return pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions)
 }
 
 func evaluatorOptions(opts *pkl.EvaluatorOptions) {
@@ -240,7 +240,7 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, 
 		}
 	}
 	if projectDir != nil {
-		evaluator, err = pkl.NewProjectEvaluator(context.Background(), *projectDir, evaluatorOptions, opts)
+		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions, opts)
 	} else {
 		evaluator, err = pkl.NewEvaluator(context.Background(), evaluatorOptions, opts)
 	}

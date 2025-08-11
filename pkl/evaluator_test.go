@@ -35,7 +35,7 @@ import (
 //go:embed test_fixtures/testfs/*
 var testFs embed.FS
 
-func setupProject(t *testing.T) url.URL {
+func setupProject(t *testing.T) *url.URL {
 	tempDir := t.TempDir()
 	_ = os.WriteFile(tempDir+"/PklProject", []byte(`
 amends "pkl:Project"
@@ -63,7 +63,7 @@ import "@uri/URI.pkl"
 
 uri = URI.parse("https://www.example.com").toString()
 `), 0o644)
-	return url.URL{Scheme: "file", Path: tempDir}
+	return &url.URL{Scheme: "file", Path: tempDir}
 }
 
 func getOpenPort() int {

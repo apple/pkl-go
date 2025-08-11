@@ -56,7 +56,7 @@ type EvaluatorManager interface {
 	//
 	// When using project dependencies, they must first be resolved using the `pkl project resolve`
 	// CLI command.
-	NewProjectEvaluator(ctx context.Context, projectBaseUrl url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error)
+	NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error)
 }
 
 type evaluatorManager struct {
@@ -142,7 +142,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	}
 }
 
-func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
 	projectEvaluator, err := NewEvaluator(ctx, opts...)
 	if err != nil {
 		return nil, err
