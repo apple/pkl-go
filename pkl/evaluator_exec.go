@@ -18,7 +18,7 @@ package pkl
 
 import (
 	"context"
-	"path/filepath"
+	"net/url"
 )
 
 // NewEvaluator returns an evaluator backed by a single EvaluatorManager.
@@ -31,14 +31,14 @@ func NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) 
 }
 
 // NewProjectEvaluator is an easy way to create an evaluator that is configured by the specified
-// projectDir.
+// projectBaseUrl.
 //
 // It is similar to running the `pkl eval` or `pkl test` CLI command with a set `--project-dir`.
 //
 // When using project dependencies, they must first be resolved using the `pkl project resolve`
 // CLI command.
-func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	return NewProjectEvaluatorWithCommand(ctx, projectDir, nil, opts...)
+func NewProjectEvaluator(ctx context.Context, projectBaseUrl url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	return NewProjectEvaluatorWithCommand(ctx, projectBaseUrl, nil, opts...)
 }
 
 // NewProjectEvaluatorWithCommand is like NewProjectEvaluator, but also accepts the Pkl command to run.
@@ -52,7 +52,7 @@ func NewProjectEvaluator(ctx context.Context, projectDir string, opts ...func(op
 //
 // If creating multiple evaluators, prefer using EvaluatorManager.NewProjectEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
-func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func NewProjectEvaluatorWithCommand(ctx context.Context, projectBaseUrl url.URL, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
 	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
@@ -60,8 +60,8 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectDir string, pklC
 	}
 	defer projectEvaluator.Close()
 
-	projectPath := filepath.Join(projectDir, "PklProject")
-	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, projectPath)
+	projectPath := projectBaseUrl.JoinPath("PklProject")
+	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, &ModuleSource{Uri: projectPath})
 	if err != nil {
 		return nil, err
 	}

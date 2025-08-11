@@ -368,16 +368,3 @@ func TestLoadProjectWithRewrites(t *testing.T) {
 		})
 	}
 }
-
-func TestLoadProjectFromEvaluator2(t *testing.T) {
-	ev, err := NewEvaluator(context.Background(), PreconfiguredOptions)
-	if err != nil {
-		t.Fatalf(err.Error())
-	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer ev.Close()
-	project, err := LoadProjectFromEvaluator2(context.Background(), ev, TextSource(`amends "pkl:Project"`))
-	if assert.NoError(t, err) {
-		assert.NotNil(t, project)
-	}
-}

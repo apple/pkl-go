@@ -50,8 +50,7 @@ type EvaluatorManager interface {
 
 	// NewProjectEvaluator is an easy way to create an evaluator whose project directory is determined
 	// by `projectBaseUrl`.
-	//
-	// It loads the project
+	// It loads the project from the `PklProject` and `PklProject.deps.json` files within `projectBaseUrl`.
 	//
 	// It is similar to running the `pkl eval` or `pkl test` CLI command with a set `--project-dir`.
 	//
@@ -148,7 +147,7 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseU
 	if err != nil {
 		return nil, err
 	}
-	projectSource := projectBaseUrl.JoinPath(projectBaseUrl.Path, "PklProject")
+	projectSource := projectBaseUrl.JoinPath("PklProject")
 	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, &ModuleSource{Uri: projectSource})
 	if err != nil {
 		return nil, err

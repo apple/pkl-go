@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -100,10 +101,10 @@ func newEvaluator() (pkl.Evaluator, error) {
 		projectDirFlag = *settings.ProjectDir
 	}
 	projectDir := findProjectDir(projectDirFlag)
-	if projectDir == "" {
+	if projectDir == nil {
 		return pkl.NewEvaluator(context.Background(), evaluatorOptions)
 	}
-	return pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions)
+	return pkl.NewProjectEvaluator(context.Background(), *projectDir, evaluatorOptions)
 }
 
 func evaluatorOptions(opts *pkl.EvaluatorOptions) {
@@ -216,15 +217,15 @@ func doFindProjectDir(dir string) string {
 	return doFindProjectDir(parent)
 }
 
-func findProjectDir(projectDirFlag string) string {
+func findProjectDir(projectDirFlag string) *url.URL {
 	if projectDirFlag != "" {
-		return projectDirFlag
+		return &url.URL{Scheme: "file", Path: projectDirFlag}
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
-		return ""
+		return nil
 	}
-	return doFindProjectDir(cwd)
+	return &url.URL{Scheme: "file", Path: doFindProjectDir(cwd)}
 }
 
 // Loads the settings for controlling codegen.
@@ -238,8 +239,8 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, 
 			opts.CacheDir = cacheDirFlag
 		}
 	}
-	if projectDir != "" {
-		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions, opts)
+	if projectDir != nil {
+		evaluator, err = pkl.NewProjectEvaluator(context.Background(), *projectDir, evaluatorOptions, opts)
 	} else {
 		evaluator, err = pkl.NewEvaluator(context.Background(), evaluatorOptions, opts)
 	}
