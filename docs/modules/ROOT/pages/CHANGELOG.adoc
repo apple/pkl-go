@@ -1,5 +1,21 @@
 = Changelog
 
+
+[[release-0.11.1]]
+== 0.11.1 (2025-08-11)
+
+=== Fixes
+
+* Support loading certs from ~/.pkl/cacerts in pkl-gen-go (https://github.com/apple/pkl-go/pull/154[#154], https://github.com/apple/pkl-go/pull/155[#155]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+
+
 [[release-0.11.0]]
 == 0.11.0 (2025-07-28)
 
