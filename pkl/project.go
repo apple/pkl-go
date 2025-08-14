@@ -133,12 +133,14 @@ func LoadProject(context context.Context, path string) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	return LoadProjectFromEvaluator(context, ev, path)
+	return LoadProjectFromEvaluator(context, ev, FileSource(path))
 }
 
-func LoadProjectFromEvaluator(context context.Context, ev Evaluator, path string) (*Project, error) {
+// LoadProjectFromEvaluator is like LoadProject, but uses the already provisioned evaluator, and loads the project
+// from a ModuleSource rather than a path string.
+func LoadProjectFromEvaluator(context context.Context, ev Evaluator, projectSource *ModuleSource) (*Project, error) {
 	var proj *Project
-	if err := ev.EvaluateOutputValue(context, FileSource(path), &proj); err != nil {
+	if err := ev.EvaluateOutputValue(context, projectSource, &proj); err != nil {
 		return nil, err
 	}
 	return proj, nil

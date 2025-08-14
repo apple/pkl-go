@@ -35,7 +35,7 @@ import (
 //go:embed test_fixtures/testfs/*
 var testFs embed.FS
 
-func setupProject(t *testing.T) string {
+func setupProject(t *testing.T) *url.URL {
 	tempDir := t.TempDir()
 	_ = os.WriteFile(tempDir+"/PklProject", []byte(`
 amends "pkl:Project"
@@ -63,7 +63,7 @@ import "@uri/URI.pkl"
 
 uri = URI.parse("https://www.example.com").toString()
 `), 0o644)
-	return tempDir
+	return &url.URL{Scheme: "file", Path: tempDir}
 }
 
 func getOpenPort() int {
@@ -467,11 +467,10 @@ age = 43
 	})
 
 	t.Run("EvaluatorManager.NewProjectEvaluator", func(t *testing.T) {
-		// TODO(oss): re-enable this test after repos are public
-		t.SkipNow()
 		ev, err := manager.NewProjectEvaluator(context.Background(), projectDir, PreconfiguredOptions)
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), FileSource(projectDir, "main.pkl"))
+			mainPklFile := &ModuleSource{Uri: projectDir.JoinPath("./main.pkl")}
+			out, err := ev.EvaluateOutputText(context.Background(), mainPklFile)
 			assert.NoError(t, err)
 			assert.Equal(t, "uri = \"https://www.example.com\"\n", out)
 		}
@@ -629,7 +628,7 @@ func TestNewProjectEvaluator(t *testing.T) {
 	projectDir := setupProject(t)
 	ev, err := NewProjectEvaluator(context.Background(), projectDir, PreconfiguredOptions)
 	if assert.NoError(t, err) {
-		out, err := ev.EvaluateOutputText(context.Background(), FileSource(projectDir, "main.pkl"))
+		out, err := ev.EvaluateOutputText(context.Background(), &ModuleSource{Uri: projectDir.JoinPath("main.pkl")})
 		assert.NoError(t, err)
 		assert.Equal(t, "uri = \"https://www.example.com\"\n", out)
 	}
