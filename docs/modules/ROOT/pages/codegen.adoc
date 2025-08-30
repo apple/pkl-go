@@ -6,7 +6,15 @@ Pkl code may turn into Go code by way of code generation.
 
 == Running code generation
 
-Code generation is done through the `pkl-gen-go` binary. To install:
+Code generation is done through the `pkl-gen-go` tool. To install:
+
+[source,bash,subs="attributes"]
+----
+go get -tool github.com/apple/pkl-go/cmd/pkl-gen-go
+----
+
+The `pkl-gen-go` binary may also be installed and used directly.
+If installing directly, omit `go tool` from commands. To install:
 
 [source,bash,subs="attributes"]
 ----
@@ -17,7 +25,7 @@ Once installed, Go may be generated from Pkl:
 
 [source,bash]
 ----
-pkl-gen-go config/AppConfig.pkl
+go tool pkl-gen-go config/AppConfig.pkl
 ----
 
 == Configuring the code generator
