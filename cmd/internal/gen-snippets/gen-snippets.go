@@ -76,7 +76,9 @@ func makeGoCode(evaluator pkl.Evaluator, snippetsDir string) {
 			basename := strings.TrimSuffix(filepath.Base(file.Name()), ".pkl")
 			errContents := strings.ReplaceAll(err.Error(), codegenDir, "<codegen_dir>")
 			errContents = stripLineNumbers(errContents)
-			os.MkdirAll(outputDir, os.ModePerm)
+			if err = os.MkdirAll(outputDir, os.ModePerm); err != nil {
+				panic(err)
+			}
 			if err = os.WriteFile(filepath.Join(outputDir, basename), []byte(errContents), 0o666); err != nil {
 				panic(err)
 			}

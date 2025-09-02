@@ -178,7 +178,12 @@ func (e *execEvaluator) readIncomingMessages(stdout io.Reader) {
 }
 
 func (e *execEvaluator) handleSendMessages(stdin io.WriteCloser) {
-	defer stdin.Close()
+
+	defer func() {
+		if err := stdin.Close(); err != nil {
+			internal.Debug("Failed to close stdin: %v", err)
+		}
+	}()
 
 	for msg := range e.out {
 		internal.Debug("Sending message: %#v", msg)
