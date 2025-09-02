@@ -11,7 +11,18 @@ Your project will need to include pkl-go as a dependency:
 go get github.com/apple/pkl-go
 ----
 
-If you are using xref:codegen.adoc[code generation], install the pkl-gen-go binary, either via `go install` or with a direct download.
+If you are using xref:codegen.adoc[code generation], use `go tool` to run `pkl-gen-go`:
+
+[source,bash,subs="+attributes"]
+----
+go get -tool github.com/apple/pkl-go/cmd/pkl-gen-go
+----
+
+Also, ensure that the latest Pkl release is xref:main:pkl-cli:index.adoc#installation[installed on your machine].
+
+The `pkl-gen-go` binary can also be installed directly, either via `go install`, or with a direct download.
+If opting for direct installation, omit the `go tool` from commands in this document.
+Using `go tool` is preferred because it keeps the version of `pkl-gen-go` in sync with `pkl-go`.
 
 The binaries are available as assets on our link:https://github.com/apple/pkl-go/releases/tag/v{version}/[GitHub release].
 
@@ -25,8 +36,6 @@ go install github.com/apple/pkl-go/cmd/pkl-gen-go@v{version}
 curl -L -o pkl-gen-go github.com/apple/pkl-go/releases/download/v{version}/pkl-gen-go-<platform>.bin
 chmod +x pkl-gen-go
 ----
-
-Also, ensure that Pkl is xref:main:pkl-cli:index.adoc#installation[installed on your machine].
 
 == 2. Define a Pkl schema
 
@@ -56,18 +65,13 @@ port: UInt16
 
 With a schema defined, generate Go source code for it.
 
-Code generation is done via the `pkl-gen-go` CLI. To install:
-
-[source,bash]
-----
-go install github.com/apple/pkl-go/cmd/pkl-gen-go@v{version}
-----
+Code generation is done via the `pkl-gen-go` CLI.
 
 In our example, Go sources can be generated using the following command:
 
 [source,bash]
 ----
-pkl-gen-go pkl/AppConfig.pkl --base-path github.com/myorg/myteam
+go tool pkl-gen-go pkl/AppConfig.pkl --base-path github.com/myorg/myteam
 ----
 
 The `--base-path` causes the code generator to place the Go source files in a relative path.
@@ -78,7 +82,7 @@ xref:codegen.adoc#settings-file[settings file].
 In this example, the Go package name of our Pkl module is `github.com/myorg/myteam/appconfig`, and the base path
 is `github.com/myorg/myteam`. Therefore, the generated Go files will be placed into the `appconfig` directory.
 
-For more details on how to control code generation, consult `pkl-gen-go --help`.
+For more details on how to control code generation, consult `go tool pkl-gen-go --help`.
 
 == 4. Evaluate Pkl configuration data in Go
 
