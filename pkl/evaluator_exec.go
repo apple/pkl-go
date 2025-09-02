@@ -19,6 +19,8 @@ package pkl
 import (
 	"context"
 	"net/url"
+
+	"github.com/apple/pkl-go/pkl/internal"
 )
 
 // NewEvaluator returns an evaluator backed by a single EvaluatorManager.
@@ -58,7 +60,12 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectBaseUrl *url.URL
 	if err != nil {
 		return nil, err
 	}
-	defer projectEvaluator.Close()
+
+	defer func() {
+		if err := projectEvaluator.Close(); err != nil {
+			internal.Debug("Failed to close project evaluator: %v", err)
+		}
+	}()
 
 	projectPath := projectBaseUrl.JoinPath("PklProject")
 	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, &ModuleSource{Uri: projectPath})
