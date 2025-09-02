@@ -88,7 +88,6 @@ func getOpenPort() int {
 
 func TestEvaluator(t *testing.T) {
 	manager := NewEvaluatorManager()
-
 	projectDir := setupProject(t)
 
 	t.Run("EvaluateOutputText", func(t *testing.T) {
@@ -585,7 +584,7 @@ class Bar {
 			t.Fatal(err)
 		}
 		if pklVersion0_26.isGreaterThan(version) {
-			t.SkipNow()
+			t.Skip("evaluator is older than 0.26")
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
 			options.Http = &Http{
@@ -607,7 +606,7 @@ class Bar {
 			t.Fatal(err)
 		}
 		if version.isGreaterThan(pklVersion0_25) {
-			t.SkipNow()
+			t.Skip("evaluator is greater than 0.25")
 		}
 		_, err = manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
 			options.Http = &Http{
