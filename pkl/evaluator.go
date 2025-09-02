@@ -50,7 +50,7 @@ type Evaluator interface {
 	// EvaluateOutputFiles evaluates the `output.files` property of the given module, giving the text of each file.
 	EvaluateOutputFiles(ctx context.Context, source *ModuleSource) (map[string]string, error)
 
-	// EvaluateOutputFileBytes evaluates the `output.files` property of the given module, giving the bytes of each file.
+	// EvaluateOutputFilesBytes evaluates the `output.files` property of the given module, giving the bytes of each file.
 	//
 	// Supported on Pkl 0.29 and higher.
 	EvaluateOutputFilesBytes(ctx context.Context, source *ModuleSource) (map[string][]byte, error)
