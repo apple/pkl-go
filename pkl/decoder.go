@@ -29,21 +29,21 @@ import (
 
 //goland:noinspection GoUnusedConst
 const (
-	codeObject               = 0x1
-	codeMap                  = 0x2
-	codeMapping              = 0x3
-	codeList                 = 0x4
-	codeListing              = 0x5
-	codeSet                  = 0x6
-	codeDuration             = 0x7
-	codeDataSize             = 0x8
-	codePair                 = 0x9
-	codeIntSeq               = 0xA
-	codeRegex                = 0xB
-	codeClass                = 0xC
-	codeTypeAlias            = 0xD
-	codeFunction             = 0xE
-	codeBytes                = 0xF
+	codeObject               = 0x01
+	codeMap                  = 0x02
+	codeMapping              = 0x03
+	codeList                 = 0x04
+	codeListing              = 0x05
+	codeSet                  = 0x06
+	codeDuration             = 0x07
+	codeDataSize             = 0x08
+	codePair                 = 0x09
+	codeIntSeq               = 0x0A
+	codeRegex                = 0x0B
+	codeClass                = 0x0C
+	codeTypeAlias            = 0x0D
+	codeFunction             = 0x0E
+	codeBytes                = 0x0F
 	codeObjectMemberProperty = 0x10
 	codeObjectMemberEntry    = 0x11
 	codeObjectMemberElement  = 0x12
@@ -74,7 +74,7 @@ func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
 	case reflect.Ptr:
 		return d.decodePointer(typ)
 	case reflect.Struct:
-		return d.decodeStruct(typ)
+		return d.decodePklObject(typ, true)
 	case reflect.Bool:
 		return d.decodeBool()
 	case reflect.String:
@@ -174,7 +174,7 @@ func (d *decoder) decodeInterface(typ reflect.Type) (*reflect.Value, error) {
 	case msgpcode.IsFixedMap(code) || code == msgpcode.Map16 || code == msgpcode.Map32:
 		return d.decodeMapImpl(typ)
 	case msgpcode.IsFixedArray(code):
-		return d.decodePklObject(typ)
+		return d.decodePklObject(typ, false)
 	case msgpcode.IsString(code):
 		return d.decodeString()
 	case code == msgpcode.Nil:
@@ -202,45 +202,48 @@ func (d *decoder) decodeInterface(typ reflect.Type) (*reflect.Value, error) {
 	return &ret, nil
 }
 
-func (d *decoder) decodePklObject(typ reflect.Type) (*reflect.Value, error) {
-	_, err := d.dec.DecodeArrayLen()
+func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *reflect.Value, err error) {
+	length, code, err := d.decodeObjectPreamble()
 	if err != nil {
 		return nil, err
 	}
-	code, err := d.dec.DecodeInt()
-	if err != nil {
-		return nil, err
-	}
-	switch code {
-	case codeObject:
-		return d.decodeObject(typ)
-	case codeMap:
-		fallthrough
-	case codeMapping:
-		return d.decodeMapImpl(reflect.TypeOf(map[any]any{}))
-	case codeList:
-		fallthrough
-	case codeListing:
-		return d.decodeSliceImpl(reflect.TypeOf([]any{}))
-	case codeSet:
-		return d.decodeSet(reflect.TypeOf(map[any]any{}))
-	case codeDataSize:
-		return d.decodeDataSize()
-	case codeDuration:
-		return d.decodeDuration()
-	case codeIntSeq:
-		return d.decodeIntSeq()
-	case codeRegex:
-		return d.decodeRegex()
-	case codeClass:
-		return d.decodeClass()
-	case codeTypeAlias:
-		return d.decodeTypeAlias()
+	switch {
+	case code == codeObject:
+		res, err = d.decodeObject(typ)
+	case !requireStruct && (code == codeMap || code == codeMapping):
+		res, err = d.decodeMapImpl(reflect.TypeOf(map[any]any{}))
+	case !requireStruct && (code == codeList || code == codeListing):
+		res, err = d.decodeSliceImpl(reflect.TypeOf([]any{}))
+	case !requireStruct && code == codeSet:
+		res, err = d.decodeSet(reflect.TypeOf(map[any]any{}))
+	case code == codeDataSize:
+		res, err = d.decodeDataSize()
+	case code == codeDuration:
+		res, err = d.decodeDuration()
+	case code == codePair:
+		if typ == emptyInterfaceType {
+			res, err = d.decodePair(reflect.TypeOf(Pair[any, any]{}))
+		} else {
+			res, err = d.decodePair(typ)
+		}
+	case code == codeIntSeq:
+		res, err = d.decodeIntSeq()
+	case code == codeRegex:
+		res, err = d.decodeRegex()
+	case code == codeClass:
+		res, err = d.decodeClass()
+	case code == codeTypeAlias:
+		res, err = d.decodeTypeAlias()
 	default:
+		if requireStruct {
+			return nil, fmt.Errorf("code %#02x cannot be decoded into a struct", code)
+		}
 		return nil, &InternalError{
-			err: fmt.Errorf("encountered unknown object code: %d", code),
+			err: fmt.Errorf("encountered unknown object code: %#02x", code),
 		}
 	}
+
+	return res, d.skip(err, length-getDecodedLength(code)-1) // -1 is from the code field
 }
 
 // decodeObjectPreamble decodes the preamble for Pkl objects.
@@ -257,4 +260,39 @@ func (d *decoder) decodeObjectPreamble() (int, int, error) {
 		return 0, 0, err
 	}
 	return arrLen, code, err
+}
+
+// getDecodedLength returns the number of array fields a specific type code is expected to yield
+func getDecodedLength(code int) int {
+	switch code {
+	case codeObject:
+		return 3 // name, moduleUri, member array
+	case codeDataSize, codeDuration:
+		return 2 // value, unitStr
+	case codePair:
+		return 2 // first, second
+	case codeIntSeq:
+		return 3 // start, end, step
+	case codeClass, codeTypeAlias:
+		return 0
+	default:
+		return 1
+	}
+}
+
+// skip provides a utility for ensuring forward-compatibility of fixed-size array types.
+// Any time something is decoded from an array of some expected fixed size this should be called
+// with `<array length> - <actual decoded value count>` as the argument.
+func (d *decoder) skip(passthrough error, length int) error {
+	if passthrough != nil {
+		return passthrough
+	} else if length < 0 {
+		panic("skip lenength < 0")
+	}
+	for range length {
+		if err := d.dec.Skip(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

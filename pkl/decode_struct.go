@@ -43,37 +43,6 @@ var (
 	emptyInterfaceType    = reflect.TypeOf(sliceOfEmptyInterface).Elem()
 )
 
-// decodeStruct decodes into an object represented by typ.
-// If outValue is not nil, writes fields onto outValue.
-func (d *decoder) decodeStruct(typ reflect.Type) (*reflect.Value, error) {
-	_, code, err := d.decodeObjectPreamble()
-	if err != nil {
-		return nil, err
-	}
-	switch code {
-	case codeObject:
-		return d.decodeObject(typ)
-	case codeDataSize:
-		return d.decodeDataSize()
-	case codeDuration:
-		return d.decodeDuration()
-	case codePair:
-		return d.decodePair(typ)
-	case codeIntSeq:
-		return d.decodeIntSeq()
-	case codeRegex:
-		return d.decodeRegex()
-	case codeClass:
-		ret := reflect.ValueOf(Class{})
-		return &ret, nil
-	case codeTypeAlias:
-		ret := reflect.ValueOf(TypeAlias{})
-		return &ret, nil
-	default:
-		return nil, fmt.Errorf("code %x cannot be decoded into a struct", code)
-	}
-}
-
 func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 	name, err := d.dec.DecodeString()
 	if err != nil {
@@ -103,16 +72,18 @@ func (d *decoder) decodeObjectGeneric(moduleUri, name string) (*reflect.Value, e
 		return nil, err
 	}
 	for i := 0; i < length; i++ {
-		_, err := d.dec.DecodeArrayLen()
+		memberLength, err := d.dec.DecodeArrayLen()
 		if err != nil {
 			return nil, err
 		}
 		code, err := d.dec.DecodeInt()
+		memberLength -= 1
 		if err != nil {
 			return nil, err
 		}
 		switch code {
 		case codeObjectMemberProperty:
+			memberLength -= 2
 			name, err := d.dec.DecodeString()
 			if err != nil {
 				return nil, err
@@ -123,6 +94,7 @@ func (d *decoder) decodeObjectGeneric(moduleUri, name string) (*reflect.Value, e
 			}
 			obj.Properties[name] = value.Interface()
 		case codeObjectMemberEntry:
+			memberLength -= 2
 			key, err := d.decodeInterface(emptyInterfaceType)
 			if err != nil {
 				return nil, err
@@ -133,6 +105,7 @@ func (d *decoder) decodeObjectGeneric(moduleUri, name string) (*reflect.Value, e
 			}
 			obj.Entries[key.Interface()] = value.Interface()
 		case codeObjectMemberElement:
+			memberLength -= 2
 			// index
 			_, err := d.dec.DecodeInt()
 			if err != nil {
@@ -143,6 +116,9 @@ func (d *decoder) decodeObjectGeneric(moduleUri, name string) (*reflect.Value, e
 				return nil, err
 			}
 			obj.Elements = append(obj.Elements, value.Interface())
+		}
+		if err := d.skip(nil, memberLength); err != nil {
+			return nil, err
 		}
 	}
 	ret := reflect.ValueOf(obj)
@@ -258,7 +234,8 @@ func (d *decoder) decodePair(typ reflect.Type) (*reflect.Value, error) {
 }
 
 func (d *decoder) decodeStructField(fields map[string]structField, out *reflect.Value) error {
-	if _, err := d.dec.DecodeArrayLen(); err != nil {
+	length, err := d.dec.DecodeArrayLen()
+	if err != nil {
 		return err
 	}
 	memberCode, err := d.dec.DecodeInt()
@@ -290,7 +267,7 @@ func (d *decoder) decodeStructField(fields map[string]structField, out *reflect.
 		return err
 	}
 	out.FieldByName(sf.Name).Set(*decodedValue)
-	return nil
+	return d.skip(nil, length-3)
 }
 
 func (d *decoder) decodeClass() (*reflect.Value, error) {
