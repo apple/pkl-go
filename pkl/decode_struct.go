@@ -64,10 +64,10 @@ func (d *decoder) decodeStruct(typ reflect.Type) (*reflect.Value, error) {
 	case codeRegex:
 		return d.decodeRegex()
 	case codeClass:
-		ret := reflect.ValueOf(&Class{})
+		ret := reflect.ValueOf(Class{})
 		return &ret, nil
 	case codeTypeAlias:
-		ret := reflect.ValueOf(&TypeAlias{})
+		ret := reflect.ValueOf(TypeAlias{})
 		return &ret, nil
 	default:
 		return nil, fmt.Errorf("code %x cannot be decoded into a struct", code)
@@ -294,12 +294,12 @@ func (d *decoder) decodeStructField(fields map[string]structField, out *reflect.
 }
 
 func (d *decoder) decodeClass() (*reflect.Value, error) {
-	ret := reflect.ValueOf(&Class{})
+	ret := reflect.ValueOf(Class{})
 	return &ret, nil
 }
 
 func (d *decoder) decodeTypeAlias() (*reflect.Value, error) {
-	ret := reflect.ValueOf(&TypeAlias{})
+	ret := reflect.ValueOf(TypeAlias{})
 	return &ret, nil
 }
 

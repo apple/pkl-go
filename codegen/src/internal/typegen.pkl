@@ -177,6 +177,16 @@ mappedTypes: Mapping<Class|TypeAlias, Type> = new {
     typeName = "DataSizeUnit"
     importPath = "github.com/apple/pkl-go/pkl"
   }
+  [Class] = new Type.Declared {
+    package = "pkl"
+    typeName = "Class"
+    importPath = "github.com/apple/pkl-go/pkl"
+  }
+  [TypeAlias] = new Type.Declared {
+    package = "pkl"
+    typeName = "TypeAlias"
+    importPath = "github.com/apple/pkl-go/pkl"
+  }
   // introduced in Pkl 0.29
   [Bytes] = new Type.Slice {
     elem = new Type.Declared { typeName = "byte" }

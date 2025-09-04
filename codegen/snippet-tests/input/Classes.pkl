@@ -99,6 +99,10 @@ class Bug {
   kind4: BugKindFour
 
   bagOfStuff: Dynamic
+
+  bugClass: Class
+
+  bugTypeAlias: TypeAlias
 }
 
 abstract class A {

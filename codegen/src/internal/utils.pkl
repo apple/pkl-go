@@ -108,7 +108,7 @@ function renderHeaderComment(`module`: reflect.Module) =
   "// Code generated from Pkl module `\(`module`.name)`. DO NOT EDIT."
 
 function canBeNormalizedToEnumName(name: String) =
-  name == "" || splitNameOnNonLettersOrDigits(name).length > 0
+  name == "" || !splitNameOnNonLettersOrDigits(name).isEmpty
 
 function normalizeEnumName(name: String) =
   if (name == "") "Empty"
