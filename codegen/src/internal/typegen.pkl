@@ -124,13 +124,11 @@ function generatePair(
   enclosing: reflect.TypeDeclaration,
   seenMappings: List<GoMapping>
 ): Type =
-  new Type.Pointer {
-    elem = new Type.Declared {
-      typeName = "Pair"
-      package = "pkl"
-      importPath = "github.com/apple/pkl-go/pkl"
-      typeArguments = type.typeArguments.map((t) -> generateType(t, enclosing, seenMappings))
-    }
+  new Type.Declared {
+    typeName = "Pair"
+    package = "pkl"
+    importPath = "github.com/apple/pkl-go/pkl"
+    typeArguments = type.typeArguments.map((t) -> generateType(t, enclosing, seenMappings))
   }
 
 local function builtInType(typ: String): Type.Declared = new { typeName = typ }

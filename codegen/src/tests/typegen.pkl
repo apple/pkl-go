@@ -58,6 +58,8 @@ local reflectedNullables = reflect.Class(Nullables)
 local class Pairs {
   res1: Pair<String, String>
   res2: Pair<String, String?>
+  res3: Pair
+  res4: Pair<String, String>?
 }
 
 local reflectedPairs = reflect.Class(Pairs)
@@ -108,7 +110,9 @@ facts {
     generateType(reflectedNullables.properties["res8"].type) == "*map[*string]*string"
   }
   ["pairs"] {
-    generateType(reflectedPairs.properties["res1"].type) == "*pkl.Pair[string, string]"
-    generateType(reflectedPairs.properties["res2"].type) == "*pkl.Pair[string, *string]"
+    generateType(reflectedPairs.properties["res1"].type) == "pkl.Pair[string, string]"
+    generateType(reflectedPairs.properties["res2"].type) == "pkl.Pair[string, *string]"
+    generateType(reflectedPairs.properties["res3"].type) == "pkl.Pair[any, any]"
+    generateType(reflectedPairs.properties["res4"].type) == "*pkl.Pair[string, string]"
   }
 }
