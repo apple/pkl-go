@@ -1,0 +1,7 @@
+@go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/nomappinghidden" }
+module NoMappingHidden
+
+import ".../src/go.pkl"
+import "support/NoMapping.pkl"
+
+hidden noMapping: NoMapping
