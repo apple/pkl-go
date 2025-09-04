@@ -287,7 +287,7 @@ func (d *decoder) skip(passthrough error, length int) error {
 	if passthrough != nil {
 		return passthrough
 	} else if length < 0 {
-		panic("skip lenength < 0")
+		panic("skip length < 0")
 	}
 	for range length {
 		if err := d.dec.Skip(); err != nil {

@@ -84,7 +84,7 @@ var anies []byte
 //go:embed test_fixtures/msgpack/unknown_type.pkl.msgpack
 var unknownType []byte
 
-//go:embed test_fixtures/msgpack/arrays_too_long.pkl.msgpack
+//go:embed test_fixtures/manual/arrays_too_long.pkl.msgpack
 var arraysTooLong []byte
 
 func TestUnmarshall_Primitives(t *testing.T) {
