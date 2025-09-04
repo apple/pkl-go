@@ -22,9 +22,12 @@ import (
 )
 
 func (d *decoder) decodeMap(inType reflect.Type) (*reflect.Value, error) {
-	_, code, err := d.decodeObjectPreamble()
+	length, code, err := d.decodeObjectPreamble()
 	if err != nil {
 		return nil, err
+	}
+	if length != 2 {
+		return nil, fmt.Errorf("expected array length 2 but got %d", length)
 	}
 	if code == codeSet {
 		return d.decodeSet(inType)

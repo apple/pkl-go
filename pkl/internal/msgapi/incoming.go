@@ -129,44 +129,34 @@ func Decode(decoder *msgpack.Decoder) (IncomingMessage, error) {
 	switch c {
 	case codeEvaluateResponse:
 		var resp EvaluateResponse
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeEvaluateLog:
 		var resp Log
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeNewEvaluatorResponse:
 		var resp CreateEvaluatorResponse
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeEvaluateRead:
 		var resp ReadResource
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeEvaluateReadModule:
 		var resp ReadModule
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeListResourcesRequest:
 		var resp ListResources
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeListModulesRequest:
 		var resp ListModules
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeInitializeModuleReaderRequest:
 		var resp InitializeModuleReader
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeInitializeResourceReaderRequest:
 		var resp InitializeResourceReader
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	case codeCloseExternalProcess:
 		var resp CloseExternalProcess
-		err = decoder.Decode(&resp)
-		return &resp, err
+		return &resp, decoder.Decode(&resp)
 	default:
 		panic(fmt.Sprintf("Unknown code: %d", c))
 	}

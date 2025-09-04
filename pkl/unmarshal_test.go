@@ -84,6 +84,9 @@ var anies []byte
 //go:embed test_fixtures/msgpack/unknown_type.pkl.msgpack
 var unknownType []byte
 
+//go:embed test_fixtures/manual/arrays_too_long.pkl.msgpack
+var arraysTooLong []byte
+
 func TestUnmarshall_Primitives(t *testing.T) {
 	var res primitives.Primitives
 	expected := primitives.Primitives{
@@ -447,4 +450,9 @@ func TestUnmarshal_UnknownType(t *testing.T) {
 	err := pkl.Unmarshal(unknownType, &res)
 	assert.Error(t, err)
 	assert.Equal(t, "cannot decode Pkl value of type `PcfRenderer` into Go type `interface {}`. Define a custom mapping for this using `pkl.RegisterMapping`", err.Error())
+}
+
+func TestUnmarshal_ArraysTooLong(t *testing.T) {
+	var res pkl.Object
+	assert.NoError(t, pkl.Unmarshal(arraysTooLong, &res))
 }
