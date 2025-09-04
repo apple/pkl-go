@@ -243,7 +243,10 @@ func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *re
 		}
 	}
 
-	return res, d.skip(err, length-getDecodedLength(code)-1) // -1 is from the code field
+	if err != nil {
+		return nil, err
+	}
+	return res, d.skip(length - getDecodedLength(code) - 1) // -1 is from the code field
 }
 
 // decodeObjectPreamble decodes the preamble for Pkl objects.
@@ -283,10 +286,8 @@ func getDecodedLength(code int) int {
 // skip provides a utility for ensuring forward-compatibility of fixed-size array types.
 // Any time something is decoded from an array of some expected fixed size this should be called
 // with `<array length> - <actual decoded value count>` as the argument.
-func (d *decoder) skip(passthrough error, length int) error {
-	if passthrough != nil {
-		return passthrough
-	} else if length < 0 {
+func (d *decoder) skip(length int) error {
+	if length < 0 {
 		panic("skip length < 0")
 	}
 	for range length {

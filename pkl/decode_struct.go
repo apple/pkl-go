@@ -117,7 +117,7 @@ func (d *decoder) decodeObjectGeneric(moduleUri, name string) (*reflect.Value, e
 			}
 			obj.Elements = append(obj.Elements, value.Interface())
 		}
-		if err := d.skip(nil, memberLength); err != nil {
+		if err := d.skip(memberLength); err != nil {
 			return nil, err
 		}
 	}
@@ -267,7 +267,7 @@ func (d *decoder) decodeStructField(fields map[string]structField, out *reflect.
 		return err
 	}
 	out.FieldByName(sf.Name).Set(*decodedValue)
-	return d.skip(nil, length-3)
+	return d.skip(length - 3)
 }
 
 func (d *decoder) decodeClass() (*reflect.Value, error) {
