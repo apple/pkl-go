@@ -72,10 +72,12 @@ function gatherTypeDeclarationsFromType(
 
 function gatherPropertiesDeclarations(clazz: reflect.Class) =
   (seen: List<reflect.TypeDeclaration>) ->
-    clazz.properties.values.fold(
-      seen,
-      (acc, p) -> gatherTypeDeclarationsFromType(p.type, clazz, acc)
-    )
+    clazz.properties.values
+      .filter((p) -> !p.modifiers.contains("hidden"))
+      .fold(
+        seen,
+        (acc, p) -> gatherTypeDeclarationsFromType(p.type, clazz, acc)
+      )
 
 function gatherSuperDeclarations(clazz: reflect.Class) =
   (seen: List<reflect.TypeDeclaration>) ->
