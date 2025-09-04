@@ -148,15 +148,15 @@ func TestUnmarshall_Collections(t *testing.T) {
 			2: {},
 			3: {},
 		},
-		Res11: &pkl.Pair[int, float64]{
+		Res11: pkl.Pair[int, float64]{
 			First:  1,
 			Second: 5.0,
 		},
-		Res12: &pkl.Pair[any, any]{
+		Res12: pkl.Pair[any, any]{
 			First:  "hello",
 			Second: "goodbye",
 		},
-		Res13: &pkl.Pair[int, *int]{
+		Res13: pkl.Pair[int, *int]{
 			First:  1,
 			Second: &[]int{2}[0],
 		},

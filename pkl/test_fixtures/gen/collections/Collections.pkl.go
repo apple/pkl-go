@@ -28,11 +28,11 @@ type Collections struct {
 
 	Res10 map[int8]struct{} `pkl:"res10"`
 
-	Res11 *pkl.Pair[int, float64] `pkl:"res11"`
+	Res11 pkl.Pair[int, float64] `pkl:"res11"`
 
-	Res12 *pkl.Pair[any, any] `pkl:"res12"`
+	Res12 pkl.Pair[any, any] `pkl:"res12"`
 
-	Res13 *pkl.Pair[int, *int] `pkl:"res13"`
+	Res13 pkl.Pair[int, *int] `pkl:"res13"`
 
 	Res14 []byte `pkl:"res14"`
 }
