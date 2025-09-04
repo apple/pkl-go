@@ -28,4 +28,8 @@ type Bug struct {
 	Kind4 string `pkl:"kind4"`
 
 	BagOfStuff pkl.Object `pkl:"bagOfStuff"`
+
+	BugClass pkl.Class `pkl:"bugClass"`
+
+	BugTypeAlias pkl.TypeAlias `pkl:"bugTypeAlias"`
 }
