@@ -21,9 +21,10 @@ import (
 	_ "embed"
 	"testing"
 
+	"github.com/apple/pkl-go/pkl"
+	"github.com/apple/pkl-go/pkl/internal"
 	unknowntype "github.com/apple/pkl-go/pkl/test_fixtures/gen/unknown_type"
 
-	"github.com/apple/pkl-go/pkl"
 	any2 "github.com/apple/pkl-go/pkl/test_fixtures/gen/any"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/classes"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/collections"
@@ -32,6 +33,7 @@ import (
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/dynamic"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/nullables"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/primitives"
+	"github.com/apple/pkl-go/pkl/test_fixtures/gen/types"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/unions"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/unions/number"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/unions/othernumbers"
@@ -86,6 +88,9 @@ var unknownType []byte
 
 //go:embed test_fixtures/manual/arrays_too_long.pkl.msgpack
 var arraysTooLong []byte
+
+//go:embed test_fixtures/msgpack/types.pkl.msgpack
+var typesInput []byte
 
 func TestUnmarshall_Primitives(t *testing.T) {
 	var res primitives.Primitives
@@ -455,4 +460,20 @@ func TestUnmarshal_UnknownType(t *testing.T) {
 func TestUnmarshal_ArraysTooLong(t *testing.T) {
 	var res pkl.Object
 	assert.NoError(t, pkl.Unmarshal(arraysTooLong, &res))
+}
+
+func TestUnmarshal_Types(t *testing.T) {
+	version, err := pkl.NewEvaluatorManager().GetVersion()
+	assert.NoError(t, err)
+
+	var res types.Types
+	if internal.MustParseSemver(version).IsLessThan(internal.PklVersion0_30) {
+		assert.Equal(t, types.Types{}, res)
+	} else {
+		assert.Equal(t, types.Types{
+			StringClass: pkl.Class{ModuleUri: "pkl:base", QualifiedName: "pkl.base#String"},
+			ModuleClass: pkl.Class{ModuleUri: "pkl:base", QualifiedName: "pkl.base"},
+			TypeAlias:   pkl.TypeAlias{ModuleUri: "pkl:base", QualifiedName: "pkl.base#UInt8"},
+		}, res)
+	}
 }

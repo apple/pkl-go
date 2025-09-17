@@ -59,31 +59,44 @@ type Pair[A any, B any] struct {
 
 // Regex is the Go representation of `pkl.base#Regex`.
 //
-// Regulard experssions in Pkl are
+// Regular expressions in Pkl are [Java regular expressions](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)
+// and may not be compatible with [Go's RE2](https://github.com/google/re2/wiki/Syntax) syntax.
 type Regex struct {
 	// Pattern is the regex pattern expression in string form.
 	Pattern string
 }
 
 // Class is the Go representation of `pkl.base#Class`.
-//
-// This value is purposefully opaque, and only exists for compatibilty.
-type Class struct{}
+type Class struct {
+	// ModuleUri of the Pkl module containing the class.
+	// Will be an empty string for values encoded by Pkl versions older than 0.30.
+	ModuleUri string
+
+	// QualifiedName of the Pkl class.
+	// Will be an empty string for values encoded by Pkl versions older than 0.30.
+	QualifiedName string
+}
 
 // TypeAlias is the Go representation of `pkl.base#TypeAlias`.
-//
-// This value is purposefully opaque, and only exists for compatibilty.
-type TypeAlias struct{}
+type TypeAlias struct {
+	// ModuleUri of the Pkl module containing the typealias.
+	// Will be an empty string for values encoded by Pkl versions older than 0.30.
+	ModuleUri string
+
+	// QualifiedName of the Pkl typealias.
+	// Will be an empty string for values encoded by Pkl versions older than 0.30.
+	QualifiedName string
+}
 
 // IntSeq is the Go representation of `pkl.base#IntSeq`.
 //
-// This value exists for compatibility. IntSeq should preferrably be used as a way to describe
+// This value exists for compatibility. IntSeq should preferably be used as a way to describe
 // logic within a Pkl program, and not passed as data between Pkl and Go.
 type IntSeq struct {
-	// Start is the start of this seqeunce.
+	// Start is the start of this sequence.
 	Start int
 
-	// End is the end of this seqeunce.
+	// End is the end of this sequence.
 	End int
 
 	// Step is the common difference of successive members of this sequence.

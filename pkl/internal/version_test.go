@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-package pkl
+package internal
 
 import (
 	"testing"
@@ -23,9 +23,9 @@ import (
 )
 
 func compareVersions(v1 string, v2 string) int {
-	semverV1 := mustParseSemver(v1)
-	semverV2 := mustParseSemver(v2)
-	return semverV1.compareTo(semverV2)
+	semverV1 := MustParseSemver(v1)
+	semverV2 := MustParseSemver(v2)
+	return semverV1.CompareTo(semverV2)
 }
 
 func TestCompareSemverVersions(t *testing.T) {

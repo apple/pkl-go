@@ -270,13 +270,37 @@ func (d *decoder) decodeStructField(fields map[string]structField, out *reflect.
 	return d.skip(length - 3)
 }
 
-func (d *decoder) decodeClass() (*reflect.Value, error) {
-	ret := reflect.ValueOf(Class{})
+func (d *decoder) decodeClass(length int) (*reflect.Value, error) {
+	var (
+		class Class
+		err   error
+	)
+	if length > 1 { // pkl 0.30+ includes the qualified name and module uri
+		if class.ModuleUri, err = d.dec.DecodeString(); err != nil {
+			return nil, err
+		}
+		if class.QualifiedName, err = d.dec.DecodeString(); err != nil {
+			return nil, err
+		}
+	}
+	ret := reflect.ValueOf(class)
 	return &ret, nil
 }
 
-func (d *decoder) decodeTypeAlias() (*reflect.Value, error) {
-	ret := reflect.ValueOf(TypeAlias{})
+func (d *decoder) decodeTypeAlias(length int) (*reflect.Value, error) {
+	var (
+		typeAlias TypeAlias
+		err       error
+	)
+	if length > 1 { // pkl 0.30+ includes the qualified name and module uri
+		if typeAlias.ModuleUri, err = d.dec.DecodeString(); err != nil {
+			return nil, err
+		}
+		if typeAlias.QualifiedName, err = d.dec.DecodeString(); err != nil {
+			return nil, err
+		}
+	}
+	ret := reflect.ValueOf(typeAlias)
 	return &ret, nil
 }
 

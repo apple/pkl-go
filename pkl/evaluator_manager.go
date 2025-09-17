@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
 )
 
@@ -78,7 +79,7 @@ type evaluatorManagerImpl interface {
 	inChan() chan msgapi.IncomingMessage
 	outChan() chan msgapi.OutgoingMessage
 	closedChan() chan error
-	getVersion() (*semver, error)
+	getVersion() (*internal.Semver, error)
 }
 
 var _ EvaluatorManager = (*evaluatorManager)(nil)
@@ -159,7 +160,7 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseU
 	return NewEvaluator(ctx, newOpts...)
 }
 
-func (m *evaluatorManager) getVersion() (*semver, error) {
+func (m *evaluatorManager) getVersion() (*internal.Semver, error) {
 	return m.impl.getVersion()
 }
 

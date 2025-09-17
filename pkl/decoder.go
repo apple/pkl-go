@@ -66,8 +66,8 @@ var durationType = reflect.TypeOf(time.Duration(0))
 
 // Decode decodes the next value according to the expected type.
 func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
-	res, isUnmarshaled, err := d.maybeUnmarshal(typ)
-	if isUnmarshaled {
+	res, isUnmarshalled, err := d.maybeUnmarshal(typ)
+	if isUnmarshalled {
 		return res, err
 	}
 	switch typ.Kind() {
@@ -145,7 +145,7 @@ func (d *decoder) decodePointer(inType reflect.Type) (*reflect.Value, error) {
 }
 
 // maybeUnmarshal determines if typ implements encoding.BinaryUnmarshaler, and if it does,
-// performs the unmarshaling.
+// performs the unmarshalling.
 func (d *decoder) maybeUnmarshal(typ reflect.Type) (*reflect.Value, bool, error) {
 	ptr := reflect.New(typ)
 	unmarshaler, isUnmarshaler := ptr.Interface().(encoding.BinaryUnmarshaler)
@@ -231,9 +231,9 @@ func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *re
 	case code == codeRegex:
 		res, err = d.decodeRegex()
 	case code == codeClass:
-		res, err = d.decodeClass()
+		res, err = d.decodeClass(length)
 	case code == codeTypeAlias:
-		res, err = d.decodeTypeAlias()
+		res, err = d.decodeTypeAlias(length)
 	default:
 		if requireStruct {
 			return nil, fmt.Errorf("code %#02x cannot be decoded into a struct", code)
@@ -246,7 +246,7 @@ func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *re
 	if err != nil {
 		return nil, err
 	}
-	return res, d.skip(length - getDecodedLength(code) - 1) // -1 is from the code field
+	return res, d.skip(length - getDecodedLength(code, length) - 1) // -1 is from the code field
 }
 
 // decodeObjectPreamble decodes the preamble for Pkl objects.
@@ -266,7 +266,7 @@ func (d *decoder) decodeObjectPreamble() (int, int, error) {
 }
 
 // getDecodedLength returns the number of array fields a specific type code is expected to yield
-func getDecodedLength(code int) int {
+func getDecodedLength(code, length int) int {
 	switch code {
 	case codeObject:
 		return 3 // name, moduleUri, member array
@@ -277,6 +277,11 @@ func getDecodedLength(code int) int {
 	case codeIntSeq:
 		return 3 // start, end, step
 	case codeClass, codeTypeAlias:
+		if length > 1 {
+			// pkl 0.30+ includes the qualified name and module uri
+			return 2
+		}
+		// before pkl 0.30 only the type code is present
 		return 0
 	default:
 		return 1
