@@ -194,7 +194,6 @@ func TestLoadProject(t *testing.T) {
 
 		t.Run("annotations", func(t *testing.T) {
 			manager := NewEvaluatorManager()
-			//goland:noinspection GoUnhandledErrorResult
 			defer func() { _ = manager.Close() }()
 			version, err := manager.(*evaluatorManager).getVersion()
 			if err != nil {

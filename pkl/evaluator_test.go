@@ -75,7 +75,6 @@ func getOpenPort() int {
 	if err != nil {
 		panic(err)
 	}
-	//goland:noinspection GoUnhandledErrorResult
 	defer func() { _ = listener.Close() }()
 	addrStr := listener.Addr().String()
 	parts := strings.Split(addrStr, ":")
