@@ -14,6 +14,9 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
+//go:build !libpkl
+// +build !libpkl
+
 package pkl
 
 import (
