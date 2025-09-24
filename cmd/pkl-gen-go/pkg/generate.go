@@ -131,7 +131,12 @@ func GenerateGo(
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tmpFile.Name())
+
+	defer func() {
+		if err := os.RemoveAll(tmpFile.Name()); err != nil {
+			log("Failed to remove temporary file %s: %v\n", tmpFile.Name(), err)
+		}
+	}()
 
 	templateValues := TemplateValues{
 		GeneratorSettings: settings,
