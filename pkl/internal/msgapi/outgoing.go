@@ -84,6 +84,7 @@ type CreateEvaluator struct {
 	TimeoutSeconds          int64                      `msgpack:"timeoutSeconds,omitempty"`
 	ExternalModuleReaders   map[string]*ExternalReader `msgpack:"externalModuleReaders,omitempty"`
 	ExternalResourceReaders map[string]*ExternalReader `msgpack:"externalResourceReaders,omitempty"`
+	TraceMode               string                     `msgpack:"traceMode,omitEmpty"`
 }
 
 type ProjectOrDependency struct {
