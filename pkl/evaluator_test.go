@@ -29,6 +29,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -119,7 +120,7 @@ func TestEvaluator(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version.isLessThan(pklVersion0_29) {
+		if version.IsLessThan(internal.PklVersion0_29) {
 			t.SkipNow()
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
@@ -154,7 +155,7 @@ func TestEvaluator(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version.isLessThan(pklVersion0_29) {
+		if version.IsLessThan(internal.PklVersion0_29) {
 			t.SkipNow()
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
@@ -583,7 +584,7 @@ class Bar {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if pklVersion0_26.isGreaterThan(version) {
+		if internal.PklVersion0_26.IsGreaterThan(version) {
 			t.SkipNow()
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
@@ -605,7 +606,7 @@ class Bar {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if version.isGreaterThan(pklVersion0_25) {
+		if version.IsGreaterThan(internal.PklVersion0_25) {
 			t.SkipNow()
 		}
 		_, err = manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {

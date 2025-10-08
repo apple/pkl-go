@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,7 +45,7 @@ func TestExternalReaderE2E(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pklVersion0_27.isGreaterThan(version) {
+	if internal.PklVersion0_27.IsGreaterThan(version) {
 		t.SkipNow()
 	}
 

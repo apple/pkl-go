@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
 )
 
@@ -55,6 +56,7 @@ type EvaluatorOptions struct {
 	//   - `"textproto"`
 	//   - `"xml"`
 	//   - `"yaml"`
+	//   - `"pkl-binary"`
 	OutputFormat string
 
 	// AllowedModules defines URI patterns that determine which modules are permitted to be loaded and evaluated.
@@ -77,7 +79,7 @@ type EvaluatorOptions struct {
 
 	// CacheDir is the directory where `package:` modules are cached.
 	//
-	// If empty, no cacheing is performed.
+	// If empty, no caching is performed.
 	CacheDir string
 
 	// RootDir is the root directory for file-based reads within a Pkl program.
@@ -106,7 +108,7 @@ type EvaluatorOptions struct {
 	// or EvaluatorManager.NewProjectEvaluator.
 	ProjectBaseURI string
 
-	// DeclaredProjectDepenedencies is set of dependencies available to modules within ProjectBaseURI.
+	// DeclaredProjectDependencies is set of dependencies available to modules within ProjectBaseURI.
 	//
 	// When importing dependencies, a PklProject.deps.json file must exist within ProjectBaseURI
 	// that contains the project's resolved dependencies.
@@ -353,17 +355,17 @@ var WithOsEnv = func(opts *EvaluatorOptions) {
 	}
 }
 
-func buildEvaluatorOptions(version *semver, fns ...func(*EvaluatorOptions)) (*EvaluatorOptions, error) {
+func buildEvaluatorOptions(version *internal.Semver, fns ...func(*EvaluatorOptions)) (*EvaluatorOptions, error) {
 	o := &EvaluatorOptions{}
 	for _, f := range fns {
 		f(o)
 	}
 	// repl:text is the URI of the module used to hold expressions. It should always be allowed.
 	o.AllowedModules = append(o.AllowedModules, "repl:text")
-	if o.Http != nil && pklVersion0_26.isGreaterThan(version) {
+	if o.Http != nil && internal.PklVersion0_26.IsGreaterThan(version) {
 		return nil, fmt.Errorf("http options are not supported on Pkl versions lower than 0.26")
 	}
-	if (len(o.ExternalModuleReaders) > 0 || len(o.ExternalResourceReaders) > 0) && pklVersion0_27.isGreaterThan(version) {
+	if (len(o.ExternalModuleReaders) > 0 || len(o.ExternalResourceReaders) > 0) && internal.PklVersion0_27.IsGreaterThan(version) {
 		return nil, fmt.Errorf("external reader options are not supported on Pkl versions lower than 0.27")
 	}
 	return o, nil

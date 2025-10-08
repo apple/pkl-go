@@ -1,0 +1,9 @@
+@go.Package { name = "github.com/apple/pkl-go/pkl/test_fixtures/gen/types" }
+module types
+
+import "pkl:base"
+import ".../codegen/src/go.pkl"
+
+stringClass: Class = String
+moduleClass: Class = base.getClass()
+typeAlias: TypeAlias = UInt8

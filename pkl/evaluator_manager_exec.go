@@ -69,7 +69,7 @@ type execEvaluator struct {
 	closed chan error
 	// exited is a flag that indicates evaluator was closed explicitly
 	exited      atomicBool
-	version     *semver
+	version     *internal.Semver
 	pklCommand  []string
 	processDone chan struct{}
 }
@@ -86,9 +86,9 @@ func (e *execEvaluator) closedChan() chan error {
 	return e.closed
 }
 
-var pklVersionRegex = regexp.MustCompile(fmt.Sprintf("Pkl (%s).*", semverPattern.String()))
+var pklVersionRegex = regexp.MustCompile(fmt.Sprintf("Pkl (%s).*", internal.SemverPattern.String()))
 
-func (e *execEvaluator) getVersion() (*semver, error) {
+func (e *execEvaluator) getVersion() (*internal.Semver, error) {
 	if e.version != nil {
 		return e.version, nil
 	}
@@ -102,7 +102,7 @@ func (e *execEvaluator) getVersion() (*semver, error) {
 	if len(matches) < 2 {
 		return nil, fmt.Errorf("failed to get version information from Pkl. Ran `%s`, and got stdout \"%s\"", strings.Join(command.Args, " "), versionCmdOut)
 	}
-	version, err := parseSemver(matches[1])
+	version, err := internal.ParseSemver(matches[1])
 	if err != nil {
 		return nil, err
 	}

@@ -22,6 +22,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -199,7 +200,7 @@ func TestLoadProject(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if version.isLessThan(pklVersion0_27) {
+			if version.IsLessThan(internal.PklVersion0_27) {
 				t.SkipNow()
 			}
 			assert.Len(t, project.Annotations, 1)
@@ -278,7 +279,7 @@ func TestLoadProjectWithProxy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pklVersion0_26.isGreaterThan(version) {
+	if internal.PklVersion0_26.IsGreaterThan(version) {
 		t.SkipNow()
 	}
 
@@ -313,7 +314,7 @@ func TestLoadProjectWithExternalReaders(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pklVersion0_27.isGreaterThan(version) {
+	if internal.PklVersion0_27.IsGreaterThan(version) {
 		t.SkipNow()
 	}
 
@@ -345,7 +346,7 @@ func TestLoadProjectWithRewrites(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if version.isLessThan(pklVersion0_29) {
+	if version.IsLessThan(internal.PklVersion0_29) {
 		t.SkipNow()
 	}
 

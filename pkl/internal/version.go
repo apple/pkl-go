@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-package pkl
+package internal
 
 import (
 	"fmt"
@@ -23,26 +23,29 @@ import (
 	"strings"
 )
 
-var semverPattern = regexp.MustCompile(`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`)
+var SemverPattern = regexp.MustCompile(`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`)
 
-var numericIdentifer = regexp.MustCompile(`^(0|[1-9]\d*)$`)
-
-//goland:noinspection GoSnakeCaseUsage
-var pklVersion0_25 = mustParseSemver("0.25.0")
+var numericIdentifier = regexp.MustCompile(`^(0|[1-9]\d*)$`)
 
 //goland:noinspection GoSnakeCaseUsage
-var pklVersion0_26 = mustParseSemver("0.26.0")
+var PklVersion0_25 = MustParseSemver("0.25.0")
 
 //goland:noinspection GoSnakeCaseUsage
-var pklVersion0_27 = mustParseSemver("0.27.0")
+var PklVersion0_26 = MustParseSemver("0.26.0")
 
 //goland:noinspection GoSnakeCaseUsage
-var pklVersion0_28 = mustParseSemver("0.28.0")
+var PklVersion0_27 = MustParseSemver("0.27.0")
 
 //goland:noinspection GoSnakeCaseUsage
-var pklVersion0_29 = mustParseSemver("0.29.0")
+var PklVersion0_28 = MustParseSemver("0.28.0")
 
-type semver struct {
+//goland:noinspection GoSnakeCaseUsage
+var PklVersion0_29 = MustParseSemver("0.29.0")
+
+//goland:noinspection GoSnakeCaseUsage
+var PklVersion0_30 = MustParseSemver("0.30.0")
+
+type Semver struct {
 	major                 int
 	minor                 int
 	patch                 int
@@ -63,7 +66,7 @@ func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {
 	return compareInt(i.numericId, other.numericId)
 }
 
-func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
+func (s *Semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
 	if s.prerelease == "" {
 		return nil
 	}
@@ -73,7 +76,7 @@ func (s *semver) getPrereleaseIdentifiers() []prereleaseIdentifier {
 	identifiers := strings.Split(s.prerelease, ".")
 	prereleaseIdentifiers := make([]prereleaseIdentifier, len(identifiers))
 	for i, str := range identifiers {
-		if numericIdentifer.MatchString(str) {
+		if numericIdentifier.MatchString(str) {
 			// guaranteed to succeed
 			num, _ := strconv.Atoi(str)
 			prereleaseIdentifiers[i] = prereleaseIdentifier{numericId: num}
@@ -96,16 +99,16 @@ func compareInt(a, b int) int {
 	}
 }
 
-func (s *semver) compareToString(other string) (int, error) {
-	otherVersion, err := parseSemver(other)
+func (s *Semver) compareToString(other string) (int, error) {
+	otherVersion, err := ParseSemver(other)
 	if err != nil {
 		return 0, err
 	}
-	return s.compareTo(otherVersion), nil
+	return s.CompareTo(otherVersion), nil
 }
 
-// compareTo returns -1 if s < other, 1 if s > other, and 0 otherwise.
-func (s *semver) compareTo(other *semver) int {
+// CompareTo returns -1 if s < other, 1 if s > other, and 0 otherwise.
+func (s *Semver) CompareTo(other *Semver) int {
 	if comparison := compareInt(s.major, other.major); comparison != 0 {
 		return comparison
 	}
@@ -126,15 +129,15 @@ func (s *semver) compareTo(other *semver) int {
 	return compareInt(len(ids1), len(ids2))
 }
 
-func (s *semver) isGreaterThan(other *semver) bool {
-	return s.compareTo(other) > 0
+func (s *Semver) IsGreaterThan(other *Semver) bool {
+	return s.CompareTo(other) > 0
 }
 
-func (s *semver) isLessThan(other *semver) bool {
-	return s.compareTo(other) < 0
+func (s *Semver) IsLessThan(other *Semver) bool {
+	return s.CompareTo(other) < 0
 }
 
-func (s *semver) String() string {
+func (s *Semver) String() string {
 	var builder strings.Builder
 	_, err := fmt.Fprintf(&builder, "%d.%d.%d", s.major, s.minor, s.patch)
 	if err != nil {
@@ -152,16 +155,16 @@ func (s *semver) String() string {
 	return builder.String()
 }
 
-func mustParseSemver(s string) *semver {
-	parsed, err := parseSemver(s)
+func MustParseSemver(s string) *Semver {
+	parsed, err := ParseSemver(s)
 	if err != nil {
 		panic(err)
 	}
 	return parsed
 }
 
-func parseSemver(s string) (*semver, error) {
-	matched := semverPattern.FindStringSubmatch(s)
+func ParseSemver(s string) (*Semver, error) {
+	matched := SemverPattern.FindStringSubmatch(s)
 	if len(matched) < 6 {
 		return nil, fmt.Errorf("failed to parse %s as semver", s)
 	}
@@ -177,7 +180,7 @@ func parseSemver(s string) (*semver, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &semver{
+	return &Semver{
 		major:      major,
 		minor:      minor,
 		patch:      patch,

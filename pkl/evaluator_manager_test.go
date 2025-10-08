@@ -22,6 +22,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,11 +34,11 @@ type fakeEvaluatorImpl struct {
 	closed  chan error
 }
 
-func (f *fakeEvaluatorImpl) getVersion() (*semver, error) {
+func (f *fakeEvaluatorImpl) getVersion() (*internal.Semver, error) {
 	if f.version == "" {
-		return pklVersion0_25, nil
+		return internal.PklVersion0_25, nil
 	}
-	return parseSemver(f.version)
+	return internal.ParseSemver(f.version)
 }
 
 func (f *fakeEvaluatorImpl) init() error {
@@ -62,7 +63,7 @@ func (f *fakeEvaluatorImpl) closedChan() chan error {
 
 var _ evaluatorManagerImpl = (*fakeEvaluatorImpl)(nil)
 
-func newFakeEvalautorManager() *evaluatorManager {
+func newFakeEvaluatorManager() *evaluatorManager {
 	return &evaluatorManager{
 		impl: &fakeEvaluatorImpl{
 			in:     make(chan msgapi.IncomingMessage),
@@ -76,7 +77,7 @@ func newFakeEvalautorManager() *evaluatorManager {
 }
 
 func TestEvaluatorManager_interrupt_NewEvaluator(t *testing.T) {
-	m := newFakeEvalautorManager()
+	m := newFakeEvaluatorManager()
 	defer assert.NoError(t, m.Close())
 	go m.listen()
 	go func() {
@@ -88,7 +89,7 @@ func TestEvaluatorManager_interrupt_NewEvaluator(t *testing.T) {
 }
 
 func TestEvaluatorManager_interrupt_Close(t *testing.T) {
-	m := newFakeEvalautorManager()
+	m := newFakeEvaluatorManager()
 	go m.listen()
 	go func() {
 		_ = m.Close()
