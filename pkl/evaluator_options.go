@@ -129,7 +129,22 @@ type EvaluatorOptions struct {
 	// Added in Pkl 0.27.
 	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
 	ExternalResourceReaders map[string]ExternalReader
+
+	// TraceMode dictates how Pkl will format messages logged by `trace()`.
+	//
+	// Added in Pkl 0.30.
+	// If the underlying Pkl does not support trace modes, this option will be ignored.
+	TraceMode TraceMode
 }
+
+type TraceMode string
+
+const (
+	// TraceCompact causes all structures passed to trace() will be emitted on a single line.
+	TraceCompact TraceMode = "compact"
+	// TracePretty causes all structures passed to trace() will be indented and emitted across multiple lines.
+	TracePretty TraceMode = "pretty"
+)
 
 type ProjectRemoteDependency struct {
 	PackageUri string     `pkl:"uri"`
@@ -312,6 +327,7 @@ func (e *EvaluatorOptions) toMessage() *msgapi.CreateEvaluator {
 		Http:                    e.Http.toMessage(),
 		ExternalModuleReaders:   externalReadersToMessage(e.ExternalModuleReaders),
 		ExternalResourceReaders: externalReadersToMessage(e.ExternalResourceReaders),
+		TraceMode:               string(e.TraceMode),
 	}
 }
 
