@@ -34,8 +34,39 @@ import (
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/pkg"
 	"github.com/apple/pkl-go/pkl"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
+
+var (
+	// Version of pkl-gen-go.
+	//
+	// This gets replaced by ldflags when built through CI,
+	// or by init when installed via go install.
+	Version = "development"
+
+	generatorSettingsPath string
+	generateScript        string
+	mappings              map[string]string
+	basePath              string
+	allowedModules        []string
+	allowedResources      []string
+	dryRun                bool
+	projectDir            string
+	cacheDir              string
+	suppressWarnings      bool
+	outputPath            string
+	printVersion          bool
+
+	settings generatorsettings.GeneratorSettings
+	err      error
+)
+
+func init() {
+	info, ok := debug.ReadBuildInfo()
+	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" || Version != "development" {
+		return
+	}
+	Version = strings.TrimPrefix(info.Main.Version, "v")
+}
 
 var command = cobra.Command{
 	Use:   "pkl-gen-go [flags] <module>",
@@ -71,6 +102,10 @@ CONFIGURING OUTPUT PATH
 			fmt.Println(Version)
 			return nil
 		}
+		settings, err = loadGeneratorSettings()
+		if err != nil {
+			return fmt.Errorf("failed to load generator settings: %w", err)
+		}
 		evaluator, err := newEvaluator()
 		if err != nil {
 			return fmt.Errorf("failed to create evaluator: %w", err)
@@ -93,6 +128,22 @@ CONFIGURING OUTPUT PATH
 		}
 		return cobra.ExactArgs(1)(cmd, args)
 	},
+}
+
+func init() {
+	flags := command.Flags()
+	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file")
+	flags.StringVar(&generateScript, "generate-script", "", "The Generate.pkl script to use")
+	flags.StringToStringVar(&mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
+	flags.StringVar(&basePath, "base-path", "", "The base path used to determine relative output")
+	flags.StringVar(&outputPath, "output-path", "", "The output directory to write generated sources into")
+	flags.BoolVar(&suppressWarnings, "suppress-format-warning", false, "Suppress warnings around formatting issues")
+	flags.StringSliceVar(&allowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
+	flags.StringSliceVar(&allowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
+	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
+	flags.StringVar(&cacheDir, "cache-dir", "", "The cache directory for storing packages")
+	flags.BoolVar(&dryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
+	flags.BoolVar(&printVersion, "version", false, "Print the version and exit")
 }
 
 func newEvaluator() (pkl.Evaluator, error) {
@@ -161,27 +212,6 @@ func cacertsFromHomeDir() ([]byte, error) {
 	return nil, nil
 }
 
-var (
-	settings         generatorsettings.GeneratorSettings
-	suppressWarnings bool
-	outputPath       string
-	printVersion     bool
-)
-
-// The version of pkl-gen-go.
-//
-// This gets replaced by ldflags when built through CI,
-// or by init when installed via go install.
-var Version = "development"
-
-func init() {
-	info, ok := debug.ReadBuildInfo()
-	if !ok || info.Main.Version == "" || info.Main.Version == "(devel)" || Version != "development" {
-		return
-	}
-	Version = strings.TrimPrefix(info.Main.Version, "v")
-}
-
 func fileExists(filepath string) bool {
 	_, err := os.Stat(filepath)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -219,7 +249,11 @@ func doFindProjectDir(dir string) string {
 
 func findProjectDir(projectDirFlag string) *url.URL {
 	if projectDirFlag != "" {
-		return &url.URL{Scheme: "file", Path: projectDirFlag}
+		normalized, err := filepath.Abs(projectDirFlag)
+		if err != nil {
+			panic(err)
+		}
+		return &url.URL{Scheme: "file", Path: normalized}
 	}
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -230,17 +264,17 @@ func findProjectDir(projectDirFlag string) *url.URL {
 
 // Loads the settings for controlling codegen.
 // Uses a Pkl evaluator that is separate from what's used for actually running codegen.
-func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, cacheDirFlag string) (generatorsettings.GeneratorSettings, error) {
-	projectDir := findProjectDir(projectDirFlag)
+func loadGeneratorSettings() (generatorsettings.GeneratorSettings, error) {
+	resolvedProjectDir := findProjectDir(projectDir)
 	var evaluator pkl.Evaluator
 	var err error
 	opts := func(opts *pkl.EvaluatorOptions) {
-		if cacheDirFlag != "" {
-			opts.CacheDir = cacheDirFlag
+		if cacheDir != "" {
+			opts.CacheDir = cacheDir
 		}
 	}
-	if projectDir != nil {
-		evaluator, err = pkl.NewProjectEvaluator(context.Background(), projectDir, evaluatorOptions, opts)
+	if resolvedProjectDir != nil {
+		evaluator, err = pkl.NewProjectEvaluator(context.Background(), resolvedProjectDir, evaluatorOptions, opts)
 	} else {
 		evaluator, err = pkl.NewEvaluator(context.Background(), evaluatorOptions, opts)
 	}
@@ -268,46 +302,8 @@ func loadGeneratorSettings(generatorSettingsPath string, projectDirFlag string, 
 		normalized := path.Join(settingsFilePath, *s.CacheDir)
 		s.CacheDir = &normalized
 	}
-	return s, nil
-}
 
-func init() {
-	flags := command.Flags()
-	var generatorSettingsPath string
-	var generateScript string
-	var mappings map[string]string
-	var basePath string
-	var allowedModules []string
-	var allowedResources []string
-	var dryRun bool
-	var projectDir string
-	var cacheDir string
-	flags.StringVar(&generatorSettingsPath, "generator-settings", "", "The path to a generator settings file")
-	flags.StringVar(&generateScript, "generate-script", "", "The Generate.pkl script to use")
-	flags.StringToStringVar(&mappings, "mapping", nil, "The mapping of a Pkl module name to a Go package name")
-	flags.StringVar(&basePath, "base-path", "", "The base path used to determine relative output")
-	flags.StringVar(&outputPath, "output-path", "", "The output directory to write generated sources into")
-	flags.BoolVar(&suppressWarnings, "suppress-format-warning", false, "Suppress warnings around formatting issues")
-	flags.StringSliceVar(&allowedModules, "allowed-modules", nil, "URI patterns that determine which modules can be loaded and evaluated")
-	flags.StringSliceVar(&allowedResources, "allowed-resources", nil, "URI patterns that determine which resources can be loaded and evaluated")
-	flags.StringVar(&projectDir, "project-dir", "", "The project directory to load dependency and evaluator settings from")
-	flags.StringVar(&cacheDir, "cache-dir", "", "The cache directory for storing packages")
-	flags.BoolVar(&dryRun, "dry-run", false, "Print out the names of the files that will be generated, but don't write any files")
-	flags.BoolVar(&printVersion, "version", false, "Print the version and exit")
-	var err error
-	if err = flags.Parse(os.Args); err != nil && !errors.Is(err, pflag.ErrHelp) {
-		panic(err)
-	}
-	if projectDir != "" {
-		projectDir, err = filepath.Abs(projectDir)
-		if err != nil {
-			panic(err)
-		}
-	}
-	settings, err = loadGeneratorSettings(generatorSettingsPath, projectDir, cacheDir)
-	if err != nil {
-		panic(err)
-	}
+	// load overrides from CLI flags
 	if generateScript != "" {
 		settings.GeneratorScriptPath = generateScript
 	}
@@ -324,19 +320,22 @@ func init() {
 		settings.AllowedResources = allowedResources
 	}
 	if projectDir != "" {
-		if settings.ProjectDir == nil {
-			settings.ProjectDir = new(string)
+		normalized, err := filepath.Abs(projectDir)
+		if err != nil {
+			return s, err
 		}
-		*settings.ProjectDir = projectDir
+		settings.ProjectDir = &normalized
 	}
 	if cacheDir != "" {
 		normalized, err := filepath.Abs(cacheDir)
 		if err != nil {
-			panic(err)
+			return s, err
 		}
 		settings.CacheDir = &normalized
 	}
 	settings.DryRun = dryRun
+
+	return s, nil
 }
 
 func main() {
