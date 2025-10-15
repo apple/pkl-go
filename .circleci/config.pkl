@@ -30,7 +30,8 @@ local class PklDistribution {
   version: String
 
   /// The URL to download this distribution
-  fixed downloadUrl: String = "https://github.com/apple/pkl/releases/download/\(version)/pkl-linux-amd64"
+  fixed downloadUrl: String =
+    "https://github.com/apple/pkl/releases/download/\(version)/pkl-linux-amd64"
 }
 
 local pklLatest: PklDistribution = new { version = "0.29.0" }
@@ -70,7 +71,8 @@ jobs {
       steps {
         new RunStep {
           name = "Setup"
-          command = """
+          command =
+            """
             curl -L -o pkl.bin '\(distribution.downloadUrl)'
             chmod +x pkl.bin
             mkdir test-results
@@ -80,7 +82,8 @@ jobs {
           // snippet tests depend on Pkl 0.29 or higher.
           new RunStep {
             name = "snippet test"
-            command = """
+            command =
+              """
               export PKL_EXEC=$(pwd)/pkl.bin
 
               echo "Running Pkl snippet tests"
@@ -93,7 +96,8 @@ jobs {
         }
         new RunStep {
           name = "go test"
-          command = """
+          command =
+            """
             export PKL_EXEC=$(pwd)/pkl.bin
             go install github.com/jstemmer/go-junit-report/v2@latest
             echo "Running Go unit tests"
@@ -129,7 +133,8 @@ jobs {
               ["GOOS"] = if (os == "linux") os else "darwin"
               ["GOARCH"] = if (arch == "amd64") arch else "arm64"
             }
-            command = #"""
+            command =
+              #"""
               # strip preceding "v"
               VERSION="${CIRCLE_TAG:1}"
 
@@ -157,7 +162,8 @@ jobs {
       new AttachWorkspaceStep { at = "." }
       new RunStep {
         name = "Creating universal binary"
-        command = #"""
+        command =
+          #"""
           lipo \
             -create \
             -output out/pkl-gen-go/pkl-gen-go-macos.bin \
@@ -183,7 +189,8 @@ jobs {
       "checkout"
       new RunStep {
         name = "Creating Pkl package"
-        command = """
+        command =
+          """
           curl -L -o pkl.bin '\(pklDistributions[pklDistributions.length - 1].downloadUrl)'
           chmod +x pkl.bin
           ./pkl.bin project package codegen/src/ --output-path out/pkl-package/
@@ -207,7 +214,8 @@ jobs {
       new RunStep {
         name = "gh release"
         // language=bash
-        command = #"""
+        command =
+          #"""
           # strip preceding "v"
           VERSION="${CIRCLE_TAG:1}"
           EXPECTED_VERSION=$(cat VERSION.txt)

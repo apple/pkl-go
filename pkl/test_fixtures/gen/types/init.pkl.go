@@ -5,4 +5,5 @@ import "github.com/apple/pkl-go/pkl"
 
 func init() {
 	pkl.RegisterStrictMapping("types", Types{})
+	pkl.RegisterStrictMapping("types#Foo", Foo{})
 }

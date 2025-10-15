@@ -41,12 +41,6 @@ house: House = new {
   bathrooms = 2
 }
 
-animalClass: Class = Animal
-
-moduleClass: Class = module.getClass()
-
-felineTypeAlias: TypeAlias = Feline
-
 abstract class Animal {
   name: String
 }
@@ -64,8 +58,6 @@ class Greyhound extends Dog {
 class Cat extends Animal {
   meows: Boolean
 }
-
-typealias Feline = Cat
 
 class House {
   area: Int

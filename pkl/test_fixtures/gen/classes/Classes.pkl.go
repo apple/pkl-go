@@ -15,12 +15,6 @@ type Classes struct {
 	MyAnimal Animal `pkl:"myAnimal"`
 
 	House House `pkl:"house"`
-
-	AnimalClass pkl.Class `pkl:"animalClass"`
-
-	ModuleClass pkl.Class `pkl:"moduleClass"`
-
-	FelineTypeAlias pkl.TypeAlias `pkl:"felineTypeAlias"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Classes
