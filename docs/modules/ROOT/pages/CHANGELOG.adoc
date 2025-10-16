@@ -1,5 +1,43 @@
 = Changelog
 
+[[release-0.12.0]]
+== 0.12.0 (2025-11-05)
+
+=== Additions
+
+* Support for the changes to the encoded data for `pkl.Class` and `pkl.TypeAlias` (https://github.com/apple/pkl-go/pull/168[#168], https://github.com/apple/pkl-go/pull/167[#167], https://github.com/apple/pkl-go/pull/170[#170], https://github.com/apple/pkl-go/pull/175[#175]).
+** The type's name and module URI are now included. When using Pkl versions prior to 0.30 these fields will be empty strings.
+** These changes also insulate pkl-go's decoder against some types of future changes to the binary encoding protocol.
+* Support for configuring the new trace mode evaluator option introduced in Pkl 0.30 (https://github.com/apple/pkl-go/pull/171[#171], https://github.com/apple/pkl-go/pull/172[#172], https://github.com/apple/pkl-go/pull/174[#174]).
+* Support for loading a project from a ModuleSource (https://github.com/apple/pkl-go/pull/153[#153]).
+
+=== Changes
+
+*  Do not force `pkl.Pair` struct fields to be pointers (https://github.com/apple/pkl-go/pull/169[#169]).
+** pkl-go v0.11.0 updated code generation so that only nullable properties in Pkl generated pointer struct fields in Go, but this improvement did not extend to properties of type `Pair`.
+* Improve `pkl-gen-go` CLI code to prevent cases where environmental issues would prevent accessing CLI `--help` (https://github.com/apple/pkl-go/pull/173[#173]).
+
+=== Miscellaneous
+
+* Document use of `go tool` for running `pkl-gen-go` (https://github.com/apple/pkl-go/pull/163[#163]).
+* Enforce Pkl code formatting (https://github.com/apple/pkl-go/pull/178[#178]).
+* Enforce Go code formatting (https://github.com/apple/pkl-go/pull/179[#179]).
+
+=== Fixes
+
+* Fix method documentation for `EvaluateOutputFilesBytes` (https://github.com/apple/pkl-go/pull/164[#164]).
+* Do not require package mappings for types only used in hidden properties (https://github.com/apple/pkl-go/pull/166[#166]).
+* Improve error handling in various components (https://github.com/apple/pkl-go/pull/165[#165]).
+* Fix handling of module/resource reader schemes containing regex control characters (https://github.com/apple/pkl-go/pull/177[#177]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/kasugamirai[@kasugamirai]
+
 
 [[release-0.11.1]]
 == 0.11.1 (2025-08-11)
