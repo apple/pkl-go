@@ -10,9 +10,13 @@ import (
 type Types struct {
 	StringClass pkl.Class `pkl:"stringClass"`
 
-	ModuleClass pkl.Class `pkl:"moduleClass"`
+	BaseModuleClass pkl.Class `pkl:"baseModuleClass"`
 
-	TypeAlias pkl.TypeAlias `pkl:"typeAlias"`
+	Uint8TypeAlias pkl.TypeAlias `pkl:"uint8TypeAlias"`
+
+	FooClass pkl.Class `pkl:"fooClass"`
+
+	BarTypeAlias pkl.TypeAlias `pkl:"barTypeAlias"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Types

@@ -72,9 +72,9 @@ type Class struct {
 	// Will be an empty string for values encoded by Pkl versions older than 0.30.
 	ModuleUri string
 
-	// QualifiedName of the Pkl class.
+	// Name of the Pkl class.
 	// Will be an empty string for values encoded by Pkl versions older than 0.30.
-	QualifiedName string
+	Name string
 }
 
 // TypeAlias is the Go representation of `pkl.base#TypeAlias`.
@@ -83,9 +83,9 @@ type TypeAlias struct {
 	// Will be an empty string for values encoded by Pkl versions older than 0.30.
 	ModuleUri string
 
-	// QualifiedName of the Pkl typealias.
+	// Name of the Pkl typealias.
 	// Will be an empty string for values encoded by Pkl versions older than 0.30.
-	QualifiedName string
+	Name string
 }
 
 // IntSeq is the Go representation of `pkl.base#IntSeq`.

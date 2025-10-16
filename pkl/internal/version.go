@@ -121,11 +121,17 @@ func (s *Semver) CompareTo(other *Semver) int {
 		return comparison
 	}
 	ids1, ids2 := s.getPrereleaseIdentifiers(), other.getPrereleaseIdentifiers()
+	// if one version is stable (no prerelease ids) then it is higher
+	if len(ids1) == 0 || len(ids2) == 0 {
+		return compareInt(len(ids2), len(ids1))
+	}
+	// otherwise, pair-wise compare each prelease id
 	for i := 0; i < min(len(ids1), len(ids2)); i++ {
 		if cmp := ids1[i].compareTo(ids2[i]); cmp != 0 {
 			return cmp
 		}
 	}
+	// fall back to more prerelease ids is higher
 	return compareInt(len(ids1), len(ids2))
 }
 

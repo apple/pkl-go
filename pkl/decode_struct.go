@@ -284,10 +284,10 @@ func (d *decoder) decodeClass(length int) (*reflect.Value, error) {
 		err   error
 	)
 	if length > 1 { // pkl 0.30+ includes the qualified name and module uri
-		if class.ModuleUri, err = d.dec.DecodeString(); err != nil {
+		if class.Name, err = d.dec.DecodeString(); err != nil {
 			return nil, err
 		}
-		if class.QualifiedName, err = d.dec.DecodeString(); err != nil {
+		if class.ModuleUri, err = d.dec.DecodeString(); err != nil {
 			return nil, err
 		}
 	}
@@ -301,10 +301,10 @@ func (d *decoder) decodeTypeAlias(length int) (*reflect.Value, error) {
 		err       error
 	)
 	if length > 1 { // pkl 0.30+ includes the qualified name and module uri
-		if typeAlias.ModuleUri, err = d.dec.DecodeString(); err != nil {
+		if typeAlias.Name, err = d.dec.DecodeString(); err != nil {
 			return nil, err
 		}
-		if typeAlias.QualifiedName, err = d.dec.DecodeString(); err != nil {
+		if typeAlias.ModuleUri, err = d.dec.DecodeString(); err != nil {
 			return nil, err
 		}
 	}

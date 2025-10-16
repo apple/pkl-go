@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/apple/pkl-go/pkl"
-	"github.com/apple/pkl-go/pkl/internal"
 	unknowntype "github.com/apple/pkl-go/pkl/test_fixtures/gen/unknown_type"
 
 	any2 "github.com/apple/pkl-go/pkl/test_fixtures/gen/any"
@@ -91,6 +90,9 @@ var arraysTooLong []byte
 
 //go:embed test_fixtures/msgpack/types.pkl.msgpack
 var typesInput []byte
+
+//go:embed test_fixtures/manual/types_pre_0.30.pkl.msgpack
+var typesPre030Input []byte
 
 func TestUnmarshall_Primitives(t *testing.T) {
 	var res primitives.Primitives
@@ -463,17 +465,21 @@ func TestUnmarshal_ArraysTooLong(t *testing.T) {
 }
 
 func TestUnmarshal_Types(t *testing.T) {
-	version, err := pkl.NewEvaluatorManager().GetVersion()
-	assert.NoError(t, err)
-
 	var res types.Types
-	if internal.MustParseSemver(version).IsLessThan(internal.PklVersion0_30) {
-		assert.Equal(t, types.Types{}, res)
-	} else {
-		assert.Equal(t, types.Types{
-			StringClass: pkl.Class{ModuleUri: "pkl:base", QualifiedName: "pkl.base#String"},
-			ModuleClass: pkl.Class{ModuleUri: "pkl:base", QualifiedName: "pkl.base"},
-			TypeAlias:   pkl.TypeAlias{ModuleUri: "pkl:base", QualifiedName: "pkl.base#UInt8"},
-		}, res)
-	}
+	assert.NoError(t, pkl.Unmarshal(typesInput, &res))
+
+	assert.Equal(t, types.Types{
+		StringClass:     pkl.Class{ModuleUri: "pkl:base", Name: "String"},
+		BaseModuleClass: pkl.Class{ModuleUri: "pkl:base", Name: "ModuleClass"},
+		Uint8TypeAlias:  pkl.TypeAlias{ModuleUri: "pkl:base", Name: "UInt8"},
+		FooClass:        pkl.Class{ModuleUri: "pklgo:/pkl/test_fixtures/types.pkl", Name: "types#Foo"},
+		BarTypeAlias:    pkl.TypeAlias{ModuleUri: "pklgo:/pkl/test_fixtures/types.pkl", Name: "types#Bar"},
+	}, res)
+}
+
+func TestUnmarshal_Types_Pre_030(t *testing.T) {
+	var res types.Types
+	assert.NoError(t, pkl.Unmarshal(typesPre030Input, &res))
+
+	assert.Equal(t, types.Types{}, res)
 }
