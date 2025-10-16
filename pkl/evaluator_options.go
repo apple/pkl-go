@@ -486,6 +486,9 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 				}
 			}
 		}
+		if evaluatorSettings.TraceMode != nil {
+			opts.TraceMode = *evaluatorSettings.TraceMode
+		}
 	}
 }
 

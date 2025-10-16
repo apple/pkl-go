@@ -78,6 +78,7 @@ type ProjectEvaluatorSettings struct {
 	Color                   string                                           `pkl:"color"`
 	ExternalModuleReaders   map[string]ProjectEvaluatorSettingExternalReader `pkl:"externalModuleReaders"`
 	ExternalResourceReaders map[string]ProjectEvaluatorSettingExternalReader `pkl:"externalResourceReaders"`
+	TraceMode               *TraceMode                                       `pkl:"traceMode"`
 }
 
 // ProjectEvaluatorSettingsHttp is the Go representation of pkl.EvaluatorSettings.Http

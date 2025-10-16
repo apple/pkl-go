@@ -174,6 +174,13 @@ evaluatorSettings {
   }
 }`
 
+const project6Contents = `
+amends "pkl:Project"
+
+evaluatorSettings {
+  traceMode = "pretty"
+}`
+
 func writeFile(t *testing.T, filename string, contents string) {
 	if err := os.WriteFile(filename, []byte(contents), 0o777); err != nil {
 		t.Logf("Failed to write file %s: %s", filename, err)
@@ -363,6 +370,32 @@ func TestLoadProjectWithRewrites(t *testing.T) {
 						"https://example.com/": "https://example.example/",
 					},
 				},
+			}
+			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
+		})
+	}
+}
+
+func TestLoadProjectWithTraceMode(t *testing.T) {
+	manager := NewEvaluatorManager()
+	version, err := manager.(*evaluatorManager).getVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if version.IsLessThan(internal.PklVersion0_30) {
+		t.SkipNow()
+	}
+
+	tempDir := t.TempDir()
+	_ = os.Mkdir(tempDir+"/pigeons", 0o777)
+	writeFile(t, tempDir+"/pigeons/PklProject", project6Contents)
+
+	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
+	if assert.NoError(t, err) {
+		t.Run("evaluatorSettings", func(t *testing.T) {
+			mode := TracePretty
+			expectedSettings := ProjectEvaluatorSettings{
+				TraceMode: &mode,
 			}
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
 		})
