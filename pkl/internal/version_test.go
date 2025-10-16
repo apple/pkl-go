@@ -40,6 +40,7 @@ func TestCompareSemverVersions(t *testing.T) {
 	assert.Equal(t, 1, compareVersions("2.0.0", "0.2.0"))
 	assert.Equal(t, 1, compareVersions("2.0.0", "0.0.2"))
 	assert.Equal(t, 1, compareVersions("2.0.0", "0.0.15"))
+	assert.Equal(t, 1, compareVersions("2.0.0", "2.0.0-alpha"))
 	assert.Equal(t, -1, compareVersions("2.0.0-alpha", "2.0.0-beta"))
 	assert.Equal(t, 1, compareVersions("2.0.0-alpha", "2.0.0-aaa"))
 	assert.Equal(t, 0, compareVersions("2.0.0-alpha", "2.0.0-alpha"))
