@@ -21,6 +21,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/apple/pkl-go/pkl/internal"
@@ -396,7 +397,7 @@ var WithDefaultCacheDir = func(opts *EvaluatorOptions) {
 var WithResourceReader = func(reader ResourceReader) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
 		opts.ResourceReaders = append(opts.ResourceReaders, reader)
-		opts.AllowedResources = append(opts.AllowedResources, reader.Scheme()+":")
+		opts.AllowedResources = append(opts.AllowedResources, regexp.QuoteMeta(reader.Scheme()+":"))
 	}
 }
 
@@ -405,7 +406,7 @@ var WithResourceReader = func(reader ResourceReader) func(opts *EvaluatorOptions
 var WithModuleReader = func(reader ModuleReader) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
 		opts.ModuleReaders = append(opts.ModuleReaders, reader)
-		opts.AllowedModules = append(opts.AllowedModules, reader.Scheme()+":")
+		opts.AllowedModules = append(opts.AllowedModules, regexp.QuoteMeta(reader.Scheme()+":"))
 	}
 }
 
@@ -472,7 +473,7 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 				opts.ExternalModuleReaders[scheme] = ExternalReader(reader)
 				if evaluatorSettings.AllowedModules == nil { // if no explicit allowed modules are set in the project, allow declared external module readers
 					WithDefaultAllowedModules(opts)
-					opts.AllowedModules = append(opts.AllowedModules, scheme+":")
+					opts.AllowedModules = append(opts.AllowedModules, regexp.QuoteMeta(scheme+":"))
 				}
 			}
 		}
@@ -482,7 +483,7 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 				opts.ExternalResourceReaders[scheme] = ExternalReader(reader)
 				if evaluatorSettings.AllowedResources == nil { // if no explicit allowed resources are set in the project, allow declared external resource readers
 					WithDefaultAllowedResources(opts)
-					opts.AllowedResources = append(opts.AllowedResources, scheme+":")
+					opts.AllowedResources = append(opts.AllowedResources, regexp.QuoteMeta(scheme+":"))
 				}
 			}
 		}
@@ -513,7 +514,7 @@ var WithExternalModuleReader = func(scheme string, spec ExternalReader) func(opt
 			opts.ExternalModuleReaders = map[string]ExternalReader{}
 		}
 		opts.ExternalModuleReaders[scheme] = spec
-		opts.AllowedModules = append(opts.AllowedModules, scheme+":")
+		opts.AllowedModules = append(opts.AllowedModules, regexp.QuoteMeta(scheme+":"))
 	}
 }
 
@@ -523,7 +524,7 @@ var WithExternalResourceReader = func(scheme string, spec ExternalReader) func(o
 			opts.ExternalResourceReaders = map[string]ExternalReader{}
 		}
 		opts.ExternalResourceReaders[scheme] = spec
-		opts.AllowedResources = append(opts.AllowedResources, scheme+":")
+		opts.AllowedResources = append(opts.AllowedResources, regexp.QuoteMeta(scheme+":"))
 	}
 }
 
