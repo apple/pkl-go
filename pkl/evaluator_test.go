@@ -226,6 +226,22 @@ bar: Int = 5
 		}
 	})
 
+	t.Run("custom resource reader with scheme containing regex control characters", func(t *testing.T) {
+		reader := &virtualResourceReader{
+			scheme: "foo+bar.baz",
+			read: func(u url.URL) ([]byte, error) {
+				return []byte("Hello, World!"), nil
+			},
+		}
+		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
+		if assert.NoError(t, err) {
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read("foo+bar.baz:qux").text`))
+			assert.NoError(t, err)
+			assert.Equal(t, "foo = \"Hello, World!\"\n", out)
+			assert.NoError(t, ev.Close())
+		}
+	})
+
 	t.Run("custom resource reader error", func(t *testing.T) {
 		reader := &virtualResourceReader{
 			scheme: "flintstone",
