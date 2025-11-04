@@ -18,8 +18,9 @@
 @go.Package { name = "github.com/apple/pkl-go/cmd/pkl-gen-go/generatorsettings" }
 module pkl.golang.GeneratorSettings
 
-import "go.pkl"
 import "pkl:reflect"
+
+import "go.pkl"
 
 local version = read("resources/VERSION.txt").text.trim()
 
@@ -69,7 +70,8 @@ structTags: go.StructTags
 ///
 /// This is an internal setting that is used for testing purposes when developing the code
 /// generator.
-generatorScriptPath: String = "package://pkg.pkl-lang.org/pkl-go/pkl.golang@\(version)#/Generator.pkl"
+generatorScriptPath: String =
+  "package://pkg.pkl-lang.org/pkl-go/pkl.golang@\(version)#/Generator.pkl"
 
 /// URI patterns that determine which modules can be loaded and evaluated.
 ///

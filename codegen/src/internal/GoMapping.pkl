@@ -17,9 +17,10 @@
 @Unlisted
 abstract module pkl.golang.internal.GoMapping
 
+import "pkl:reflect"
+
 import "GoMapping.pkl"
 import "Type.pkl"
-import "pkl:reflect"
 import "utils.pkl"
 
 /// The go package path, e.g. `github.com/myorg/myproj/appconfig`
@@ -43,10 +44,13 @@ source: reflect.TypeDeclaration
 type: Type
 
 /// The set of names already seen prior to creating mappings for this module.
-existingNames: List<String> = seenMappings.flatMap((it) ->
-  if (it.goPackage == module.goPackage) it.names
-  else List()
-)
+existingNames: List<String> =
+  seenMappings.flatMap((it) ->
+    if (it.goPackage == module.goPackage)
+      it.names
+    else
+      List()
+  )
 
 class Enum extends GoMapping {
   local self = this
@@ -91,9 +95,9 @@ class Class extends GoMapping {
   interface: Interface? =
     if (
       clazz.modifiers.contains("abstract")
-      || clazz.modifiers.contains("open")
-      // inherits from another class
-      || clazz.superclass.reflectee != Typed && clazz.superclass.reflectee != Module
+        || clazz.modifiers.contains("open")
+        // inherits from another class
+        || clazz.superclass.reflectee != Typed && clazz.superclass.reflectee != Module
     )
       new Interface {
         name = self.name
@@ -103,22 +107,23 @@ class Class extends GoMapping {
           package = self.goPackageShort
         }
       }
-    else null
+    else
+      null
 
   struct: Struct? =
-    if (clazz.modifiers.contains("abstract")) null
+    if (clazz.modifiers.contains("abstract"))
+      null
     else
       let (structName = if (self.interface == null) name else "\(self.name)Impl")
         new Struct {
           name = structName
           clazz = self.clazz
           type = new Type.Declared {
-              typeName = structName
-              importPath = self.goPackage
-              package = self.goPackageShort
-            }
+            typeName = structName
+            importPath = self.goPackage
+            package = self.goPackageShort
           }
-
+        }
 }
 
 class EnumMember {

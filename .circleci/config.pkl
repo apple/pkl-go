@@ -34,7 +34,7 @@ local class PklDistribution {
     "https://github.com/apple/pkl/releases/download/\(version)/pkl-linux-amd64"
 }
 
-local pklLatest: PklDistribution = new { version = "0.29.0" }
+local pklLatest: PklDistribution = new { version = "0.30.0" }
 
 local pklDistributions: Listing<PklDistribution> = new {
   new { version = "0.25.3" }
@@ -121,6 +121,28 @@ jobs {
         name = "Check Formatting"
         command = "gofumpt -d ."
         // -d shows the diff but is also required to get a non-zero exit when formatting is needed
+      }
+    }
+  }
+  ["test-format-pkl"] {
+    docker {
+      new { image = "cimg/base:2024.01" }
+    }
+    steps {
+      new RunStep {
+        name = "Setup"
+        command =
+          """
+          curl -L -o pkl.bin '\(pklLatest.downloadUrl)'
+          chmod +x pkl.bin
+          """
+      }
+      new RunStep {
+        name = "Check Formatting"
+        command =
+          """
+          $(pwd)/pkl.bin format --grammar-version 1 --diff-name-only .
+          """
       }
     }
   }

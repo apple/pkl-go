@@ -22,4 +22,4 @@ open class MyClass {
   thing: String
 }
 
-typealias MyEnum = "one"|"two"|"three"
+typealias MyEnum = "one" | "two" | "three"

@@ -19,8 +19,9 @@
 module pkl.golang.internal.typegen
 
 import "pkl:reflect"
-import "Type.pkl"
+
 import "GoMapping.pkl"
+import "Type.pkl"
 
 function generateType(
   type: reflect.Type,
@@ -30,27 +31,33 @@ function generateType(
   if (type is reflect.NullableType)
     let (_elem = generateType(type.member, enclosing, seenMappings))
       // No double pointers
-      if (_elem is Type.Pointer) _elem
-      else new Type.Pointer { elem = _elem }
+      if (_elem is Type.Pointer)
+        _elem
+      else
+        new Type.Pointer { elem = _elem }
   else if (type is reflect.DeclaredType)
     generateDeclaredType(type, enclosing, seenMappings)
   else if (type is reflect.ModuleType)
     let (moduleClass = enclosing.enclosingDeclaration.moduleClass)
       generateType(reflect.DeclaredType(moduleClass), moduleClass, seenMappings)
-  else if (type is reflect.UnionType) generateUnionType(type, seenMappings)
-  else if (type is reflect.UnknownType) anyType
-  else if (type is reflect.NothingType) throw("Unable to generate Go for the `nothing` type")
-  else if (type is reflect.StringLiteralType) new Type.Declared { typeName = "string" }
-  else throw("Unsure how to generate this type: \(type)")
+  else if (type is reflect.UnionType)
+    generateUnionType(type, seenMappings)
+  else if (type is reflect.UnknownType)
+    anyType
+  else if (type is reflect.NothingType)
+    throw("Unable to generate Go for the `nothing` type")
+  else if (type is reflect.StringLiteralType)
+    new Type.Declared { typeName = "string" }
+  else
+    throw("Unsure how to generate this type: \(type)")
 
-function generateUnionType(
-  type: reflect.UnionType,
-  seenMappings: List<GoMapping>
-): Type =
+function generateUnionType(type: reflect.UnionType, seenMappings: List<GoMapping>): Type =
   let (mappedType = seenMappings.findOrNull((c) -> c.source == type))
     if (mappedType != null)
       mappedType.type
-    else if (type.members.every((it) -> it is reflect.StringLiteralType || it == reflect.stringType))
+    else if (
+      type.members.every((it) -> it is reflect.StringLiteralType || it == reflect.stringType)
+    )
       new Type.Declared { typeName = "string" }
     else
       anyType
@@ -63,7 +70,8 @@ function generateDeclaredType(
   let (referent = type.referent)
   let (reflectee = type.referent.reflectee)
   let (mapped = seenMappings.findOrNull((it) -> it.source == referent))
-    if (mapped != null) mapped.type
+    if (mapped != null)
+      mapped.type
     else if (mappedTypes.containsKey(reflectee))
       mappedTypes[reflectee]
     else if (referent is reflect.TypeAlias)
@@ -76,7 +84,8 @@ function generateDeclaredType(
       generateSet(type, enclosing, seenMappings)
     else if (reflectee == Pair)
       generatePair(type, enclosing, seenMappings)
-    else throw("Cannot generate type \(type.referent.name) as Go.")
+    else
+      throw("Cannot generate type \(type.referent.name) as Go.")
 
 function generateListing(
   type: reflect.DeclaredType,
@@ -86,8 +95,10 @@ function generateListing(
   let (typeArg = type.typeArguments.getOrNull(0))
     new Type.Slice {
       elem =
-        if (typeArg == null) anyType
-        else generateType(typeArg, enclosing, seenMappings)
+        if (typeArg == null)
+          anyType
+        else
+          generateType(typeArg, enclosing, seenMappings)
     }
 
 function generateMapping(
@@ -99,11 +110,15 @@ function generateMapping(
   let (typeArgValue = type.typeArguments.getOrNull(1))
     new Type.Map {
       key =
-        if (typeArgKey == null) anyType
-        else generateType(typeArgKey, enclosing, seenMappings)
+        if (typeArgKey == null)
+          anyType
+        else
+          generateType(typeArgKey, enclosing, seenMappings)
       elem =
-        if (typeArgValue == null) anyType
-        else generateType(typeArgValue, enclosing, seenMappings)
+        if (typeArgValue == null)
+          anyType
+        else
+          generateType(typeArgValue, enclosing, seenMappings)
     }
 
 function generateSet(
@@ -114,8 +129,10 @@ function generateSet(
   let (typeArg = type.typeArguments.getOrNull(0))
     new Type.Map {
       key =
-        if (typeArg == null) anyType
-        else generateType(typeArg, enclosing, seenMappings)
+        if (typeArg == null)
+          anyType
+        else
+          generateType(typeArg, enclosing, seenMappings)
       elem = new Type.Declared { typeName = "struct{}" }
     }
 
@@ -123,19 +140,18 @@ function generatePair(
   type: reflect.DeclaredType,
   enclosing: reflect.TypeDeclaration,
   seenMappings: List<GoMapping>
-): Type =
-  new Type.Declared {
-    typeName = "Pair"
-    package = "pkl"
-    importPath = "github.com/apple/pkl-go/pkl"
-    typeArguments = type.typeArguments.map((t) -> generateType(t, enclosing, seenMappings))
-  }
+): Type = new Type.Declared {
+  typeName = "Pair"
+  package = "pkl"
+  importPath = "github.com/apple/pkl-go/pkl"
+  typeArguments = type.typeArguments.map((t) -> generateType(t, enclosing, seenMappings))
+}
 
 local function builtInType(typ: String): Type.Declared = new { typeName = typ }
 
 local anyType: Type.Declared = builtInType("any")
 
-mappedTypes: Mapping<Class|TypeAlias, Type> = new {
+mappedTypes: Mapping<Class | TypeAlias, Type> = new {
   [Int] = new Type.Declared { typeName = "int" }
   [Int8] = new Type.Declared { typeName = "int8" }
   [Int16] = new Type.Declared { typeName = "int16" }

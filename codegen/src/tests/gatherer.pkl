@@ -17,10 +17,11 @@
 amends "pkl:test"
 
 import "pkl:reflect"
+
+import "../internal/gatherer.pkl"
 import "fixtures/types.pkl"
 import "fixtures/types2.pkl"
 import "fixtures/types4.pkl"
-import "../internal/gatherer.pkl"
 
 // it's important that these classes are defined in another module because they gather the type
 // declarations of their enclosing module.

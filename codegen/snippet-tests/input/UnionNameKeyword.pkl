@@ -18,6 +18,6 @@ module UnionNameKeyword
 
 import ".../src/go.pkl"
 
-typealias Type = "one"|"two"|"three"
+typealias Type = "one" | "two" | "three"
 
 type: Type

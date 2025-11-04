@@ -20,6 +20,7 @@ module pkl.golang.internal.EnumGen
 extends "Gen.pkl"
 
 import "pkl:reflect"
+
 import "GoMapping.pkl"
 import "utils.pkl"
 
@@ -27,44 +28,45 @@ alias: reflect.TypeAlias = mapping.source as reflect.TypeAlias
 
 enumMapping: GoMapping.Enum = mapping as GoMapping.Enum
 
-contents = new Listing {
-  utils.renderHeaderComment(alias.enclosingDeclaration)
-  "package \(enumMapping.goPackageShort)"
-  ""
-  utils.renderImports(List("encoding", "fmt"))
-  ""
-  when (alias.docComment != null) {
-    utils.renderDocComment(alias.docComment!!, "")
-  }
-  "type \(enumMapping.name) string"
-  ""
-  "const ("
-  for (member in enumMapping.members) {
-    renderEnumMember(member)
-  }
-  ")"
-  ""
-  "// String returns the string representation of \(enumMapping.name)"
-  "func (rcv \(enumMapping.name)) String() string {"
-  "\treturn string(rcv)"
-  "}"
-  ""
-  "var _ encoding.BinaryUnmarshaler = new(\(enumMapping.name))"
-  ""
-  "// UnmarshalBinary implements encoding.BinaryUnmarshaler for \(enumMapping.name)."
-  "func (rcv *\(enumMapping.name)) UnmarshalBinary(data []byte) error {"
-  "\tswitch str := string(data); str {"
-  for (member in enumMapping.members) {
-    "\tcase \(utils.toGoString(member.pklName)):"
-    "\t\t*rcv = \(member.goName)"
-  }
-  "\tdefault:"
-  "\t\treturn fmt.Errorf(`illegal: \"%s\" is not a valid \(enumMapping.name)`, str)"
-  "\t}"
-  "\treturn nil"
-  "}"
-  ""
-}.join("\n")
+contents =
+  new Listing {
+    utils.renderHeaderComment(alias.enclosingDeclaration)
+    "package \(enumMapping.goPackageShort)"
+    ""
+    utils.renderImports(List("encoding", "fmt"))
+    ""
+    when (alias.docComment != null) {
+      utils.renderDocComment(alias.docComment!!, "")
+    }
+    "type \(enumMapping.name) string"
+    ""
+    "const ("
+    for (member in enumMapping.members) {
+      renderEnumMember(member)
+    }
+    ")"
+    ""
+    "// String returns the string representation of \(enumMapping.name)"
+    "func (rcv \(enumMapping.name)) String() string {"
+    "\treturn string(rcv)"
+    "}"
+    ""
+    "var _ encoding.BinaryUnmarshaler = new(\(enumMapping.name))"
+    ""
+    "// UnmarshalBinary implements encoding.BinaryUnmarshaler for \(enumMapping.name)."
+    "func (rcv *\(enumMapping.name)) UnmarshalBinary(data []byte) error {"
+    "\tswitch str := string(data); str {"
+    for (member in enumMapping.members) {
+      "\tcase \(utils.toGoString(member.pklName)):"
+      "\t\t*rcv = \(member.goName)"
+    }
+    "\tdefault:"
+    "\t\treturn fmt.Errorf(`illegal: \"%s\" is not a valid \(enumMapping.name)`, str)"
+    "\t}"
+    "\treturn nil"
+    "}"
+    ""
+  }.join("\n")
 
 local function renderEnumMember(member: GoMapping.EnumMember) =
   let (maxMemberNameLen = enumMapping.members.map((m) -> m.goName.length).max)

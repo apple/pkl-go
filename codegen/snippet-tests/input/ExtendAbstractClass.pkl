@@ -17,8 +17,8 @@
 module ExtendsAbstractClass
 
 import ".../src/go.pkl"
-import "support/lib3.pkl"
 import "support/lib2.pkl"
+import "support/lib3.pkl"
 
 abstract class A {
   b: String

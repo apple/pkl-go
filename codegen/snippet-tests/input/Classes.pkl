@@ -65,18 +65,18 @@ class ThisPerson extends Person {
   someoneElse: Person
 }
 
-typealias BugKind = "butterfly"|"beetle\""|"beetle one"
+typealias BugKind = "butterfly" | "beetle\"" | "beetle one"
 
 // `nothing` is allowed as a string literal
-typealias BugKindTwo = nothing|"butterfly"|"beetle\""|"beetle one"
+typealias BugKindTwo = nothing | "butterfly" | "beetle\"" | "beetle one"
 
 // should turn into just a string type because of a conflict; "bettle one" and "bettle_one" would
 // turn into the same Go identifier.
-typealias BugKindThree = "butterfly"|"beetle\""|"beetle one"|"beetle_one"
+typealias BugKindThree = "butterfly" | "beetle\"" | "beetle one" | "beetle_one"
 
 // should also turn into just a string type because there no way to generate valid go symols; "*" and "!!" would
 // turn into invalid Go symbols.
-typealias BugKindFour = "*"|"!!"
+typealias BugKindFour = "*" | "!!"
 
 class Bug {
   /// The owner of this bug.

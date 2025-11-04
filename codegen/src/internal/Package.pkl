@@ -18,11 +18,12 @@
 module pkl.golang.internal.Package
 
 import "pkl:reflect"
+
 import "ClassGen.pkl"
 import "EnumGen.pkl"
-import "utils.pkl"
-import "GoMapping.pkl"
 import "Gen.pkl"
+import "GoMapping.pkl"
+import "utils.pkl"
 
 `module`: reflect.Module
 
@@ -33,26 +34,34 @@ packageName: String
 
 structTags: Mapping<String, String>
 
-local moduleMappings: List<GoMapping> =
-  mappings.filter((it) -> it.goPackage == packageName)
+local moduleMappings: List<GoMapping> = mappings.filter((it) -> it.goPackage == packageName)
 
 local packageNameShort = moduleMappings[0].goPackageShort
 
 local function describeLocation(src: reflect.TypeDeclaration) =
-  let (memberType =
-    if (src is reflect.Class && src.enclosingDeclaration.moduleClass == src) "module"
-    else if (src is reflect.Class) "class"
-    else "typealias"
+  let (
+    memberType =
+      if (src is reflect.Class && src.enclosingDeclaration.moduleClass == src)
+        "module"
+      else if (src is reflect.Class)
+        "class"
+      else
+        "typealias"
   )
     "* \(memberType) `\(src.reflectee)` (\(src.location.displayUri))"
 
 local function hasUniqueNames(): Boolean =
   let (names = moduleMappings.map((it) -> it.name))
-    if (names.isDistinct) true
+    if (names.isDistinct)
+      true
     else
-      let (duplicateNames = moduleMappings.filter((it) -> moduleMappings.count((m) -> m.name == it.name) > 1))
+      let (
+        duplicateNames =
+          moduleMappings.filter((it) -> moduleMappings.count((m) -> m.name == it.name) > 1)
+      )
       let (locations = duplicateNames.map((it) -> describeLocation(it.source)).join("\n"))
-        throw("""
+        throw(
+          """
           Conflict: multiple Pkl declarations compute to Go name `\(duplicateNames.first.name)`.
 
           To resolve this conflict, add a `@go.Name` annotation to any of the following declarations:
@@ -65,25 +74,26 @@ local function hasUniqueNames(): Boolean =
           @go.Name { value = "CrabCakes" }
           class Crab_Cakes
           ```
-          """)
+          """
+        )
 
-local generated: List<Gen>(hasUniqueNames()) = moduleMappings.map((it) ->
-  if (it is GoMapping.Class)
-    new ClassGen {
-      structTags = module.structTags
-      mappings = module.mappings
-      mapping = it
-    }
-  else
-    new EnumGen {
-      mappings = module.mappings
-      mapping = it
-    }
-)
+local generated: List<Gen>(hasUniqueNames()) =
+  moduleMappings.map((it) ->
+    if (it is GoMapping.Class)
+      new ClassGen {
+        structTags = module.structTags
+        mappings = module.mappings
+        mapping = it
+      }
+    else
+      new EnumGen {
+        mappings = module.mappings
+        mapping = it
+      })
 
-local structs: List<GoMapping.Struct> = moduleMappings
-  .map((it) -> if (it is GoMapping.Class) it.struct else null)
-  .filterNonNull() as List<GoMapping.Struct>
+local structs: List<GoMapping.Struct> =
+  moduleMappings.map((it) -> if (it is GoMapping.Class) it.struct else null).filterNonNull()
+    as List<GoMapping.Struct>
 
 local initFile: String =
   new Listing {
@@ -94,7 +104,7 @@ local initFile: String =
     ""
     "func init() {"
     for (struct in structs) {
-        #"\#tpkl.RegisterStrictMapping(\#(utils.toGoString(struct.clazz.reflectee.toString())), \#(struct.name){})"#
+      #"\#tpkl.RegisterStrictMapping(\#(utils.toGoString(struct.clazz.reflectee.toString())), \#(struct.name){})"#
     }
     "}"
     ""

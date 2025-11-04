@@ -23,8 +23,7 @@ import ".../src/go.pkl"
 myProp: SomethingFunny
 
 @go.Name { value = "SomethingVeryFunny" }
-class SomethingFunny {
-}
+class SomethingFunny {}
 
 @go.Name { value = "ConfigType" }
-typealias Type = "one"|"two"
+typealias Type = "one" | "two"

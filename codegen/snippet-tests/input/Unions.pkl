@@ -31,12 +31,12 @@ noodle: Noodles
 disposition: AccountDisposition
 
 /// City; e.g. where people live
-typealias City = "San Francisco"|"London"|"上海"
+typealias City = "San Francisco" | "London" | "上海"
 
 /// Locale that contains cities and towns
-typealias County = "San Francisco"|"San Mateo"|"Yolo"
+typealias County = "San Francisco" | "San Mateo" | "Yolo"
 
 /// Noodles
-typealias Noodles = "拉面"|"刀切面"|"面线"|"意大利面"
+typealias Noodles = "拉面" | "刀切面" | "面线" | "意大利面"
 
-typealias AccountDisposition = ""|"icloud3"|"prod"|"shared"
+typealias AccountDisposition = "" | "icloud3" | "prod" | "shared"

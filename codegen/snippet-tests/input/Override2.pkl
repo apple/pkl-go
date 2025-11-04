@@ -16,8 +16,8 @@
 @go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/override2" }
 open module Override2
 
-import "Override2.pkl"
 import ".../src/go.pkl"
+import "Override2.pkl"
 
 /// Doc comments
 foo: String
