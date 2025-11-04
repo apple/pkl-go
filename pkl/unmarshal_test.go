@@ -320,7 +320,7 @@ func TestUnmarshal_Dynamic(t *testing.T) {
 }
 
 func TestUnmarshal_Classes(t *testing.T) {
-	var greyhound = classes.GreyhoundImpl{
+	greyhound := classes.GreyhoundImpl{
 		DogImpl: classes.DogImpl{
 			Name:  "Uni",
 			Barks: false,
