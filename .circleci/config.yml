@@ -53,6 +53,18 @@ jobs:
         path: test-results
     docker:
     - image: cimg/go:1.21
+  test-format-go:
+    steps:
+    - checkout
+    - checkout
+    - run:
+        command: go install mvdan.cc/gofumpt@v0.9.2
+        name: Setup
+    - run:
+        command: gofumpt -d .
+        name: Check Formatting
+    docker:
+    - image: cimg/go:1.21
   test-license-headers:
     steps:
     - checkout
@@ -235,6 +247,9 @@ workflows:
     - test-pkl-0-29-0:
         requires:
         - hold
+    - test-format-go:
+        requires:
+        - hold
     - test-license-headers:
         requires:
         - hold
@@ -246,16 +261,19 @@ workflows:
     jobs:
     - test-pkl-0-25-3
     - test-pkl-0-29-0
+    - test-format-go
     - test-license-headers
     - build-pkl-gen-go:
         requires:
         - test-pkl-0-25-3
         - test-pkl-0-29-0
+        - test-format-go
         - test-license-headers
     - build-pkl-package:
         requires:
         - test-pkl-0-25-3
         - test-pkl-0-29-0
+        - test-format-go
         - test-license-headers
     when:
       equal:
@@ -275,6 +293,12 @@ workflows:
             ignore: /.*/
           tags:
             only: /^v?\d+\.\d+\.\d+$/
+    - test-format-go:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
     - test-license-headers:
         filters:
           branches:
@@ -285,6 +309,7 @@ workflows:
         requires:
         - test-pkl-0-25-3
         - test-pkl-0-29-0
+        - test-format-go
         - test-license-headers
         filters:
           branches:
@@ -295,6 +320,7 @@ workflows:
         requires:
         - test-pkl-0-25-3
         - test-pkl-0-29-0
+        - test-format-go
         - test-license-headers
         filters:
           branches:

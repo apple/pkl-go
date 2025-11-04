@@ -59,3 +59,25 @@ To run the formatter:
 ----
 hawkeye format
 ----
+
+== Running gofumpt formatting
+
+This project uses https://github.com/mvdan/gofumpt[gofumpt] (v0.9.2) to format Go code.
+
+To run the formatter:
+
+[source,shell]
+----
+gofumpt -l -w .
+----
+
+== Running Pkl formatting
+
+This project uses Pkl's formatter to format Pkl code.
+
+To run the formatter:
+
+[source,shell]
+----
+pkl format --grammar-version 1 --write .
+----
