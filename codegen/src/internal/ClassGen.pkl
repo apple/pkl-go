@@ -20,10 +20,11 @@ module pkl.golang.internal.ClassGen
 extends "Gen.pkl"
 
 import "pkl:reflect"
+
 import "GoMapping.pkl"
-import "utils.pkl"
 import "Type.pkl"
 import "typegen.pkl"
+import "utils.pkl"
 
 clazz: reflect.Class = mapping.source as reflect.Class
 
@@ -31,78 +32,90 @@ classInfo: GoMapping.Class = mapping as GoMapping.Class
 
 structTags: Mapping<String, String>
 
-contents = new Listing {
-  utils.renderHeaderComment(clazz.enclosingDeclaration)
-  "package \(classInfo.goPackageShort)"
-  when (!imports.isEmpty) {
-    ""
-    utils.renderImports(imports)
-  }
-  when (interface != null) {
-    ""
-    interface
+contents =
+  new Listing {
+    utils.renderHeaderComment(clazz.enclosingDeclaration)
+    "package \(classInfo.goPackageShort)"
+    when (!imports.isEmpty) {
+      ""
+      utils.renderImports(imports)
+    }
+    when (interface != null) {
+      ""
+      interface
+      when (!isAbstract) {
+        ""
+        "var _ \(classInfo.interface.name) = \(classInfo.struct.type.render(classInfo.goPackage)){}"
+      }
+    }
     when (!isAbstract) {
       ""
-      "var _ \(classInfo.interface.name) = \(classInfo.struct.type.render(classInfo.goPackage)){}"
+      struct
+      when (interface != null && !getters.isBlank) {
+        ""
+        getters
+      }
     }
-  }
-  when (!isAbstract) {
-    ""
-    struct
-    when (interface != null && !getters.isBlank) {
+    when (isModule && !isAbstract) {
       ""
-      getters
+      "// LoadFromPath loads the pkl module at the given path and evaluates it into a \(classInfo.name)"
+      "func LoadFromPath(ctx context.Context, path string) (ret \(classInfo.type.render(classInfo.goPackage)), err error) {"
+      "\tevaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)"
+      "\tif err != nil {"
+      "\t\treturn ret, err"
+      "\t}"
+      "\tdefer func() {"
+      "\t\tcerr := evaluator.Close()"
+      "\t\tif err == nil {"
+      "\t\t\terr = cerr"
+      "\t\t}"
+      "\t}()"
+      "\tret, err = Load(ctx, evaluator, pkl.FileSource(path))"
+      "\treturn ret, err"
+      "}"
+      ""
+      "// Load loads the pkl module at the given source and evaluates it with the given evaluator into a \(classInfo.name)"
+      "func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (\(classInfo.type.render(classInfo.goPackage)), error) {"
+      "\tvar ret \(classInfo.struct.name)"
+      "\terr := evaluator.EvaluateModule(ctx, source, &ret)"
+      "\treturn ret, err"
+      "}"
     }
-  }
-  when (isModule && !isAbstract) {
     ""
-    "// LoadFromPath loads the pkl module at the given path and evaluates it into a \(classInfo.name)"
-    "func LoadFromPath(ctx context.Context, path string) (ret \(classInfo.type.render(classInfo.goPackage)), err error) {"
-    "\tevaluator, err := pkl.NewEvaluator(ctx, pkl.PreconfiguredOptions)"
-    "\tif err != nil {"
-    "\t\treturn ret, err"
-    "\t}"
-    "\tdefer func() {"
-    "\t\tcerr := evaluator.Close()"
-    "\t\tif err == nil {"
-    "\t\t\terr = cerr"
-    "\t\t}"
-    "\t}()"
-    "\tret, err = Load(ctx, evaluator, pkl.FileSource(path))"
-    "\treturn ret, err"
-    "}"
-    ""
-    "// Load loads the pkl module at the given source and evaluates it with the given evaluator into a \(classInfo.name)"
-    "func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (\(classInfo.type.render(classInfo.goPackage)), error) {"
-    "\tvar ret \(classInfo.struct.name)"
-    "\terr := evaluator.EvaluateModule(ctx, source, &ret)"
-    "\treturn ret, err"
-    "}"
-  }
-  ""
-}.join("\n")
+  }.join("\n")
 
 local isSuperOpen: Boolean = clazz.superclass.modifiers.contains("open")
 
 local isAbstract: Boolean = clazz.modifiers.contains("abstract")
 
-local superClass: GoMapping.Class? = mappings.findOrNull((c) -> c is GoMapping.Class && c.clazz == clazz.superclass) as GoMapping.Class?
+local superClass: GoMapping.Class? =
+  mappings.findOrNull((c) -> c is GoMapping.Class && c.clazz == clazz.superclass)
+    as GoMapping.Class?
 
 local fields: Map<String, GoStructField> = getFields(clazz, mappings)
 
 local imports =
   (if (isAbstract) fields.values.filter((f) -> !f.isInherited) else fields.values)
     .flatMap((f) -> f.type.imports)
-    .filter((i) -> i != classInfo.goPackage).distinct
-  + (if (superClass != null && superClass.goPackage != classInfo.goPackage) List(superClass.goPackage) else List())
-  + (if (isModule && !isAbstract) List("context", "github.com/apple/pkl-go/pkl") else List())
+    .filter((i) -> i != classInfo.goPackage)
+    .distinct
+    + (
+      if (superClass != null && superClass.goPackage != classInfo.goPackage)
+        List(superClass.goPackage)
+      else
+        List()
+    )
+    + (if (isModule && !isAbstract) List("context", "github.com/apple/pkl-go/pkl") else List())
 
 local isModule: Boolean = clazz.enclosingDeclaration.moduleClass == clazz
 
 local function getAllProperties(clazz: reflect.Class?): List<reflect.Property> =
-  if (clazz == null) List()
-  else if (doesNotInherit(clazz)) clazz.properties.values
-  else clazz.properties.values + getAllProperties(clazz.superclass!!)
+  if (clazz == null)
+    List()
+  else if (doesNotInherit(clazz))
+    clazz.properties.values
+  else
+    clazz.properties.values + getAllProperties(clazz.superclass!!)
 
 local function isSameType(typeA: reflect.Type, typeB: reflect.Type) =
   if (typeA is reflect.DeclaredType && typeB is reflect.DeclaredType)
@@ -115,81 +128,88 @@ local function isSameType(typeA: reflect.Type, typeB: reflect.Type) =
     true
   else if (typeA is reflect.StringLiteralType && typeB is reflect.StringLiteralType)
     typeA.value == typeB.value
-  // union types turn into Go's `any`, so we can say that this is always fine.
+    // union types turn into Go's `any`, so we can say that this is always fine.
   else if (typeA is reflect.UnionType && typeB is reflect.UnionType)
     true
-  // remaining types: `FunctionType`, `TypeParameter`, `ModuleType`.
-  // we can actually check if `ModuleType` refers to the same type by checking if the enclosing declaration is the same,
-  // but we will pretend it is always false for now.
-  else false
+    // remaining types: `FunctionType`, `TypeParameter`, `ModuleType`.
+    // we can actually check if `ModuleType` refers to the same type by checking if the enclosing declaration is the same,
+    // but we will pretend it is always false for now.
+  else
+    false
 
 // visible for testing
-function getFields(
-  clazz: reflect.Class,
-  mappings: List<GoMapping>
-): Map<String, GoStructField> =
+function getFields(clazz: reflect.Class, mappings: List<GoMapping>): Map<String, GoStructField> =
   let (isSuperOpen: Boolean = clazz.superclass.modifiers.contains("open"))
   // add the properties of the superclass as fields unless it is an open class (because its struct gets embedded),
   // or the class does not inherit.
-  let (superFields: Map<String, GoStructField> =
-    if (doesNotInherit(clazz) || isSuperOpen) Map()
-    else getFields(clazz.superclass!!, mappings)
+  let (
+    superFields: Map<String, GoStructField> =
+      if (doesNotInherit(clazz) || isSuperOpen)
+        Map()
+      else
+        getFields(clazz.superclass!!, mappings)
   )
   let (superProperties = getAllProperties(clazz.superclass))
     clazz.properties
       .filter((propName, prop: reflect.Property) ->
         let (superProp = superProperties.findOrNull((it) -> it.name == prop.name))
           // don't render hidden members
-          if (prop.modifiers.contains("hidden")) false
-          // Okay if there is no property override, or if the super property has the same type.
-          else if (superProp == null || isSameType(superProp.type, prop.type)) true
-          // Okay if the property is overridden but does not define a type, but don't render as its own field.
-          // E.g. `class Foo extends Bar { bar = "mybar" }`
-          else if (prop.type is reflect.UnknownType) !isSuperOpen
-          // Otherwise, the property's type has been overridden and this is impossible to
-          // represent in Go.
-          else throw("""
+          if (prop.modifiers.contains("hidden"))
+            false
+            // Okay if there is no property override, or if the super property has the same type.
+          else if (superProp == null || isSameType(superProp.type, prop.type))
+            true
+            // Okay if the property is overridden but does not define a type, but don't render as its own field.
+            // E.g. `class Foo extends Bar { bar = "mybar" }`
+          else if (prop.type is reflect.UnknownType)
+            !isSuperOpen
+            // Otherwise, the property's type has been overridden and this is impossible to
+            // represent in Go.
+          else
+            throw(
+              """
               Illegal: Class `\(clazz.reflectee)` overrides property `\(propName)`. This is not supported when generating Go.
 
               \(prop.location.displayUri)
-              """)
+              """
+            )
       )
-      .mapValues((_, prop: reflect.Property) ->
-        new GoStructField {
-          isInherited = false
-          type = typegen.generateType(prop.type, clazz, mappings)
-          docComment = prop.docComment
-          name = utils.toGoName(prop)
-          property = prop
-        }
-      ) + superFields.mapValues((_, field) -> (field) { isInherited = true })
+      .mapValues((_, prop: reflect.Property) -> new GoStructField {
+        isInherited = false
+        type = typegen.generateType(prop.type, clazz, mappings)
+        docComment = prop.docComment
+        name = utils.toGoName(prop)
+        property = prop
+      }) + superFields.mapValues((_, field) -> (field) { isInherited = true })
 
 local function doesNotInherit(clazz: reflect.Class?) =
-  clazz.superclass == null || clazz.superclass.reflectee == Module || clazz.superclass.reflectee == Typed
+  clazz.superclass == null
+    || clazz.superclass.reflectee == Module
+    || clazz.superclass.reflectee == Typed
 
-local struct: String = new Listing {
-  when (clazz.docComment != null) {
-    utils.renderDocComment(clazz.docComment!!, "")
-  }
-  "type \(classInfo.struct.name) struct {"
-  when (isSuperOpen) {
-    "\t" + superClass!!.struct.type.render(classInfo.goPackage)
-    when (!fields.isEmpty) {
-      ""
+local struct: String =
+  new Listing {
+    when (clazz.docComment != null) {
+      utils.renderDocComment(clazz.docComment!!, "")
     }
-  }
-  for (pklPropertyName, field in fields) {
-    when (pklPropertyName != fields.keys.first) {
-      ""
+    "type \(classInfo.struct.name) struct {"
+    when (isSuperOpen) {
+      "\t" + superClass!!.struct.type.render(classInfo.goPackage)
+      when (!fields.isEmpty) {
+        ""
+      }
     }
-    when (field.docComment != null) {
-      utils.renderDocComment(field.docComment!!, "\t")
+    for (pklPropertyName, field in fields) {
+      when (pklPropertyName != fields.keys.first) {
+        ""
+      }
+      when (field.docComment != null) {
+        utils.renderDocComment(field.docComment!!, "\t")
+      }
+      renderStructField(pklPropertyName, field)
     }
-    renderStructField(pklPropertyName, field)
-  }
-  "}"
-}
-  .join("\n")
+    "}"
+  }.join("\n")
 
 local interface: String? =
   if (classInfo.interface != null)
@@ -212,7 +232,8 @@ local interface: String? =
         }
         "}"
       }.join("\n")
-  else null
+  else
+    null
 
 local function renderStructField(pklPropertyName: String, field: GoStructField): String =
   new Listing {
@@ -225,20 +246,27 @@ local function renderStructField(pklPropertyName: String, field: GoStructField):
   }.join("")
 
 local function isFieldAnnotation(clazz: reflect.Class) =
-  if (clazz.reflectee.toString() == "pkl.golang.go#Field") true
-  else if (clazz.superclass != null) isFieldAnnotation(clazz.superclass!!)
-  else false
+  if (clazz.reflectee.toString() == "pkl.golang.go#Field")
+    true
+  else if (clazz.superclass != null)
+    isFieldAnnotation(clazz.superclass!!)
+  else
+    false
 
 // noinspection UnresolvedElement
 local function getStructTags(field: GoStructField): Mapping<String, String> =
-  let (an = field.property.annotations.findOrNull((it) -> isFieldAnnotation(reflect.Class(it.getClass()))))
+  let (
+    an =
+      field.property.annotations.findOrNull((it) -> isFieldAnnotation(reflect.Class(it.getClass())))
+  )
     if (an != null)
       (structTags) {
         for (key, value in an.structTags) {
           [key] = value
         }
       }
-    else structTags
+    else
+      structTags
 
 local function renderStructFieldTag(pklPropertyName: String, field: GoStructField): String =
   new Listing {
@@ -248,20 +276,22 @@ local function renderStructFieldTag(pklPropertyName: String, field: GoStructFiel
     }
   }.join("")
 
-local getters: String = new Listing {
-  for (_, field in fields) {
-    renderGetter(field)
-  }
-}.join("\n\n")
+local getters: String =
+  new Listing {
+    for (_, field in fields) {
+      renderGetter(field)
+    }
+  }.join("\n\n")
 
-local function renderGetter(field: GoStructField): String = new Listing {
-  when (field.docComment != null) {
-    utils.renderDocComment(field.docComment!!, "")
-  }
-  "func (rcv \(classInfo.struct.type.render(classInfo.goPackage))) Get\(field.name)() \(field.type.render(classInfo.goPackage)) {"
-  "\treturn rcv.\(field.name)"
-  "}"
-}.join("\n")
+local function renderGetter(field: GoStructField): String =
+  new Listing {
+    when (field.docComment != null) {
+      utils.renderDocComment(field.docComment!!, "")
+    }
+    "func (rcv \(classInfo.struct.type.render(classInfo.goPackage))) Get\(field.name)() \(field.type.render(classInfo.goPackage)) {"
+    "\treturn rcv.\(field.name)"
+    "}"
+  }.join("\n")
 
 local class GoStructField {
   /// Is this field inherited from a parent?

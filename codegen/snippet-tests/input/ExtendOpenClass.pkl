@@ -17,7 +17,6 @@
 module ExtendingOpenClass
 
 import ".../src/go.pkl"
-
 import "support/lib3.pkl"
 
 res1: MyClass

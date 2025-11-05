@@ -22,5 +22,5 @@ import ".../codegen/src/go.pkl"
 res1: Number = "two"
 res2: OtherNumbers = "三"
 
-typealias Number = "one"|"two"|"three"
-typealias OtherNumbers = nothing|"一"|"二"|"三"
+typealias Number = "one" | "two" | "three"
+typealias OtherNumbers = nothing | "一" | "二" | "三"

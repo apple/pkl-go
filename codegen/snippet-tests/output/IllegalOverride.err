@@ -3,8 +3,8 @@ Illegal: Class `overrideerr#Child` overrides property `prop`. This is not suppor
 
 file://<codegen_dir>/snippet-tests/input/IllegalOverride.err.pkl
 
-xxx | else throw("""
-           ^^^^^^^^^
+xxx | throw(
+      ^^^^^^
 at pkl.golang.internal.ClassGen#getFields.<function#5> (file://<codegen_dir>/src/internal/ClassGen.pkl)
 
 xxx | let (superProp = superProperties.findOrNull((it) -> it.name == prop.name))
@@ -19,8 +19,8 @@ xxx | let (superProperties = getAllProperties(clazz.superclass))
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.golang.internal.ClassGen#getFields.<function#2> (file://<codegen_dir>/src/internal/ClassGen.pkl)
 
-xxx | let (superFields: Map<String, GoStructField> =
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | let (
+      ^^^^^
 at pkl.golang.internal.ClassGen#getFields.<function#1> (file://<codegen_dir>/src/internal/ClassGen.pkl)
 
 xxx | let (isSuperOpen: Boolean = clazz.superclass.modifiers.contains("open"))

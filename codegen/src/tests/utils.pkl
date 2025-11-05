@@ -31,20 +31,25 @@ facts {
     utils.toGoString("foo") == #""foo""#
     utils.toGoString("你好") == #""你好""#
     utils.toGoString(#"pkl:"name""#) == #"`pkl:"name"`"#
-    utils.toGoString("""
+    utils.toGoString(
+      """
       my multiline
 
       string
-      """) == """
+      """
+    )
+      == """
       `my multiline
 
       string`
       """
-    utils.toGoString("""
+    utils.toGoString(
+      """
       multiline string
 
       with `backticks`
-      """)
+      """
+    )
       == #""multiline string\n\nwith `backticks`""#
   }
 }

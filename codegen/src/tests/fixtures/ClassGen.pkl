@@ -16,8 +16,9 @@
 
 amends "pkl:test"
 
-import ".../internal/ClassGen.pkl"
 import "pkl:reflect"
+
+import ".../internal/ClassGen.pkl"
 
 local class Person {
   name: String

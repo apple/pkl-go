@@ -21,7 +21,7 @@ import ".../codegen/src/go.pkl"
 
 res1: List<Int> = List(1, 2, 3)
 
-res2: Listing<Int> = new { 2; 3; 4; }
+res2: Listing<Int> = new { 2; 3; 4 }
 
 res3: List<List<Int>> = List(List(1), List(2), List(3))
 

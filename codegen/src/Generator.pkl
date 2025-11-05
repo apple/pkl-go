@@ -19,10 +19,11 @@
 module pkl.golang.Generator
 
 import "pkl:reflect"
+
+import "GeneratorSettings.pkl"
 import "internal/gatherer.pkl"
 import "internal/GoMapping.pkl"
 import "internal/Package.pkl"
-import "GeneratorSettings.pkl"
 import "internal/utils.pkl"
 
 /// Settings to control code generation.
@@ -35,63 +36,72 @@ moduleToGenerate: Module
 function getPackageName(mod: reflect.Module) =
   codegenSettings.packageMappings.getOrNull(mod.moduleClass.reflectee.toString())
     // Compare string representation so this works both locally and against annotations from GH pages.
-    ?? (mod.annotations.findOrNull((it) -> it.getClass().toString() == "pkl.golang.go#Package"))?.name
-    ?? throw("""
-        No go package defined for module `\(mod.moduleClass.reflectee)` (\(mod.location.displayUri)).
+    ?? (mod.annotations.findOrNull((it) -> it.getClass().toString() == "pkl.golang.go#Package"))
+      ?.name
+    ?? throw(
+      """
+      No go package defined for module `\(mod.moduleClass.reflectee)` (\(mod.location.displayUri)).
 
-        One may be defined by either:
-          * Declaring a `@go.Package` annotation on the module.
-          * Adding a `--mapping` flag when using the pkl-gen-go command.
-          * Adding a `packageMappings` clause to generator settings.
-        """)
+      One may be defined by either:
+        * Declaring a `@go.Package` annotation on the module.
+        * Adding a `--mapping` flag when using the pkl-gen-go command.
+        * Adding a `packageMappings` clause to generator settings.
+      """
+    )
 
-typealias EnumMember = reflect.StringLiteralType|reflect.NothingType
+typealias EnumMember = reflect.StringLiteralType | reflect.NothingType
 
 // noinspection TypeMismatch
 function isEnumLike(decl: reflect.TypeDeclaration) =
   decl is reflect.TypeAlias
     && let (referent = decl.referent)
       referent is reflect.UnionType
-      && referent.members.every((t) -> t is EnumMember)
-      && referent.members.filter((t) -> t is reflect.StringLiteralType)
-        .every((it: reflect.StringLiteralType) -> utils.canBeNormalizedToEnumName(it.value))
-      && referent.members.filter((t) -> t is reflect.StringLiteralType)
-        .map((it: reflect.StringLiteralType) -> utils.normalizeEnumName(it.value))
-        .isDistinct
+        && referent.members.every((t) -> t is EnumMember)
+        && referent.members
+          .filter((t) -> t is reflect.StringLiteralType)
+          .every((it: reflect.StringLiteralType) -> utils.canBeNormalizedToEnumName(it.value))
+        && referent.members
+          .filter((t) -> t is reflect.StringLiteralType)
+          .map((it: reflect.StringLiteralType) -> utils.normalizeEnumName(it.value))
+          .isDistinct
 
 function gatherEnums(decl: List<reflect.TypeDeclaration>): List<GoMapping> =
   decl
     .filter((it) -> isEnumLike(it))
-    .fold(List(), (acc, it) -> acc.add(new GoMapping.Enum {
-      goPackageShort = utils.normalizePackageName(name)
-      source = it
-      goPackage = "\(getPackageName(it.enclosingDeclaration))/\(goPackageShort)"
-      seenMappings = acc
-    }))
+    .fold(List(), (acc, it) ->
+      acc.add(new GoMapping.Enum {
+        goPackageShort = utils.normalizePackageName(name)
+        source = it
+        goPackage = "\(getPackageName(it.enclosingDeclaration))/\(goPackageShort)"
+        seenMappings = acc
+      })
+    )
 
-function gatherClasses(decl: List<reflect.TypeDeclaration>): Mixin<List<GoMapping>> =
-  (acc) ->
-    decl
-      .filter((it) -> it is reflect.Class)
-      .fold(acc, (accum, it) -> accum.add(new GoMapping.Class {
+function gatherClasses(decl: List<reflect.TypeDeclaration>): Mixin<List<GoMapping>> = (acc) ->
+  decl
+    .filter((it) -> it is reflect.Class)
+    .fold(acc, (accum, it) ->
+      accum.add(new GoMapping.Class {
         source = it
         goPackage = getPackageName(it.enclosingDeclaration)
         seenMappings = accum
-      }))
+      })
+    )
 
 local allMappings: List<GoMapping> =
   let (clazz = reflect.Module(moduleToGenerate).moduleClass)
   let (declarations = gatherer.gatherTypeDeclarations(clazz, List()))
     gatherEnums(declarations) |> gatherClasses(declarations)
 
-local packages = allMappings
-  .groupBy((it) -> it.goPackage)
-  .mapValues((_packageName, _mappings: List<GoMapping>) -> new Package {
-    packageName = _packageName
-    `module` = _mappings.first.source.enclosingDeclaration
-    mappings = allMappings
-    structTags = codegenSettings.structTags
-  })
+local packages =
+  allMappings
+    .groupBy((it) -> it.goPackage)
+    .mapValues((_packageName, _mappings: List<GoMapping>) -> new Package {
+      packageName = _packageName
+      `module` = _mappings.first.source.enclosingDeclaration
+      mappings = allMappings
+      structTags = codegenSettings.structTags
+    })
 
 output {
   files {
@@ -101,5 +111,6 @@ output {
       }
     }
   }
-  text = throw("Generate.pkl only produces multiple-file output. Try running again with the -m flag.")
+  text =
+    throw("Generate.pkl only produces multiple-file output. Try running again with the -m flag.")
 }

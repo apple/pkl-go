@@ -33,8 +33,7 @@ class Pointer extends Type {
 
   imports = elem.imports
 
-  function render(goPackage: String) =
-    "*\(elem.render(goPackage))"
+  function render(goPackage: String) = "*\(elem.render(goPackage))"
 }
 
 class Map extends Type {
@@ -44,8 +43,7 @@ class Map extends Type {
 
   imports = key.imports + elem.imports
 
-  function render(goPackage: String) =
-    "map[\(key.render(goPackage))]\(elem.render(goPackage))"
+  function render(goPackage: String) = "map[\(key.render(goPackage))]\(elem.render(goPackage))"
 }
 
 class Slice extends Type {
@@ -60,8 +58,9 @@ class Declared extends Type {
   /// The full import path for this type.
   importPath: String?
 
-  imports = (if (importPath != null) List(importPath) else List())
-    + if (typeArguments != null) typeArguments.flatMap((t) -> t.imports) else List()
+  imports =
+    (if (importPath != null) List(importPath) else List())
+      + if (typeArguments != null) typeArguments.flatMap((t) -> t.imports) else List()
 
   /// The package the type is found in
   package: String?
@@ -73,13 +72,16 @@ class Declared extends Type {
   typeArguments: List<Type>?
 
   function renderBase(goPackage: String) =
-    if (package != null && goPackage != importPath) "\(package).\(typeName)"
-    else typeName
+    if (package != null && goPackage != importPath)
+      "\(package).\(typeName)"
+    else
+      typeName
 
   function renderTypeArguments(goPackage: String) =
-    if (typeArguments == null) ""
-    else "[" + typeArguments.map((t) -> t.render(goPackage)).join(", ") + "]"
+    if (typeArguments == null)
+      ""
+    else
+      "[" + typeArguments.map((t) -> t.render(goPackage)).join(", ") + "]"
 
-  function render(goPackage: String) =
-    renderBase(goPackage) + renderTypeArguments(goPackage)
+  function render(goPackage: String) = renderBase(goPackage) + renderTypeArguments(goPackage)
 }

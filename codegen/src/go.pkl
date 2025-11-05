@@ -21,10 +21,13 @@ import "internal/utils.pkl"
 local const isValidPackageName = (it: String) ->
   let (packageNameShort = it.substring(it.lastIndexOf("/") + 1, it.length))
     if (utils.keywords.contains(packageNameShort))
-      throw("""
+      throw(
+        """
         Package name `\(it)` is not valid because it clashes with keyword `\(packageNameShort)`.
-        """)
-    else true
+        """
+      )
+    else
+      true
 
 /// A name in Go; i.e., an identifier.
 typealias GoName = String(!utils.keywords.contains(this) && matches(Regex(#"(?u)\p{L}[\p{L}\d]+"#)))
@@ -90,7 +93,7 @@ open class Field extends Annotation {
   ///
   /// `true` is a shortcut for adding a `json` tag whose value is the name of the annotated Pkl
   /// property.
-  json: (*JsonStructTag|Boolean)?
+  json: (*JsonStructTag | Boolean)?
 
   /// Additional struct tags for the annotated Pkl property.
   ///

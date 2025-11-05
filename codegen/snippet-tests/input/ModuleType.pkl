@@ -16,8 +16,8 @@
 @go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/moduletype" }
 module ModuleType
 
-import "support/lib4.pkl"
 import ".../src/go.pkl"
+import "support/lib4.pkl"
 
 myStr: String
 

@@ -20,10 +20,14 @@ module pkl.golang.internal.utils
 import "pkl:reflect"
 
 local escaper = (c: Char) ->
-  if (c == "\n") #"\n"#
-  else if (c == "\"") #"\""#
-  else if (c == #"\"#) #"\\"#
-  else c
+  if (c == "\n")
+    #"\n"#
+  else if (c == "\"")
+    #"\""#
+  else if (c == #"\"#)
+    #"\\"#
+  else
+    c
 
 /// Turn the Pkl string into a Go string literal.
 ///
@@ -33,8 +37,10 @@ local escaper = (c: Char) ->
 ///
 /// Reference: <https://go.dev/ref/spec#String_literals>
 function toGoString(str: String): String =
-  if ((str.contains("\n") || str.contains("\"")) && !str.contains("`")) "`" + str + "`"
-  else "\"" + str.chars.map(escaper).join("") + "\""
+  if ((str.contains("\n") || str.contains("\"")) && !str.contains("`"))
+    "`" + str + "`"
+  else
+    "\"" + str.chars.map(escaper).join("") + "\""
 
 // noinspection UnresolvedElement
 /// Converts a Pkl declaration (class, property, typealias) into a Go name.
@@ -48,59 +54,63 @@ function toGoString(str: String): String =
 /// 2. If a name does not start with a latin alphabet character, prefix with `N`.
 /// 3. Capitalize names so they get exported.
 function toGoName(source: reflect.Declaration): String =
-  source
-    .annotations
-    .findOrNull((it) -> it.getClass().toString() == "pkl.golang.go#Name")
-    ?.value
-  ??
+  source.annotations.findOrNull((it) -> it.getClass().toString() == "pkl.golang.go#Name")?.value
+    ??
     // edge case: if the source is the module's companion class, use the module name and not the class name.
-    let (_name =
-      if (source is reflect.Class && source.enclosingDeclaration.moduleClass == source)
-        source.enclosingDeclaration.name.split(".").last
-      else source.name
+    let (
+      _name =
+        if (source is reflect.Class && source.enclosingDeclaration.moduleClass == source)
+          source.enclosingDeclaration.name.split(".").last
+        else
+          source.name
     )
       normalizeName(_name)
 
 function normalizePackageName(name: String): String =
   let (normalized = normalizeName(name.replaceAll(".", "_")).toLowerCase())
-    if (keywords.contains(normalized)) "_\(normalized)"
-    else normalized
+    if (keywords.contains(normalized))
+      "_\(normalized)"
+    else
+      normalized
 
-keywords: List<String> = List(
-  "break",
-  "default",
-  "func",
-  "interface",
-  "select",
-  "case",
-  "defer",
-  "go",
-  "map",
-  "struct",
-  "chan",
-  "else",
-  "goto",
-  "package",
-  "switch",
-  "const",
-  "fallthrough",
-  "if",
-  "range",
-  "type",
-  "continue",
-  "for",
-  "import",
-  "return",
-  "var"
-)
+keywords: List<String> =
+  List(
+    "break",
+    "default",
+    "func",
+    "interface",
+    "select",
+    "case",
+    "defer",
+    "go",
+    "map",
+    "struct",
+    "chan",
+    "else",
+    "goto",
+    "package",
+    "switch",
+    "const",
+    "fallthrough",
+    "if",
+    "range",
+    "type",
+    "continue",
+    "for",
+    "import",
+    "return",
+    "var"
+  )
 
 function renderDocComment(docComment: String, indent: String) =
   docComment
     .split(Regex(#"\r?\n"#))
     .map((it) ->
       // gofmt doesn't like empty comment lines that have trailing whitespace.
-      if (it.trim().isBlank) "\(indent)//"
-      else "\(indent)// \(it)"
+      if (it.trim().isBlank)
+        "\(indent)//"
+      else
+        "\(indent)// \(it)"
     )
     .join("\n")
 
@@ -111,11 +121,12 @@ function canBeNormalizedToEnumName(name: String) =
   name == "" || !splitNameOnNonLettersOrDigits(name).isEmpty
 
 function normalizeEnumName(name: String) =
-  if (name == "") "Empty"
-  else normalizeName(name)
+  if (name == "")
+    "Empty"
+  else
+    normalizeName(name)
 
-function splitNameOnNonLettersOrDigits(name: String) =
-  name.split(Regex(#"(?u)[^\p{L}\d]"#))
+function splitNameOnNonLettersOrDigits(name: String) = name.split(Regex(#"(?u)[^\p{L}\d]"#))
 
 function normalizeName(name: String) =
   let (parts = splitNameOnNonLettersOrDigits(name))
@@ -127,11 +138,12 @@ function normalizeName(name: String) =
 
 function renderImports(imports: List<String>): String =
   let (distinctImports = imports.distinct)
-    if (distinctImports.length == 1) "import \(toGoString(distinctImports.first))"
+    if (distinctImports.length == 1)
+      "import \(toGoString(distinctImports.first))"
     else
-      let (groupedImports = distinctImports
-        .sort()
-        .groupBy((it) -> if (it.contains("/")) "3rdparty" else "stdlib")
+      let (
+        groupedImports =
+          distinctImports.sort().groupBy((it) -> if (it.contains("/")) "3rdparty" else "stdlib")
       )
         new Listing {
           "import ("

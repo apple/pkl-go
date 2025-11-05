@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Package name `github.com/apple/pkl-go/codegen/snippet-tests/output/import` is not valid because it clashes with keyword `import`.
 
-xx | throw("""
-     ^^^^^^^^^
+xx | throw(
+     ^^^^^^
 at pkl.golang.go#isValidPackageName.<function#2> (file://<codegen_dir>/src/go.pkl)
 
 xx | let (packageNameShort = it.substring(it.lastIndexOf("/") + 1, it.length))
@@ -13,7 +13,7 @@ xx | @go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at InvalidPackageName.name (file://<codegen_dir>/snippet-tests/input/InvalidPackageName.err.pkl)
 
-xx | if (seen.contains(decl)) seen
+xx | if (seen.contains(decl))
          ^^^^^^^^^^^^^^^^^^^
 at pkl.golang.internal.gatherer#gatherTypeDeclarations (file://<codegen_dir>/src/internal/gatherer.pkl)
 
@@ -33,12 +33,12 @@ xx | let (clazz = reflect.Module(moduleToGenerate).moduleClass)
      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.golang.Generator#allMappings (file://<codegen_dir>/src/Generator.pkl)
 
-xx | local packages = allMappings
-                      ^^^^^^^^^^^
+xx | allMappings
+     ^^^^^^^^^^^
 at pkl.golang.Generator#packages (file://<codegen_dir>/src/Generator.pkl)
 
-xx | for (_, package in packages) {
-                        ^^^^^^^^
+xxx | for (_, package in packages) {
+                         ^^^^^^^^
 at pkl.golang.Generator#output.files (file://<codegen_dir>/src/Generator.pkl)
 
 x | output.files?.toMap()?.mapValues((_, it) -> it.text) ?? Map()
