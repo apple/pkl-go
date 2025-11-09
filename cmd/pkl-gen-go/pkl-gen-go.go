@@ -259,7 +259,11 @@ func findProjectDir(projectDirFlag string) *url.URL {
 	if err != nil {
 		return nil
 	}
-	return &url.URL{Scheme: "file", Path: doFindProjectDir(cwd)}
+	projectDir := doFindProjectDir(cwd)
+	if projectDir == "" {
+		return nil
+	}
+	return &url.URL{Scheme: "file", Path: projectDir}
 }
 
 // Loads the settings for controlling codegen.
