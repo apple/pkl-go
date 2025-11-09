@@ -34,6 +34,7 @@ import (
 	"github.com/apple/pkl-go/cmd/pkl-gen-go/pkg"
 	"github.com/apple/pkl-go/pkl"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -102,7 +103,7 @@ CONFIGURING OUTPUT PATH
 			fmt.Println(Version)
 			return nil
 		}
-		settings, err = loadGeneratorSettings()
+		settings, err = loadGeneratorSettings(cmd)
 		if err != nil {
 			return fmt.Errorf("failed to load generator settings: %w", err)
 		}
@@ -264,7 +265,7 @@ func findProjectDir(projectDirFlag string) *url.URL {
 
 // Loads the settings for controlling codegen.
 // Uses a Pkl evaluator that is separate from what's used for actually running codegen.
-func loadGeneratorSettings() (generatorsettings.GeneratorSettings, error) {
+func loadGeneratorSettings(cmd *cobra.Command) (generatorsettings.GeneratorSettings, error) {
 	resolvedProjectDir := findProjectDir(projectDir)
 	var evaluator pkl.Evaluator
 	var err error
@@ -305,35 +306,40 @@ func loadGeneratorSettings() (generatorsettings.GeneratorSettings, error) {
 
 	// load overrides from CLI flags
 	if generateScript != "" {
-		settings.GeneratorScriptPath = generateScript
+		s.GeneratorScriptPath = generateScript
 	}
 	if len(mappings) != 0 {
-		settings.PackageMappings = mappings
+		s.PackageMappings = mappings
 	}
 	if basePath != "" {
-		settings.BasePath = basePath
+		s.BasePath = basePath
 	}
 	if len(allowedModules) > 0 {
-		settings.AllowedModules = allowedModules
+		s.AllowedModules = allowedModules
 	}
 	if len(allowedResources) > 0 {
-		settings.AllowedResources = allowedResources
+		s.AllowedResources = allowedResources
 	}
 	if projectDir != "" {
 		normalized, err := filepath.Abs(projectDir)
 		if err != nil {
 			return s, err
 		}
-		settings.ProjectDir = &normalized
+		s.ProjectDir = &normalized
 	}
 	if cacheDir != "" {
 		normalized, err := filepath.Abs(cacheDir)
 		if err != nil {
 			return s, err
 		}
-		settings.CacheDir = &normalized
+		s.CacheDir = &normalized
 	}
-	settings.DryRun = dryRun
+
+	cmd.Flags().Visit(func(f *pflag.Flag) {
+		if f.Name == "dry-run" {
+			s.DryRun = dryRun
+		}
+	})
 
 	return s, nil
 }
