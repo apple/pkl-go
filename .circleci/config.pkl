@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ===----------------------------------------------------------------------===//
-amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.0.2#/PklCI.pkl"
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.2.1#/PklCI.pkl"
 
 local testJobs = jobs.keys.filter((it) -> it.startsWith("test"))
 
@@ -192,8 +192,9 @@ jobs {
   }
   ["create-macos-universal-binary"] {
     macos {
-      xcode = "15.2.0"
+      xcode = "26.0.1"
     }
+    resource_class = "m4pro.medium"
     steps {
       new AttachWorkspaceStep { at = "." }
       new RunStep {
