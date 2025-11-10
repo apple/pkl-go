@@ -1,5 +1,19 @@
 = Changelog
 
+[[release-0.12.1]]
+== 0.12.1 (2025-11-10)
+
+=== Fixes
+
+* Fix project loading behavior in `pkl-gen-go` (https://github.com/apple/pkl-go/pull/181[#181]).
+* Fix CLI flag overriding behavior in `pkl-gen-go` (https://github.com/apple/pkl-go/pull/182[#182])
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/stoned[@stoned]
+
 [[release-0.12.0]]
 == 0.12.0 (2025-11-05)
 
