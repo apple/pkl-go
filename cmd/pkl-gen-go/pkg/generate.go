@@ -43,8 +43,8 @@ var (
 )
 
 type TemplateValues struct {
-	generatorsettings.GeneratorSettings
 	PklModulePath string
+	generatorsettings.GeneratorSettings
 }
 
 func determineBasePath(v *generatorsettings.GeneratorSettings) error {
