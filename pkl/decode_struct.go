@@ -268,11 +268,12 @@ func (d *decoder) decodeStructField(fields map[string]structField, out *reflect.
 	}
 	decodedType := decodedValue.Type()
 	field := out.FieldByName(sf.Name)
-	if decodedType.AssignableTo(field.Type()) {
+	switch {
+	case decodedType.AssignableTo(field.Type()):
 		field.Set(*decodedValue)
-	} else if decodedType.ConvertibleTo(field.Type()) {
+	case decodedType.ConvertibleTo(field.Type()):
 		field.Set(field.Convert(field.Type()))
-	} else {
+	default:
 		return fmt.Errorf("unable to assign or convert value for property `%s` of type `%s` to field `%s.%s` of type `%s`", propertyName, decodedType.String(), out.Type().String(), sf.Name, field.Type().String())
 	}
 	return d.skip(length - 3)

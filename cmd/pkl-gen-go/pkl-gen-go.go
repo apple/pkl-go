@@ -287,11 +287,12 @@ func loadGeneratorSettings(cmd *cobra.Command) (generatorsettings.GeneratorSetti
 		panic(err)
 	}
 	var source *pkl.ModuleSource
-	if generatorSettingsPath != "" {
+	switch {
+	case generatorSettingsPath != "":
 		source = pkl.FileSource(generatorSettingsPath)
-	} else if fileExists("generator-settings.pkl") {
+	case fileExists("generator-settings.pkl"):
 		source = pkl.FileSource("generator-settings.pkl")
-	} else {
+	default:
 		source = generatorSettingsSource()
 	}
 	s, err := generatorsettings.Load(context.Background(), evaluator, source)

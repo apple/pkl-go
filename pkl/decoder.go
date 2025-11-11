@@ -140,11 +140,12 @@ func (d *decoder) decodePointer(inType reflect.Type) (*reflect.Value, error) {
 		return val, nil
 	}
 	ret := reflect.New(inType.Elem())
-	if val.Type().AssignableTo(ret.Elem().Type()) {
+	switch {
+	case val.Type().AssignableTo(ret.Elem().Type()):
 		ret.Elem().Set(*val)
-	} else if val.Type().ConvertibleTo(ret.Elem().Type()) {
+	case val.Type().ConvertibleTo(ret.Elem().Type()):
 		ret.Elem().Set(val.Convert(ret.Elem().Type()))
-	} else {
+	default:
 		return nil, fmt.Errorf("unable to assign or convert value of type `%s` to pointer of type `%s`", val.Type(), ret.Type())
 	}
 	return &ret, nil
