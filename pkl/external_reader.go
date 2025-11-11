@@ -96,10 +96,10 @@ func NewExternalReaderClient(opts ...func(options *ExternalReaderClientOptions))
 }
 
 type externalReaderClient struct {
-	ExternalReaderClientOptions
 	in     chan msgapi.IncomingMessage
 	out    chan msgapi.OutgoingMessage
 	closed chan error
+	ExternalReaderClientOptions
 	exited atomicBool
 }
 

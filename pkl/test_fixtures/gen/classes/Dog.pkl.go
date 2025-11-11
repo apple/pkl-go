@@ -12,11 +12,10 @@ type Dog interface {
 var _ Dog = DogImpl{}
 
 type DogImpl struct {
-	Barks bool `pkl:"barks"`
-
 	Breed string `pkl:"breed"`
 
-	Name string `pkl:"name"`
+	Name  string `pkl:"name"`
+	Barks bool   `pkl:"barks"`
 }
 
 func (rcv DogImpl) GetBarks() bool {

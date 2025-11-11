@@ -66,39 +66,39 @@ type ModuleReader struct {
 }
 
 type CreateEvaluator struct {
-	RequestId              int64                `msgpack:"requestId"`
-	ResourceReaders        []*ResourceReader    `msgpack:"clientResourceReaders,omitempty"`
-	ModuleReaders          []*ModuleReader      `msgpack:"clientModuleReaders,omitempty"`
-	ExternalReaderCommands [][]string           `msgpack:"externalReaderCommands,omitempty"`
-	ModulePaths            []string             `msgpack:"modulePaths,omitempty"`
-	Env                    map[string]string    `msgpack:"env,omitempty"`
-	Properties             map[string]string    `msgpack:"properties,omitempty"`
-	OutputFormat           string               `msgpack:"outputFormat,omitempty"`
-	AllowedModules         []string             `msgpack:"allowedModules,omitempty"`
-	AllowedResources       []string             `msgpack:"allowedResources,omitempty"`
-	RootDir                string               `msgpack:"rootDir,omitempty"`
-	CacheDir               string               `msgpack:"cacheDir,omitempty"`
-	Project                *ProjectOrDependency `msgpack:"project,omitempty"`
-	Http                   *Http                `msgpack:"http,omitempty"`
-	// Intentionally not used right now. Go has `context.WithTimeout` which is a more canonical way to handle timeouts.
-	TimeoutSeconds          int64                      `msgpack:"timeoutSeconds,omitempty"`
+	Env                     map[string]string          `msgpack:"env,omitempty"`
+	Properties              map[string]string          `msgpack:"properties,omitempty"`
+	Project                 *ProjectOrDependency       `msgpack:"project,omitempty"`
+	Http                    *Http                      `msgpack:"http,omitempty"`
 	ExternalModuleReaders   map[string]*ExternalReader `msgpack:"externalModuleReaders,omitempty"`
 	ExternalResourceReaders map[string]*ExternalReader `msgpack:"externalResourceReaders,omitempty"`
+	OutputFormat            string                     `msgpack:"outputFormat,omitempty"`
+	RootDir                 string                     `msgpack:"rootDir,omitempty"`
+	CacheDir                string                     `msgpack:"cacheDir,omitempty"`
 	TraceMode               string                     `msgpack:"traceMode,omitempty"`
+	ResourceReaders         []*ResourceReader          `msgpack:"clientResourceReaders,omitempty"`
+	ModuleReaders           []*ModuleReader            `msgpack:"clientModuleReaders,omitempty"`
+	ExternalReaderCommands  [][]string                 `msgpack:"externalReaderCommands,omitempty"`
+	ModulePaths             []string                   `msgpack:"modulePaths,omitempty"`
+	AllowedModules          []string                   `msgpack:"allowedModules,omitempty"`
+	AllowedResources        []string                   `msgpack:"allowedResources,omitempty"`
+	RequestId               int64                      `msgpack:"requestId"`
+	// Intentionally not used right now. Go has `context.WithTimeout` which is a more canonical way to handle timeouts.
+	TimeoutSeconds int64 `msgpack:"timeoutSeconds,omitempty"`
 }
 
 type ProjectOrDependency struct {
+	Checksums      *Checksums                      `msgpack:"checksums,omitempty"`
+	Dependencies   map[string]*ProjectOrDependency `msgpack:"dependencies"`
 	PackageUri     string                          `msgpack:"packageUri,omitempty"`
 	Type           string                          `msgpack:"type"`
 	ProjectFileUri string                          `msgpack:"projectFileUri,omitempty"`
-	Checksums      *Checksums                      `msgpack:"checksums,omitempty"`
-	Dependencies   map[string]*ProjectOrDependency `msgpack:"dependencies"`
 }
 
 type Http struct {
-	CaCertificates []byte            `msgpack:"caCertificates,omitempty"`
 	Proxy          *Proxy            `msgpack:"proxy,omitempty"`
 	Rewrites       map[string]string `msgpack:"rewrites,omitempty"`
+	CaCertificates []byte            `msgpack:"caCertificates,omitempty"`
 }
 
 type Proxy struct {
@@ -128,11 +128,11 @@ func (msg *CloseEvaluator) ToMsgPack() ([]byte, error) {
 }
 
 type Evaluate struct {
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
 	ModuleUri   string `msgpack:"moduleUri"`
 	ModuleText  string `msgpack:"moduleText,omitempty"`
 	Expr        string `msgpack:"expr,omitempty"`
+	RequestId   int64  `msgpack:"requestId"`
+	EvaluatorId int64  `msgpack:"evaluatorId"`
 }
 
 func (msg *Evaluate) ToMsgPack() ([]byte, error) {
@@ -140,10 +140,10 @@ func (msg *Evaluate) ToMsgPack() ([]byte, error) {
 }
 
 type ReadResourceResponse struct {
+	Error       string `msgpack:"error,omitempty"`
+	Contents    []byte `msgpack:"contents,omitempty"`
 	RequestId   int64  `msgpack:"requestId"`
 	EvaluatorId int64  `msgpack:"evaluatorId"`
-	Contents    []byte `msgpack:"contents,omitempty"`
-	Error       string `msgpack:"error,omitempty"`
 }
 
 func (msg *ReadResourceResponse) ToMsgPack() ([]byte, error) {
@@ -151,10 +151,10 @@ func (msg *ReadResourceResponse) ToMsgPack() ([]byte, error) {
 }
 
 type ReadModuleResponse struct {
-	RequestId   int64  `msgpack:"requestId"`
-	EvaluatorId int64  `msgpack:"evaluatorId"`
 	Contents    string `msgpack:"contents,omitempty"`
 	Error       string `msgpack:"error,omitempty"`
+	RequestId   int64  `msgpack:"requestId"`
+	EvaluatorId int64  `msgpack:"evaluatorId"`
 }
 
 func (msg *ReadModuleResponse) ToMsgPack() ([]byte, error) {
@@ -162,10 +162,10 @@ func (msg *ReadModuleResponse) ToMsgPack() ([]byte, error) {
 }
 
 type ListResourcesResponse struct {
+	Error        string         `msgpack:"error,omitempty"`
+	PathElements []*PathElement `msgpack:"pathElements,omitempty"`
 	RequestId    int64          `msgpack:"requestId"`
 	EvaluatorId  int64          `msgpack:"evaluatorId"`
-	PathElements []*PathElement `msgpack:"pathElements,omitempty"`
-	Error        string         `msgpack:"error,omitempty"`
 }
 
 func (msg ListResourcesResponse) ToMsgPack() ([]byte, error) {
@@ -173,10 +173,10 @@ func (msg ListResourcesResponse) ToMsgPack() ([]byte, error) {
 }
 
 type ListModulesResponse struct {
+	Error        string         `msgpack:"error,omitempty"`
+	PathElements []*PathElement `msgpack:"pathElements,omitempty"`
 	RequestId    int64          `msgpack:"requestId"`
 	EvaluatorId  int64          `msgpack:"evaluatorId"`
-	PathElements []*PathElement `msgpack:"pathElements,omitempty"`
-	Error        string         `msgpack:"error,omitempty"`
 }
 
 func (msg ListModulesResponse) ToMsgPack() ([]byte, error) {
@@ -189,8 +189,8 @@ type PathElement struct {
 }
 
 type InitializeModuleReaderResponse struct {
-	RequestId int64         `msgpack:"requestId"`
 	Spec      *ModuleReader `msgpack:"spec,omitempty"`
+	RequestId int64         `msgpack:"requestId"`
 }
 
 func (msg InitializeModuleReaderResponse) ToMsgPack() ([]byte, error) {
@@ -198,8 +198,8 @@ func (msg InitializeModuleReaderResponse) ToMsgPack() ([]byte, error) {
 }
 
 type InitializeResourceReaderResponse struct {
-	RequestId int64           `msgpack:"requestId"`
 	Spec      *ResourceReader `msgpack:"spec,omitempty"`
+	RequestId int64           `msgpack:"requestId"`
 }
 
 func (msg InitializeResourceReaderResponse) ToMsgPack() ([]byte, error) {

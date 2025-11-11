@@ -8,13 +8,9 @@ import (
 )
 
 type Collections struct {
-	Res1 []int `pkl:"res1"`
+	Res12 pkl.Pair[any, any] `pkl:"res12"`
 
-	Res2 []int `pkl:"res2"`
-
-	Res3 [][]int `pkl:"res3"`
-
-	Res4 [][]int `pkl:"res4"`
+	Res13 pkl.Pair[int, *int] `pkl:"res13"`
 
 	Res5 map[int]bool `pkl:"res5"`
 
@@ -28,13 +24,17 @@ type Collections struct {
 
 	Res10 map[int8]struct{} `pkl:"res10"`
 
-	Res11 pkl.Pair[int, float64] `pkl:"res11"`
+	Res1 []int `pkl:"res1"`
 
-	Res12 pkl.Pair[any, any] `pkl:"res12"`
+	Res2 []int `pkl:"res2"`
 
-	Res13 pkl.Pair[int, *int] `pkl:"res13"`
+	Res3 [][]int `pkl:"res3"`
+
+	Res4 [][]int `pkl:"res4"`
 
 	Res14 []byte `pkl:"res14"`
+
+	Res11 pkl.Pair[int, float64] `pkl:"res11"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Collections

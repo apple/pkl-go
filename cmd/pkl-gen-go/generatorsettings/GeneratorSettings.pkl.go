@@ -20,20 +20,6 @@ type GeneratorSettings struct {
 	// ```
 	PackageMappings map[string]string `pkl:"packageMappings"`
 
-	// The base path for module output.
-	//
-	// This determines the relative path that generated Go source code will be written to.
-	// For example, a base path of `"github.com/foo/bar"` means that the Go files for package
-	// `github.com/foo/bar/baz` will be written into a `baz` directory, relative to the current
-	// working directory where codegen is executed.
-	//
-	// Any Go packages that are not prefixed with [basePath] are skipped from code generation.
-	//
-	// This is typically a Go module's name, i.e. the `module` clause within a `go.mod` file.
-	//
-	// If empty, writes the full package path to the current directory.
-	BasePath string `pkl:"basePath"`
-
 	// Additional struct tags to place on all properties.
 	//
 	// In addition to these tags, every property implicitly receives a `pkl:` struct tag.
@@ -51,22 +37,6 @@ type GeneratorSettings struct {
 	// ```
 	StructTags map[string]string `pkl:"structTags"`
 
-	// The path to the Pkl code generator script.
-	//
-	// This is an internal setting that is used for testing purposes when developing the code
-	// generator.
-	GeneratorScriptPath string `pkl:"generatorScriptPath"`
-
-	// URI patterns that determine which modules can be loaded and evaluated.
-	//
-	// This corresponds to the `--allowed-modules` flag in the Pkl CLI.
-	AllowedModules []string `pkl:"allowedModules"`
-
-	// URI patterns that determine which external resources can be read.
-	//
-	// This corresponds to the `--allowed-resources` flag in the Pkl CLI.
-	AllowedResources []string `pkl:"allowedResources"`
-
 	// The project directory to control dependency and evaluator settings during codegen.
 	//
 	// This corresponds to the `--project-dir` flag in the Pkl CLI.
@@ -83,11 +53,41 @@ type GeneratorSettings struct {
 	// Paths must use `/` as the path separator.
 	CacheDir *string `pkl:"cacheDir"`
 
-	// Print out the names of the files that will be generated, but skip writing anything to disk.
-	DryRun bool `pkl:"dryRun"`
+	// The base path for module output.
+	//
+	// This determines the relative path that generated Go source code will be written to.
+	// For example, a base path of `"github.com/foo/bar"` means that the Go files for package
+	// `github.com/foo/bar/baz` will be written into a `baz` directory, relative to the current
+	// working directory where codegen is executed.
+	//
+	// Any Go packages that are not prefixed with [basePath] are skipped from code generation.
+	//
+	// This is typically a Go module's name, i.e. the `module` clause within a `go.mod` file.
+	//
+	// If empty, writes the full package path to the current directory.
+	BasePath string `pkl:"basePath"`
+
+	// The path to the Pkl code generator script.
+	//
+	// This is an internal setting that is used for testing purposes when developing the code
+	// generator.
+	GeneratorScriptPath string `pkl:"generatorScriptPath"`
 
 	// The URI of this module, used to resolve [projectDir].
 	Uri string `pkl:"uri"`
+
+	// URI patterns that determine which modules can be loaded and evaluated.
+	//
+	// This corresponds to the `--allowed-modules` flag in the Pkl CLI.
+	AllowedModules []string `pkl:"allowedModules"`
+
+	// URI patterns that determine which external resources can be read.
+	//
+	// This corresponds to the `--allowed-resources` flag in the Pkl CLI.
+	AllowedResources []string `pkl:"allowedResources"`
+
+	// Print out the names of the files that will be generated, but skip writing anything to disk.
+	DryRun bool `pkl:"dryRun"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a GeneratorSettings
