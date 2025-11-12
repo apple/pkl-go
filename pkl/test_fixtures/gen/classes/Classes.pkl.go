@@ -8,11 +8,11 @@ import (
 )
 
 type Classes struct {
+	MyAnimal Animal `pkl:"myAnimal"`
+
 	Animals []Animal `pkl:"animals"`
 
 	NullableAnimals []*Animal `pkl:"nullableAnimals"`
-
-	MyAnimal Animal `pkl:"myAnimal"`
 
 	House House `pkl:"house"`
 }
