@@ -1,0 +1,271 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+amends "@pkl.impl.ghactions/PklCI.pkl"
+
+import "@gha/actions/Artifact.pkl"
+import "@gha/actions/Common.pkl"
+import "@gha/actions/Setup.pkl"
+import "@gha/Context.pkl"
+import "@gha/Workflow.pkl"
+import "@pkl.impl.ghactions/jobs/HawkeyeCheck.pkl"
+import "@pkl.impl.ghactions/steps/SetupPkl.pkl"
+
+local pklVersionFirst = "0.25.3"
+
+local pklVersionLatest = "0.30.0"
+
+local pklVersions = List(pklVersionFirst, pklVersionLatest)
+
+local GO_VERSION = "1.25"
+
+local test: Workflow = new {
+  jobs {
+    for (pklVersion in pklVersions) {
+      ["test-pkl-\(pklVersion.replaceAll(".", "-"))"] {
+        `runs-on` = "ubuntu-latest"
+        steps {
+          new Common.Checkout {}
+          new Setup.Go {
+            with {
+              `go-version` = GO_VERSION
+            }
+          }
+          new {
+            run = "mkdir test-results/"
+          }
+          new SetupPkl { version = pklVersion }.step
+          when (pklVersion == pklVersionLatest) {
+            // snippet tests depend on Pkl 0.29 or higher.
+            new {
+              name = "Test snippets"
+              // language=bash
+              run =
+                """
+                echo "Running Pkl snippet tests"
+                ./scripts/test_snippets.sh
+
+                echo "Running Pkl unit tests"
+                pkl test --project-dir codegen/src/ --junit-reports test-results/
+                """
+            }
+          }
+          new {
+            name = "Go test"
+            run =
+              """
+              go install github.com/jstemmer/go-junit-report/v2@latest
+              echo "Running Go unit tests"
+              go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+              """
+          }
+        }
+      }
+    }
+    ["check-hawkeye"] = HawkeyeCheck.job
+  }
+}
+
+local buildWorkflow: Workflow = (test) {
+  jobs {
+    ["build-pkl-gen-go"] {
+      needs {
+        ...test.jobs.keys
+      }
+      `runs-on` = "ubuntu-latest"
+      steps {
+        new Common.Checkout {}
+        new Setup.Go {
+          with {
+            `go-version` = GO_VERSION
+          }
+        }
+        for (os in List("macos", "linux")) {
+          for (arch in List("amd64", "aarch64")) {
+            new {
+              name = "go build \(os) \(arch)"
+              env {
+                ["GOOS"] = if (os == "linux") os else "darwin"
+                ["GOARCH"] = if (arch == "amd64") arch else "arm64"
+                ["GIT_TAG"] = Context.github.refName
+              }
+              run =
+                #"""
+                # strip preceding "v"
+                VERSION="${GIT_TAG:1}"
+
+                go build \
+                  -o out/pkl-gen-go/pkl-gen-go-\#(os)-\#(arch).bin \
+                  -ldflags="-X 'main.Version=$VERSION'" \
+                  cmd/pkl-gen-go/pkl-gen-go.go
+                """#
+            }
+          }
+        }
+        new Artifact.Upload {
+          with {
+            name = "pkl-gen-go"
+            // add a wildcard to preserve folder paths in the resulting zip
+            path = "out*/"
+          }
+        }
+      }
+    }
+    ["create-macos-universal-binary"] {
+      needs = "build-pkl-gen-go"
+      `if` = "github.repository_owner == 'apple'"
+      `runs-on` = new Listing {
+        "macos"
+        "self-hosted"
+      }
+      steps {
+        new Artifact.Download {
+          with {
+            name = "pkl-gen-go"
+            `merge-multiple` = true
+          }
+        }
+        new {
+          // language=bash
+          run =
+            #"""
+            lipo \
+              -create \
+              -output out/pkl-gen-go/pkl-gen-go-macos.bin \
+              out/pkl-gen-go/pkl-gen-go-macos-aarch64.bin \
+              out/pkl-gen-go/pkl-gen-go-macos-amd64.bin
+
+            rm out/pkl-gen-go/pkl-gen-go-macos-aarch64.bin
+            rm out/pkl-gen-go/pkl-gen-go-macos-amd64.bin
+            """#
+        }
+        new Artifact.Upload {
+          with {
+            name = "pkl-gen-go-2"
+            // add a wildcard to preserve folder paths in the resulting zip
+            path = "out*/"
+          }
+        }
+      }
+    }
+    ["build-pkl-package"] {
+      needs {
+        ...test.jobs.keys
+      }
+      `runs-on` = "ubuntu-latest"
+      steps {
+        new Common.Checkout {}
+        new SetupPkl { version = pklVersionLatest }.step
+        new {
+          run =
+            """
+            pkl project package codegen/src/ --output-path out/pkl-package/
+            """
+        }
+
+        new Artifact.Upload {
+          with {
+            name = "pkl-package"
+            path = "ou[t]/"
+          }
+        }
+      }
+    }
+  }
+}
+
+testReports {
+  junit {
+    "test-results/**/*.xml"
+  }
+  excludeJobs {
+    "check-hawkeye"
+  }
+}
+
+prb = test
+
+main = buildWorkflow
+
+build = buildWorkflow
+
+release = (buildWorkflow) {
+  jobs {
+    ["do-release"] {
+      `runs-on` = "ubuntu-latest"
+      needs {
+        "build-pkl-package"
+        "create-macos-universal-binary"
+      }
+      permissions {
+        contents = "write"
+      }
+      steps {
+        new Artifact.Download {
+          with {
+            name = "pkl-gen-go-2"
+          }
+        }
+        new Artifact.Download {
+          with {
+            name = "pkl-package"
+          }
+        }
+        new {
+          name = "gh release"
+          env {
+            ["GIT_TAG"] = Context.github.refName
+            ["GH_REPO"] = Context.github.repository
+            ["GIT_SHA"] = Context.github.sha
+            ["GH_TOKEN"] = Context.github.token
+          }
+          // language=bash
+          run =
+            #"""
+            # strip preceding "v"
+            VERSION="${GIT_TAG:1}"
+            EXPECTED_VERSION=$(cat VERSION.txt)
+
+            if [ "${EXPECTED_VERSION}" != "${VERSION}" ]; then
+              echo "Mismatching versions!"
+              echo "VERSION.txt has ${EXPECTED_VERSION}"
+              echo "Inferred version from Git tag is ${VERSION}"
+              echo "Update VERSION.txt to match the tag, and re-tag."
+              exit 1
+            fi
+
+            echo "Creating release for Pkl package"
+            gh release create "pkl.golang@${VERSION}" \
+              --title "pkl.golang@${VERSION}" \
+              --target "${GIT_SHA}" \
+              --notes "This holds the release assets for the pkl.golang Pkl package" \
+              out/pkl-package/*
+
+            echo "Creating release for Go library"
+            gh release create "${GIT_TAG}" \
+              --title "${GIT_TAG}" \
+              --target "${GIT_SHA}" \
+              --verify-tag \
+              --notes "Release notes: https://pkl-lang.org/go/current/CHANGELOG.html#release-${VERSION}" \
+              out/pkl-gen-go/pkl-gen-go-linux-amd64.bin \
+              out/pkl-gen-go/pkl-gen-go-linux-aarch64.bin \
+              out/pkl-gen-go/pkl-gen-go-macos.bin
+            """#
+        }
+      }
+    }
+  }
+}
