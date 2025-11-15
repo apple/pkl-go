@@ -42,6 +42,12 @@ jobs:
         go install github.com/jstemmer/go-junit-report/v2@latest
         echo "Running Go unit tests"
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-test-pkl-0-25-3
+        path: test-results/**/*.xml
   test-pkl-0-30-0:
     runs-on: ubuntu-latest
     steps:
@@ -76,6 +82,12 @@ jobs:
         go install github.com/jstemmer/go-junit-report/v2@latest
         echo "Running Go unit tests"
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-test-pkl-0-30-0
+        path: test-results/**/*.xml
   check-hawkeye:
     name: hawkeye-check
     runs-on: ubuntu-latest
@@ -84,6 +96,12 @@ jobs:
       with:
         fetch-depth: 0
     - run: hawkeye check --config licenserc.toml --fail-if-unknown
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-check-hawkeye
+        path: test-results/**/*.xml
     container:
       image: ghcr.io/korandoru/hawkeye@sha256:c3ab994c0d81f3d116aabf9afc534e18648e3e90d7525d741c1e99dd8166ec85
   build-pkl-gen-go:
@@ -153,6 +171,12 @@ jobs:
       with:
         name: pkl-gen-go
         path: ou[t]/
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-build-pkl-gen-go
+        path: test-results/**/*.xml
   create-macos-universal-binary:
     if: github.repository_owner == 'apple'
     needs: build-pkl-gen-go
@@ -160,8 +184,10 @@ jobs:
     - macos
     - self-hosted
     steps:
-    - name: pkl-gen-go
-      uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v6
+      with:
+        name: pkl-gen-go
+        merge-multiple: true
     - run: |-
         lipo \
           -create \
@@ -175,6 +201,12 @@ jobs:
       with:
         name: pkl-gen-go-2
         path: ou[t]/
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-create-macos-universal-binary
+        path: test-results/**/*.xml
   build-pkl-package:
     needs:
     - test-pkl-0-25-3
@@ -202,3 +234,31 @@ jobs:
       with:
         name: pkl-package
         path: ou[t]/
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-build-pkl-package
+        path: test-results/**/*.xml
+  publish-test-results:
+    if: '!failure() && !cancelled()'
+    needs:
+    - test-pkl-0-25-3
+    - test-pkl-0-30-0
+    - check-hawkeye
+    - build-pkl-gen-go
+    - create-macos-universal-binary
+    - build-pkl-package
+    permissions:
+      checks: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v6
+      with:
+        pattern: test-results-xml-*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: test-results-xml-*/**/*.xml

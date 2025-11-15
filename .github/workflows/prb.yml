@@ -37,6 +37,13 @@ jobs:
         go install github.com/jstemmer/go-junit-report/v2@latest
         echo "Running Go unit tests"
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-test-pkl-0-25-3
+        path: test-results/**/*.xml
+        if-no-files-found: ignore
   test-pkl-0-30-0:
     runs-on: ubuntu-latest
     steps:
@@ -71,6 +78,13 @@ jobs:
         go install github.com/jstemmer/go-junit-report/v2@latest
         echo "Running Go unit tests"
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-test-pkl-0-30-0
+        path: test-results/**/*.xml
+        if-no-files-found: ignore
   check-hawkeye:
     name: hawkeye-check
     runs-on: ubuntu-latest
@@ -79,6 +93,13 @@ jobs:
       with:
         fetch-depth: 0
     - run: hawkeye check --config licenserc.toml --fail-if-unknown
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-check-hawkeye
+        path: test-results/**/*.xml
+        if-no-files-found: ignore
     container:
       image: ghcr.io/korandoru/hawkeye@sha256:c3ab994c0d81f3d116aabf9afc534e18648e3e90d7525d741c1e99dd8166ec85
   upload-event-file:

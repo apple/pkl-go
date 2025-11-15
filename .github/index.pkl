@@ -132,7 +132,10 @@ local buildWorkflow: Workflow = (test) {
       }
       steps {
         new Artifact.Download {
-          name = "pkl-gen-go"
+          with {
+            name = "pkl-gen-go"
+            `merge-multiple` = true
+          }
         }
         new {
           // language=bash
@@ -178,6 +181,12 @@ local buildWorkflow: Workflow = (test) {
         }
       }
     }
+  }
+}
+
+testReports {
+  junit {
+    "test-results/**/*.xml"
   }
 }
 
