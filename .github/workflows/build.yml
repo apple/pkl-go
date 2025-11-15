@@ -70,7 +70,7 @@ jobs:
         ./scripts/test_snippets.sh
 
         echo "Running Pkl unit tests"
-        $PKL_EXEC test --junit-reports test-results/ codegen/src/tests/*.pkl
+        pkl test --project-dir codegen/src/ --junit-reports test-results/
     - name: Go test
       run: |-
         go install github.com/jstemmer/go-junit-report/v2@latest
