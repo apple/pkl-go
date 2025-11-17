@@ -325,7 +325,7 @@ func parseStructOpts(field *reflect.StructField) structFieldOpts {
 
 func getStructFields(typ reflect.Type) map[string]structField {
 	numFields := typ.NumField()
-	ret := make(map[string]structField)
+	ret := make(map[string]structField, numFields)
 	for i := 0; i < numFields; i++ {
 		field := typ.Field(i)
 		// embedded
