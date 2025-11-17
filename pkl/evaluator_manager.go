@@ -262,6 +262,7 @@ func (m *evaluatorManager) interrupted(evaluatorId int64) (chan error, func()) {
 	m.interrupts.Store(ch, evaluatorId)
 	return ch, func() {
 		m.interrupts.Delete(ch)
+		close(ch)
 	}
 }
 
