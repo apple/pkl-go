@@ -145,11 +145,9 @@ local buildWorkflow: Workflow = (test) {
             lipo \
               -create \
               -output out/pkl-gen-go/pkl-gen-go-macos.bin \
-              out/pkl-gen-go/pkl-gen-go-macos-aarch64.bin \
-              out/pkl-gen-go/pkl-gen-go-macos-amd64.bin
+              out/pkl-gen-go/pkl-gen-go-macos-*.bin
 
-            rm out/pkl-gen-go/pkl-gen-go-macos-aarch64.bin
-            rm out/pkl-gen-go/pkl-gen-go-macos-amd64.bin
+            rm out/pkl-gen-go/pkl-gen-go-macos-*.bin
             """#
         }
         new Artifact.Upload {
