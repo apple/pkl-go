@@ -185,11 +185,9 @@ jobs:
         lipo \
           -create \
           -output out/pkl-gen-go/pkl-gen-go-macos.bin \
-          out/pkl-gen-go/pkl-gen-go-macos-aarch64.bin \
-          out/pkl-gen-go/pkl-gen-go-macos-amd64.bin
+          out/pkl-gen-go/pkl-gen-go-macos-*.bin
 
-        rm out/pkl-gen-go/pkl-gen-go-macos-aarch64.bin
-        rm out/pkl-gen-go/pkl-gen-go-macos-amd64.bin
+        rm out/pkl-gen-go/pkl-gen-go-macos-*.bin
     - uses: actions/upload-artifact@v5
       with:
         name: pkl-gen-go-2
