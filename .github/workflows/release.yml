@@ -226,7 +226,7 @@ jobs:
     - uses: actions/upload-artifact@v5
       with:
         name: pkl-package
-        path: ou[t]/
+        path: out*/
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5

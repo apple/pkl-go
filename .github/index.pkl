@@ -179,7 +179,8 @@ local buildWorkflow: Workflow = (test) {
         new Artifact.Upload {
           with {
             name = "pkl-package"
-            path = "ou[t]/"
+            // add a wildcard to preserve folder paths in the resulting zip
+            path = "out*/"
           }
         }
       }
