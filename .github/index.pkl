@@ -31,6 +31,9 @@ local pklVersionLatest = "0.30.0"
 local pklVersions = List(pklVersionFirst, pklVersionLatest)
 
 local GO_VERSION = "1.25"
+local gofumptVersion = "0.9.2"
+local goJunitReportVersion = "2.1.0"
+local goLicensesVersion = "2.0.1"
 
 local test: Workflow = new {
   jobs {
@@ -67,7 +70,7 @@ local test: Workflow = new {
             name = "Go test"
             run =
               """
-              go install github.com/jstemmer/go-junit-report/v2@latest
+              go install github.com/jstemmer/go-junit-report/v2@v\(goJunitReportVersion)
               echo "Running Go unit tests"
               go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
               """
@@ -76,6 +79,46 @@ local test: Workflow = new {
       }
     }
     ["check-hawkeye"] = HawkeyeCheck.job
+    ["check-format-pkl"] {
+      `runs-on` = "ubuntu-latest"
+      steps {
+        new Common.Checkout {}
+        new SetupPkl { version = pklVersionLatest }.step
+        new {
+          name = "Check Go Formatting"
+          run = "pkl format --grammar-version 1 --diff-name-only ."
+        }
+      }
+    }
+    ["check-format-go"] {
+      `runs-on` = "ubuntu-latest"
+      steps {
+        new Common.Checkout {}
+        new Setup.Go {
+          with {
+            `go-version` = GO_VERSION
+          }
+        }
+        new {
+          name = "Check Go Formatting"
+          run =
+            """
+            go install mvdan.cc/gofumpt@v\(gofumptVersion)
+            gofumpt -d .
+            """
+          // gofumpt -d shows the diff but is also required to get a non-zero exit when formatting is needed
+        }
+        new {
+          name = "Check NOTICE.txt"
+          run =
+            """
+            go install github.com/google/go-licenses/v2@v\(goLicensesVersion)
+            ./scripts/create_notice.sh
+            git diff --exit-code
+            """
+        }
+      }
+    }
   }
 }
 
