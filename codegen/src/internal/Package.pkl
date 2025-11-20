@@ -92,7 +92,10 @@ local generated: List<Gen>(hasUniqueNames()) =
       })
 
 local structs: List<GoMapping.Struct> =
-  moduleMappings.map((it) -> if (it is GoMapping.Class) it.struct else null).filterNonNull()
+  moduleMappings
+    .map((it) -> if (it is GoMapping.Class) it.struct else null)
+    .filterNonNull()
+    .sortBy((it) -> utils.toGoString(it!!.clazz.reflectee.toString()))
     as List<GoMapping.Struct>
 
 local initFile: String =
