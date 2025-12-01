@@ -24,7 +24,7 @@ jobs:
       with:
         path: artifacts
         name: test-results-.*
-        name_is_regex: true
+        name_is_regexp: true
         run_id: ${{ github.event.workflow_run.id }}
     - name: Publish test results
       uses: EnricoMi/publish-unit-test-result-action@v2
