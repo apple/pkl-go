@@ -1,6 +1,4 @@
-# Do not modify!
-# This file was generated from a template using https://github.com/StefMa/pkl-gha
-
+# Generated from Workflow.pkl. DO NOT EDIT.
 name: Pull Request
 'on':
   pull_request: {}
@@ -13,10 +11,10 @@ jobs:
   test-pkl-0-25-3:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
       with:
         go-version: '1.25'
     - run: mkdir test-results/
@@ -41,7 +39,7 @@ jobs:
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-test-pkl-0-25-3
         path: test-results/**/*.xml
@@ -49,10 +47,10 @@ jobs:
   test-pkl-0-30-0:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
       with:
         go-version: '1.25'
     - run: mkdir test-results/
@@ -84,7 +82,7 @@ jobs:
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-test-pkl-0-30-0
         path: test-results/**/*.xml
@@ -93,7 +91,7 @@ jobs:
     name: hawkeye-check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
         fetch-depth: 0
@@ -103,7 +101,7 @@ jobs:
   check-format-pkl:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
     - name: Setup Pkl
@@ -124,7 +122,7 @@ jobs:
       run: pkl format --grammar-version 1 --diff-name-only .
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-check-format-pkl
         path: test-results/**/*.xml
@@ -132,10 +130,10 @@ jobs:
   check-format-go:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
       with:
         go-version: '1.25'
     - name: Check Go Formatting
@@ -149,7 +147,7 @@ jobs:
         git diff --exit-code
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-check-format-go
         path: test-results/**/*.xml
@@ -159,14 +157,14 @@ jobs:
     steps:
     - name: Upload event file
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-event-file
         path: ${{ github.event_path }}
   check-pkl-github-actions:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
     - name: Setup Pkl

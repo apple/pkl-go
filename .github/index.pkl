@@ -16,11 +16,9 @@
 
 amends "@pkl.impl.ghactions/PklCI.pkl"
 
-import "@gha/actions/Artifact.pkl"
-import "@gha/actions/Common.pkl"
-import "@gha/actions/Setup.pkl"
-import "@gha/Context.pkl"
-import "@gha/Workflow.pkl"
+import "@com.github.actions/catalog.pkl"
+import "@com.github.actions/context.pkl"
+import "@com.github.actions/Workflow.pkl"
 import "@pkl.impl.ghactions/jobs/HawkeyeCheck.pkl"
 import "@pkl.impl.ghactions/steps/SetupPkl.pkl"
 
@@ -41,8 +39,8 @@ local test: Workflow = new {
       ["test-pkl-\(pklVersion.replaceAll(".", "-"))"] {
         `runs-on` = "ubuntu-latest"
         steps {
-          new Common.Checkout {}
-          new Setup.Go {
+          catalog.`actions/checkout@v6`
+          (catalog.`actions/setup-go@v6`) {
             with {
               `go-version` = GO_VERSION
             }
@@ -82,7 +80,7 @@ local test: Workflow = new {
     ["check-format-pkl"] {
       `runs-on` = "ubuntu-latest"
       steps {
-        new Common.Checkout {}
+        catalog.`actions/checkout@v6`
         new SetupPkl { version = pklVersionLatest }.step
         new {
           name = "Check Go Formatting"
@@ -93,8 +91,8 @@ local test: Workflow = new {
     ["check-format-go"] {
       `runs-on` = "ubuntu-latest"
       steps {
-        new Common.Checkout {}
-        new Setup.Go {
+        catalog.`actions/checkout@v6`
+        (catalog.`actions/setup-go@v6`) {
           with {
             `go-version` = GO_VERSION
           }
@@ -130,8 +128,8 @@ local buildWorkflow: Workflow = (test) {
       }
       `runs-on` = "ubuntu-latest"
       steps {
-        new Common.Checkout {}
-        new Setup.Go {
+        catalog.`actions/checkout@v6`
+        (catalog.`actions/setup-go@v6`) {
           with {
             `go-version` = GO_VERSION
           }
@@ -143,7 +141,7 @@ local buildWorkflow: Workflow = (test) {
               env {
                 ["GOOS"] = if (os == "linux") os else "darwin"
                 ["GOARCH"] = if (arch == "amd64") arch else "arm64"
-                ["GIT_TAG"] = Context.github.refName
+                ["GIT_TAG"] = context.github.refName
               }
               run =
                 #"""
@@ -158,7 +156,7 @@ local buildWorkflow: Workflow = (test) {
             }
           }
         }
-        new Artifact.Upload {
+        (catalog.`actions/upload-artifact@v5`) {
           with {
             name = "pkl-gen-go"
             // add a wildcard to preserve folder paths in the resulting zip
@@ -175,11 +173,8 @@ local buildWorkflow: Workflow = (test) {
         "self-hosted"
       }
       steps {
-        new Artifact.Download {
-          with {
-            name = "pkl-gen-go"
-            `merge-multiple` = true
-          }
+        (catalog.`actions/download-artifact@v6`) {
+          name = "pkl-gen-go"
         }
         new {
           // language=bash
@@ -193,7 +188,7 @@ local buildWorkflow: Workflow = (test) {
             rm out/pkl-gen-go/pkl-gen-go-macos-*.bin
             """#
         }
-        new Artifact.Upload {
+        (catalog.`actions/upload-artifact@v5`) {
           with {
             name = "pkl-gen-go-2"
             // add a wildcard to preserve folder paths in the resulting zip
@@ -208,7 +203,7 @@ local buildWorkflow: Workflow = (test) {
       }
       `runs-on` = "ubuntu-latest"
       steps {
-        new Common.Checkout {}
+        catalog.`actions/checkout@v6`
         new SetupPkl { version = pklVersionLatest }.step
         new {
           run =
@@ -216,8 +211,7 @@ local buildWorkflow: Workflow = (test) {
             pkl project package codegen/src/ --output-path out/pkl-package/
             """
         }
-
-        new Artifact.Upload {
+        (catalog.`actions/upload-artifact@v5`) {
           with {
             name = "pkl-package"
             // add a wildcard to preserve folder paths in the resulting zip
@@ -256,12 +250,12 @@ release = (buildWorkflow) {
         contents = "write"
       }
       steps {
-        new Artifact.Download {
+        (catalog.`actions/download-artifact@v6`) {
           with {
             name = "pkl-gen-go-2"
           }
         }
-        new Artifact.Download {
+        (catalog.`actions/download-artifact@v6`) {
           with {
             name = "pkl-package"
           }
@@ -269,10 +263,10 @@ release = (buildWorkflow) {
         new {
           name = "gh release"
           env {
-            ["GIT_TAG"] = Context.github.refName
-            ["GH_REPO"] = Context.github.repository
-            ["GIT_SHA"] = Context.github.sha
-            ["GH_TOKEN"] = Context.github.token
+            ["GIT_TAG"] = context.github.refName
+            ["GH_REPO"] = context.github.repository
+            ["GIT_SHA"] = context.github.sha
+            ["GH_TOKEN"] = context.github.token
           }
           // language=bash
           run =

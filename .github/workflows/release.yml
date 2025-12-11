@@ -1,6 +1,4 @@
-# Do not modify!
-# This file was generated from a template using https://github.com/StefMa/pkl-gha
-
+# Generated from Workflow.pkl. DO NOT EDIT.
 name: Release
 'on':
   push:
@@ -17,10 +15,10 @@ jobs:
   test-pkl-0-25-3:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
       with:
         go-version: '1.25'
     - run: mkdir test-results/
@@ -45,17 +43,17 @@ jobs:
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-test-pkl-0-25-3
         path: test-results/**/*.xml
   test-pkl-0-30-0:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
       with:
         go-version: '1.25'
     - run: mkdir test-results/
@@ -87,7 +85,7 @@ jobs:
         go test -race -v ./... 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/go-test-results.xml
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-test-pkl-0-30-0
         path: test-results/**/*.xml
@@ -95,7 +93,7 @@ jobs:
     name: hawkeye-check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
         fetch-depth: 0
@@ -105,7 +103,7 @@ jobs:
   check-format-pkl:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
     - name: Setup Pkl
@@ -126,17 +124,17 @@ jobs:
       run: pkl format --grammar-version 1 --diff-name-only .
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-check-format-pkl
         path: test-results/**/*.xml
   check-format-go:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
       with:
         go-version: '1.25'
     - name: Check Go Formatting
@@ -150,7 +148,7 @@ jobs:
         git diff --exit-code
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-check-format-go
         path: test-results/**/*.xml
@@ -163,10 +161,10 @@ jobs:
     - check-format-go
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-go@v6
+    - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6
       with:
         go-version: '1.25'
     - name: go build macos amd64
@@ -221,13 +219,13 @@ jobs:
           -o out/pkl-gen-go/pkl-gen-go-linux-aarch64.bin \
           -ldflags="-X 'main.Version=$VERSION'" \
           cmd/pkl-gen-go/pkl-gen-go.go
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: pkl-gen-go
         path: out*/
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-build-pkl-gen-go
         path: test-results/**/*.xml
@@ -238,10 +236,9 @@ jobs:
     - macos
     - self-hosted
     steps:
-    - uses: actions/download-artifact@v6
-      with:
-        name: pkl-gen-go
-        merge-multiple: true
+    - name: pkl-gen-go
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+      with: {}
     - run: |-
         lipo \
           -create \
@@ -249,13 +246,13 @@ jobs:
           out/pkl-gen-go/pkl-gen-go-macos-*.bin
 
         rm out/pkl-gen-go/pkl-gen-go-macos-*.bin
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: pkl-gen-go-2
         path: out*/
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-create-macos-universal-binary
         path: test-results/**/*.xml
@@ -268,7 +265,7 @@ jobs:
     - check-format-go
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
     - name: Setup Pkl
@@ -286,13 +283,13 @@ jobs:
         echo "$DIR" >> "$GITHUB_PATH"
         echo "pkl_exec=$PKL_EXEC" >> "$GITHUB_OUTPUT"
     - run: pkl project package codegen/src/ --output-path out/pkl-package/
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: pkl-package
         path: out*/
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-build-pkl-package
         path: test-results/**/*.xml
@@ -304,10 +301,10 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
       with:
         name: pkl-gen-go-2
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
       with:
         name: pkl-package
     - name: gh release
@@ -347,12 +344,12 @@ jobs:
           out/pkl-gen-go/pkl-gen-go-macos.bin
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-do-release
         path: test-results/**/*.xml
   publish-test-results:
-    if: '!failure() && !cancelled()'
+    if: '!cancelled()'
     needs:
     - test-pkl-0-25-3
     - test-pkl-0-30-0
@@ -366,12 +363,12 @@ jobs:
       checks: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
       with:
         pattern: test-results-xml-*
     - name: Publish test results
       if: '!cancelled()'
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf # v2
       with:
         comment_mode: 'off'
         files: test-results-xml-*/**/*.xml
