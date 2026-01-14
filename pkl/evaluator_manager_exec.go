@@ -63,15 +63,15 @@ func NewEvaluatorManagerWithCommand(pklCommand []string) EvaluatorManager {
 }
 
 type execEvaluator struct {
-	cmd    *exec.Cmd
-	in     chan msgapi.IncomingMessage
-	out    chan msgapi.OutgoingMessage
-	closed chan error
-	// exited is a flag that indicates evaluator was closed explicitly
-	exited      atomicBool
+	cmd         *exec.Cmd
+	in          chan msgapi.IncomingMessage
+	out         chan msgapi.OutgoingMessage
+	closed      chan error
 	version     *internal.Semver
-	pklCommand  []string
 	processDone chan struct{}
+	pklCommand  []string
+	// exited is a flag that indicates evaluator was closed explicitly
+	exited atomicBool
 }
 
 func (e *execEvaluator) inChan() chan msgapi.IncomingMessage {
