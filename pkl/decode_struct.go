@@ -340,7 +340,7 @@ func getStructFields(typ reflect.Type) map[string]structField {
 					ret[k] = v
 				}
 			default:
-				panic("unhandled default case")
+				panic("pkl: getStructFields: unhandled field kind")
 			}
 		} else {
 			opts := parseStructOpts(&field)
