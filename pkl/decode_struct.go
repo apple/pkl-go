@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -339,6 +339,8 @@ func getStructFields(typ reflect.Type) map[string]structField {
 				for k, v := range getStructFields(field.Type) {
 					ret[k] = v
 				}
+			default:
+				panic("pkl: getStructFields: unhandled field kind")
 			}
 		} else {
 			opts := parseStructOpts(&field)
@@ -374,6 +376,8 @@ func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 				{
 					fieldValue = reflect.New(field.Type).Elem()
 				}
+			default:
+				panic("pkl: getOutputValue: unhandled field kind")
 			}
 			ret.FieldByName(field.Name).Set(fieldValue)
 		}
