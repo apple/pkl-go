@@ -339,6 +339,8 @@ func getStructFields(typ reflect.Type) map[string]structField {
 				for k, v := range getStructFields(field.Type) {
 					ret[k] = v
 				}
+			default:
+				panic("unhandled default case")
 			}
 		} else {
 			opts := parseStructOpts(&field)
@@ -374,6 +376,8 @@ func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 				{
 					fieldValue = reflect.New(field.Type).Elem()
 				}
+			default:
+				panic("unhandled default case")
 			}
 			ret.FieldByName(field.Name).Set(fieldValue)
 		}
