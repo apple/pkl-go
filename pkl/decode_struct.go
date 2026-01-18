@@ -377,7 +377,7 @@ func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 					fieldValue = reflect.New(field.Type).Elem()
 				}
 			default:
-				panic("unhandled default case")
+				panic("pkl: getOutputValue: unhandled field kind")
 			}
 			ret.FieldByName(field.Name).Set(fieldValue)
 		}
