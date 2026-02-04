@@ -97,11 +97,13 @@ jobs:
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
+        ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || '' }}
         persist-credentials: false
         fetch-depth: 0
+    - run: git config --global --add safe.directory $(pwd)
     - run: hawkeye check --config licenserc.toml --fail-if-unknown
     container:
-      image: ghcr.io/korandoru/hawkeye@sha256:c3ab994c0d81f3d116aabf9afc534e18648e3e90d7525d741c1e99dd8166ec85
+      image: ghcr.io/korandoru/hawkeye@sha256:e0abf8dbfaeeeba1249679d662d9fb404b1dcdb041c6093ea1f7a6edb7d89319
   check-format-pkl:
     runs-on: ubuntu-latest
     steps:
