@@ -5,7 +5,7 @@ The pkl-gen-go binary includes libraries that may be distributed under a differe
 
 ---
 github.com/google/go-cmp/cmp
-BSD-3-Clause - https://github.com/google/go-cmp/blob/v0.6.0/LICENSE
+BSD-3-Clause - https://github.com/google/go-cmp/blob/v0.7.0/LICENSE
 
 ***
 
@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---
 github.com/spf13/cobra
-Apache-2.0 - https://github.com/spf13/cobra/blob/v1.8.0/LICENSE.txt
+Apache-2.0 - https://github.com/spf13/cobra/blob/v1.10.2/LICENSE.txt
 
 ***
 
@@ -222,7 +222,7 @@ Apache-2.0 - https://github.com/spf13/cobra/blob/v1.8.0/LICENSE.txt
 
 ---
 github.com/spf13/pflag
-BSD-3-Clause - https://github.com/spf13/pflag/blob/v1.0.5/LICENSE
+BSD-3-Clause - https://github.com/spf13/pflag/blob/v1.0.10/LICENSE
 
 ***
 
@@ -324,7 +324,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---
 golang.org/x/mod
-BSD-3-Clause - https://cs.opensource.google/go/x/mod/+/v0.24.0:LICENSE
+BSD-3-Clause - https://cs.opensource.google/go/x/mod/+/v0.33.0:LICENSE
 
 ***
 

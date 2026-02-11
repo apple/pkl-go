@@ -16,7 +16,7 @@ jobs:
         persist-credentials: false
     - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
       with:
-        go-version: '1.25'
+        go-version: '1.26'
     - run: mkdir test-results/
     - name: Setup Pkl
       id: setup-pkl
@@ -52,7 +52,7 @@ jobs:
         persist-credentials: false
     - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
       with:
-        go-version: '1.25'
+        go-version: '1.26'
     - run: mkdir test-results/
     - name: Setup Pkl
       id: setup-pkl
@@ -135,7 +135,7 @@ jobs:
         persist-credentials: false
     - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
       with:
-        go-version: '1.25'
+        go-version: '1.26'
     - name: Check Go Formatting
       run: |-
         go install mvdan.cc/gofumpt@v0.9.2
