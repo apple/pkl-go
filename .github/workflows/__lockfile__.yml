@@ -23,7 +23,7 @@ jobs:
     - name: actions/download-artifact@v6
       uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
     - name: actions/setup-go@v6
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
     - name: actions/upload-artifact@v5
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
     - name: dawidd6/action-download-artifact@v11
