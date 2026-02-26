@@ -73,13 +73,13 @@ type Evaluator interface {
 }
 
 type evaluator struct {
-	evaluatorId     int64
 	logger          Logger
 	manager         *evaluatorManager
 	pendingRequests *sync.Map
-	closed          bool
 	resourceReaders []ResourceReader
 	moduleReaders   []ModuleReader
+	evaluatorId     int64
+	closed          bool
 }
 
 var _ Evaluator = (*evaluator)(nil)

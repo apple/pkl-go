@@ -46,17 +46,17 @@ var PklVersion0_29 = MustParseSemver("0.29.0")
 var PklVersion0_30 = MustParseSemver("0.30.0")
 
 type Semver struct {
-	major                 int
-	minor                 int
-	patch                 int
 	prerelease            string
 	build                 string
 	prereleaseIdentifiers []prereleaseIdentifier
+	major                 int
+	minor                 int
+	patch                 int
 }
 
 type prereleaseIdentifier struct {
-	numericId      int
 	alphaNumericId string
+	numericId      int
 }
 
 func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {

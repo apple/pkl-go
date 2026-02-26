@@ -10,9 +10,8 @@ type Cat interface {
 var _ Cat = CatImpl{}
 
 type CatImpl struct {
-	Meows bool `pkl:"meows"`
-
-	Name string `pkl:"name"`
+	Name  string `pkl:"name"`
+	Meows bool   `pkl:"meows"`
 }
 
 func (rcv CatImpl) GetMeows() bool {

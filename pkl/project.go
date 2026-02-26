@@ -30,17 +30,17 @@ func init() {
 
 // Project is the go representation of pkl.Project.
 type Project struct {
-	ProjectFileUri    string                   `pkl:"projectFileUri"`
-	Package           *ProjectPackage          `pkl:"package"`
-	EvaluatorSettings ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
-	Tests             []string                 `pkl:"tests"`
-	Annotations       []Object                 `pkl:"annotations"`
+	Package *ProjectPackage `pkl:"package"`
 
 	// internal field; use Project.Dependencies instead.
 	// values are either Project or ProjectRemoteDependency
 	RawDependencies map[string]any `pkl:"dependencies"`
 
-	dependencies *ProjectDependencies `pkl:"-"`
+	dependencies      *ProjectDependencies     `pkl:"-"`
+	ProjectFileUri    string                   `pkl:"projectFileUri"`
+	Tests             []string                 `pkl:"tests"`
+	Annotations       []Object                 `pkl:"annotations"`
+	EvaluatorSettings ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
 }
 
 // ProjectPackage is the go representation of pkl.Project#Package.
@@ -50,7 +50,6 @@ type ProjectPackage struct {
 	Version             string   `pkl:"version"`
 	PackageZipUrl       string   `pkl:"packageZipUrl"`
 	Description         string   `pkl:"description"`
-	Authors             []string `pkl:"authors"`
 	Website             string   `pkl:"website"`
 	Documentation       string   `pkl:"documentation"`
 	SourceCode          string   `pkl:"sourceCode"`
@@ -58,9 +57,10 @@ type ProjectPackage struct {
 	License             string   `pkl:"license"`
 	LicenseText         string   `pkl:"licenseText"`
 	IssueTracker        string   `pkl:"issueTracker"`
+	Uri                 string   `pkl:"uri"`
+	Authors             []string `pkl:"authors"`
 	ApiTests            []string `pkl:"apiTests"`
 	Exclude             []string `pkl:"exclude"`
-	Uri                 string   `pkl:"uri"`
 }
 
 // ProjectEvaluatorSettings is the Go representation of pkl.EvaluatorSettings
@@ -70,15 +70,15 @@ type ProjectEvaluatorSettings struct {
 	AllowedModules          *[]string                                        `pkl:"allowedModules"`
 	AllowedResources        *[]string                                        `pkl:"allowedResources"`
 	NoCache                 *bool                                            `pkl:"noCache"`
-	ModulePath              []string                                         `pkl:"modulePath"`
-	Timeout                 Duration                                         `pkl:"timeout"`
-	ModuleCacheDir          string                                           `pkl:"moduleCacheDir"`
-	RootDir                 string                                           `pkl:"rootDir"`
 	Http                    *ProjectEvaluatorSettingsHttp                    `pkl:"http"`
-	Color                   string                                           `pkl:"color"`
 	ExternalModuleReaders   map[string]ProjectEvaluatorSettingExternalReader `pkl:"externalModuleReaders"`
 	ExternalResourceReaders map[string]ProjectEvaluatorSettingExternalReader `pkl:"externalResourceReaders"`
 	TraceMode               *TraceMode                                       `pkl:"traceMode"`
+	ModuleCacheDir          string                                           `pkl:"moduleCacheDir"`
+	RootDir                 string                                           `pkl:"rootDir"`
+	Color                   string                                           `pkl:"color"`
+	ModulePath              []string                                         `pkl:"modulePath"`
+	Timeout                 Duration                                         `pkl:"timeout"`
 }
 
 // ProjectEvaluatorSettingsHttp is the Go representation of pkl.EvaluatorSettings.Http

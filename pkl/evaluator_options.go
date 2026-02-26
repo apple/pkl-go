@@ -30,20 +30,39 @@ import (
 
 // EvaluatorOptions is the set of options available to control Pkl evaluation.
 type EvaluatorOptions struct {
+
+	// Logger is the logging interface for messages emitted by the Pkl evaluator.
+	Logger Logger
+
 	// Properties is the set of properties available to the `prop:` resource reader.
 	Properties map[string]string
 
 	// Env is the set of environment variables available to the `env:` resource reader.
 	Env map[string]string
 
-	// ModulePaths is the set of directories, ZIP archives, or JAR archives to search when
-	// resolving `modulepath`: resources and modules.
+	// DeclaredProjectDependencies is set of dependencies available to modules within ProjectBaseURI.
 	//
-	// This option must be non-emptyMirror if ModuleReaderModulePath or ResourceModulePath are used.
-	ModulePaths []string
+	// When importing dependencies, a PklProject.deps.json file must exist within ProjectBaseURI
+	// that contains the project's resolved dependencies.
+	DeclaredProjectDependencies *ProjectDependencies
 
-	// Logger is the logging interface for messages emitted by the Pkl evaluator.
-	Logger Logger
+	// Settings for controlling how Pkl talks over HTTP(S).
+	//
+	// Added in Pkl 0.26.
+	// If the underlying Pkl does not support HTTP options, NewEvaluator will return with an error.
+	Http *Http
+
+	// ExternalModuleReaders registers external commands that implement module reader schemes.
+	//
+	// Added in Pkl 0.27.
+	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
+	ExternalModuleReaders map[string]ExternalReader
+
+	// ExternalResourceReaders registers external commands that implement resource reader schemes.
+	//
+	// Added in Pkl 0.27.
+	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
+	ExternalResourceReaders map[string]ExternalReader
 
 	// OutputFormat controls the renderer to be used when rendering the `output.text`
 	// property of a module.
@@ -59,24 +78,6 @@ type EvaluatorOptions struct {
 	//   - `"yaml"`
 	//   - `"pkl-binary"`
 	OutputFormat string
-
-	// AllowedModules defines URI patterns that determine which modules are permitted to be loaded and evaluated.
-	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
-	//
-	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
-	AllowedModules []string
-
-	// AllowedResources defines URI patterns that determine which resources are permitted to be loaded and evaluated.
-	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
-	//
-	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
-	AllowedResources []string
-
-	// ResourceReaders are the resource readers to be used by the evaluator.
-	ResourceReaders []ResourceReader
-
-	// ModuleReaders are the set of custom module readers to be used by the evaluator.
-	ModuleReaders []ModuleReader
 
 	// CacheDir is the directory where `package:` modules are cached.
 	//
@@ -109,35 +110,35 @@ type EvaluatorOptions struct {
 	// or EvaluatorManager.NewProjectEvaluator.
 	ProjectBaseURI string
 
-	// DeclaredProjectDependencies is set of dependencies available to modules within ProjectBaseURI.
-	//
-	// When importing dependencies, a PklProject.deps.json file must exist within ProjectBaseURI
-	// that contains the project's resolved dependencies.
-	DeclaredProjectDependencies *ProjectDependencies
-
-	// Settings for controlling how Pkl talks over HTTP(S).
-	//
-	// Added in Pkl 0.26.
-	// If the underlying Pkl does not support HTTP options, NewEvaluator will return with an error.
-	Http *Http
-
-	// ExternalModuleReaders registers external commands that implement module reader schemes.
-	//
-	// Added in Pkl 0.27.
-	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
-	ExternalModuleReaders map[string]ExternalReader
-
-	// ExternalResourceReaders registers external commands that implement resource reader schemes.
-	//
-	// Added in Pkl 0.27.
-	// If the underlying Pkl does not support external readers, evaluation will fail when a registered scheme is used.
-	ExternalResourceReaders map[string]ExternalReader
-
 	// TraceMode dictates how Pkl will format messages logged by `trace()`.
 	//
 	// Added in Pkl 0.30.
 	// If the underlying Pkl does not support trace modes, this option will be ignored.
 	TraceMode TraceMode
+
+	// ModulePaths is the set of directories, ZIP archives, or JAR archives to search when
+	// resolving `modulepath`: resources and modules.
+	//
+	// This option must be non-emptyMirror if ModuleReaderModulePath or ResourceModulePath are used.
+	ModulePaths []string
+
+	// AllowedModules defines URI patterns that determine which modules are permitted to be loaded and evaluated.
+	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
+	//
+	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
+	AllowedModules []string
+
+	// AllowedResources defines URI patterns that determine which resources are permitted to be loaded and evaluated.
+	// Patterns are regular expressions in the dialect understood by [java.util.regex.Pattern].
+	//
+	// [java.util.regex.Pattern]: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/regex/Pattern.html
+	AllowedResources []string
+
+	// ResourceReaders are the resource readers to be used by the evaluator.
+	ResourceReaders []ResourceReader
+
+	// ModuleReaders are the set of custom module readers to be used by the evaluator.
+	ModuleReaders []ModuleReader
 }
 
 type TraceMode string
@@ -150,8 +151,8 @@ const (
 )
 
 type ProjectRemoteDependency struct {
-	PackageUri string     `pkl:"uri"`
 	Checksums  *Checksums `pkl:"checksums"`
+	PackageUri string     `pkl:"uri"`
 }
 
 func (dep *ProjectRemoteDependency) toMessage() *msgapi.ProjectOrDependency {
@@ -174,11 +175,10 @@ func (checksums *Checksums) toMessage() *msgapi.Checksums {
 }
 
 type ProjectLocalDependency struct {
-	PackageUri string
+	Dependencies *ProjectDependencies
+	PackageUri   string
 
 	ProjectFileUri string
-
-	Dependencies *ProjectDependencies
 }
 
 func (dep *ProjectLocalDependency) toMessage() *msgapi.ProjectOrDependency {
@@ -211,10 +211,6 @@ func (p *ProjectDependencies) toMessage() map[string]*msgapi.ProjectOrDependency
 }
 
 type Http struct {
-	// PEM format certificates to trust when making HTTP requests.
-	//
-	// If empty, Pkl will trust its own built-in certificates.
-	CaCertificates []byte
 
 	// Configuration of the HTTP proxy to use.
 	//
@@ -237,6 +233,10 @@ type Http struct {
 	//			"https://example.com/": "https://my.other.website/"
 	//		}
 	Rewrites map[string]string
+	// PEM format certificates to trust when making HTTP requests.
+	//
+	// If empty, Pkl will trust its own built-in certificates.
+	CaCertificates []byte
 }
 
 func (http *Http) toMessage() *msgapi.Http {

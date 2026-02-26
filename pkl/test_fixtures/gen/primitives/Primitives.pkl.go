@@ -8,33 +8,33 @@ import (
 )
 
 type Primitives struct {
+	Res11 any `pkl:"res11"`
+
 	Res0 string `pkl:"res0"`
 
 	Res1 int `pkl:"res1"`
 
-	Res2 int8 `pkl:"res2"`
-
-	Res3 int16 `pkl:"res3"`
-
-	Res4 int32 `pkl:"res4"`
-
 	Res5 uint `pkl:"res5"`
 
-	Res6 uint8 `pkl:"res6"`
-
-	Res7 uint16 `pkl:"res7"`
-
-	Res8 uint32 `pkl:"res8"`
-
 	Res9 float64 `pkl:"res9"`
-
-	Res10 bool `pkl:"res10"`
-
-	Res11 any `pkl:"res11"`
 
 	Res12 float64 `pkl:"res12"`
 
 	Res13 float64 `pkl:"res13"`
+
+	Res4 int32 `pkl:"res4"`
+
+	Res8 uint32 `pkl:"res8"`
+
+	Res3 int16 `pkl:"res3"`
+
+	Res7 uint16 `pkl:"res7"`
+
+	Res2 int8 `pkl:"res2"`
+
+	Res6 uint8 `pkl:"res6"`
+
+	Res10 bool `pkl:"res10"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Primitives
