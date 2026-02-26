@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ function getPackageName(mod: reflect.Module) =
 
       One may be defined by either:
         * Declaring a `@go.Package` annotation on the module.
-        * Adding a `--mapping` flag when using the pkl-gen-go command.
+        * Adding a `--mapping` flag when using the @pkl.go/gen.pkl command.
         * Adding a `packageMappings` clause to generator settings.
       """
     )

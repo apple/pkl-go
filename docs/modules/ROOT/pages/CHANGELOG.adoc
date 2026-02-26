@@ -1,5 +1,35 @@
 = Changelog
 
+[[release-0.13.0]]
+== 0.13.0 (TBD)
+
+[IMPORTANT]
+====
+This release removes the `pkl-gen-go` binary and replaces it with a new xref:main:pkl-cli:index.adoc#cli-tools[`pkl:Command`]-based tool `@pkl.go/gen.pkl` (pr:[]).
+This tool requires Pkl 0.31 or later.
+Consult the xref:ROOT:quickstart.adoc#codegen[codegen] section of the quickstart for more information on how to use the new tool.
+====
+
+=== Changes
+
+* Upgrade to Go 1.26 (pr:https://github.com/apple/pkl-go/pull/208[]).
++
+NOTE: pkl-go now requires Go 1.24.
+* Refactor decoding logic to use switch statements (pr:https://github.com/apple/pkl-go/pull/186[]).
+* Remove unnecessary build constraint (pr:https://github.com/apple/pkl-go/pull/190[]).
+* Optimize map initialization in for improved performance (pr:https://github.com/apple/pkl-go/pull/192[]).
+* Improve error reporting in unreachable decoding paths (pr:https://github.com/apple/pkl-go/pull/205[]).
+
+=== Fixes
+
+* Close channel in after evaluator manager interruption to prevent resource leaks (pr:https://github.com/apple/pkl-go/pull/191[]).
+* Ensure registration order is stable in generated init.pkl.go files (pr:https://github.com/apple/pkl-go/pull/196[]).
+
+=== Contributors ❤️
+
+* https://github.com/HT154[@HT154]
+* https://github.com/kasugamirai[@kasugamirai]
+
 [[release-0.12.1]]
 == 0.12.1 (2025-11-10)
 

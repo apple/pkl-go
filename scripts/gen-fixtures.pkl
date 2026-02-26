@@ -1,0 +1,51 @@
+#!/usr/bin/env -S pkl run --external-module-reader pklgo='go run cmd/internal/read-fixtures/read-fixures.go'
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+extends "pkl:Command"
+
+import "pkl:pklbinary"
+
+import "../codegen/src/gen.pkl"
+
+local collections = import("../pkl/test_fixtures/collections.pkl")
+
+local run = (gen) {
+  options {
+    `base-path` = "github.com/apple/pkl-go"
+    pklInputModules {
+      for (_, mod in import*("../pkl/test_fixtures/*.pkl")) {
+        mod
+      }
+    }
+  }
+}
+
+output {
+  files {
+    ...?run.output.files
+    for (path, mod in import*("pklgo:/pkl/test_fixtures/*.pkl")) {
+      ["pkl/test_fixtures/msgpack/\(path.split("/").last).msgpack"] {
+        bytes = new pklbinary.Renderer {}.renderDocument(mod)
+      }
+    }
+    for (prop in List("res1", "res2", "res9")) {
+      ["pkl/test_fixtures/msgpack/collections.\(prop).msgpack"] {
+        bytes = new pklbinary.Renderer {}.renderValue(collections.getProperty(prop))
+      }
+    }
+  }
+}

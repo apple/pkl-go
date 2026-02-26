@@ -106,15 +106,6 @@ local test: Workflow = new {
             """
           // gofumpt -d shows the diff but is also required to get a non-zero exit when formatting is needed
         }
-        new {
-          name = "Check NOTICE.txt"
-          run =
-            """
-            go install github.com/google/go-licenses/v2@v\(goLicensesVersion)
-            ./scripts/create_notice.sh
-            git diff --exit-code
-            """
-        }
       }
     }
   }
@@ -122,81 +113,6 @@ local test: Workflow = new {
 
 local buildWorkflow: Workflow = (test) {
   jobs {
-    ["build-pkl-gen-go"] {
-      needs {
-        ...test.jobs.keys
-      }
-      `runs-on` = "ubuntu-latest"
-      steps {
-        catalog.`actions/checkout@v6`
-        (catalog.`actions/setup-go@v6`) {
-          with {
-            `go-version` = GO_VERSION
-          }
-        }
-        for (os in List("macos", "linux")) {
-          for (arch in List("amd64", "aarch64")) {
-            new {
-              name = "go build \(os) \(arch)"
-              env {
-                ["GOOS"] = if (os == "linux") os else "darwin"
-                ["GOARCH"] = if (arch == "amd64") arch else "arm64"
-                ["GIT_TAG"] = context.github.refName
-              }
-              run =
-                #"""
-                # strip preceding "v"
-                VERSION="${GIT_TAG:1}"
-
-                go build \
-                  -o out/pkl-gen-go/pkl-gen-go-\#(os)-\#(arch).bin \
-                  -ldflags="-X 'main.Version=$VERSION'" \
-                  cmd/pkl-gen-go/pkl-gen-go.go
-                """#
-            }
-          }
-        }
-        (catalog.`actions/upload-artifact@v5`) {
-          with {
-            name = "pkl-gen-go"
-            // add a wildcard to preserve folder paths in the resulting zip
-            path = "out*/"
-          }
-        }
-      }
-    }
-    ["create-macos-universal-binary"] {
-      needs = "build-pkl-gen-go"
-      `if` = "github.repository_owner == 'apple'"
-      `runs-on` = new Listing {
-        "macos"
-        "self-hosted"
-      }
-      steps {
-        (catalog.`actions/download-artifact@v6`) {
-          name = "pkl-gen-go"
-        }
-        new {
-          // language=bash
-          run =
-            #"""
-            lipo \
-              -create \
-              -output out/pkl-gen-go/pkl-gen-go-macos.bin \
-              out/pkl-gen-go/pkl-gen-go-macos-*.bin
-
-            rm out/pkl-gen-go/pkl-gen-go-macos-*.bin
-            """#
-        }
-        (catalog.`actions/upload-artifact@v5`) {
-          with {
-            name = "pkl-gen-go-2"
-            // add a wildcard to preserve folder paths in the resulting zip
-            path = "out*/"
-          }
-        }
-      }
-    }
     ["build-pkl-package"] {
       needs {
         ...test.jobs.keys
@@ -244,17 +160,11 @@ release = (buildWorkflow) {
       `runs-on` = "ubuntu-latest"
       needs {
         "build-pkl-package"
-        "create-macos-universal-binary"
       }
       permissions {
         contents = "write"
       }
       steps {
-        (catalog.`actions/download-artifact@v6`) {
-          with {
-            name = "pkl-gen-go-2"
-          }
-        }
         (catalog.`actions/download-artifact@v6`) {
           with {
             name = "pkl-package"
@@ -295,10 +205,7 @@ release = (buildWorkflow) {
               --title "${GIT_TAG}" \
               --target "${GIT_SHA}" \
               --verify-tag \
-              --notes "Release notes: https://pkl-lang.org/go/current/CHANGELOG.html#release-${VERSION}" \
-              out/pkl-gen-go/pkl-gen-go-linux-amd64.bin \
-              out/pkl-gen-go/pkl-gen-go-linux-aarch64.bin \
-              out/pkl-gen-go/pkl-gen-go-macos.bin
+              --notes "Release notes: https://pkl-lang.org/go/current/CHANGELOG.html#release-${VERSION}"
             """#
         }
       }

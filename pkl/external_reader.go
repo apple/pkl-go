@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package pkl
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"net/url"
 	"os"
 
@@ -70,6 +71,18 @@ var WithExternalClientStreams = func(requestReader io.Reader, responseWriter io.
 	return func(options *ExternalReaderClientOptions) {
 		options.RequestReader = requestReader
 		options.ResponseWriter = responseWriter
+	}
+}
+
+// WithExternalClientFs sets up a [ModuleReader] and [ResourceReader] to the ExternalReaderClient
+// that associates the provided scheme with files from fs.
+//
+//goland:noinspection GoUnusedGlobalVariable
+var WithExternalClientFs = func(fs fs.FS, scheme string) func(opts *ExternalReaderClientOptions) {
+	return func(opts *ExternalReaderClientOptions) {
+		reader := &fsReader{fs: fs, scheme: scheme}
+		WithExternalClientModuleReader(&fsModuleReader{reader})(opts)
+		WithExternalClientResourceReader(&fsResourceReader{reader})(opts)
 	}
 }
 
