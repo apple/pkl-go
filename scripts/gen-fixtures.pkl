@@ -1,4 +1,4 @@
-#!/usr/bin/env -S pkl run --external-module-reader pklgo='go run cmd/internal/read-fixtures/read-fixures.go'
+#!/usr/bin/env -S pkl run --external-module-reader pklgo=cmd/internal/read-fixtures/read-fixtures.sh
 //===----------------------------------------------------------------------===//
 // Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
