@@ -47,7 +47,7 @@ jobs:
       with:
         name: test-results-xml-test-pkl-0-25-3
         path: test-results/**/*.xml
-  test-pkl-0-30-0:
+  test-pkl-0-31-0:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -60,9 +60,9 @@ jobs:
     - name: Setup Pkl
       id: setup-pkl
       env:
-        PKL_VERSION: 0.30.0
+        PKL_VERSION: 0.31.0
         PKL_FILENAME: pkl
-        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.30.0/pkl-linux-amd64
+        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.31.0/pkl-linux-amd64
       shell: bash
       run: |-
         DIR="$(mktemp -d /tmp/pkl-$PKL_VERSION-XXXXXX)"
@@ -87,7 +87,7 @@ jobs:
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: test-results-xml-test-pkl-0-30-0
+        name: test-results-xml-test-pkl-0-31-0
         path: test-results/**/*.xml
   check-hawkeye:
     name: hawkeye-check
@@ -111,9 +111,9 @@ jobs:
     - name: Setup Pkl
       id: setup-pkl
       env:
-        PKL_VERSION: 0.30.0
+        PKL_VERSION: 0.31.0
         PKL_FILENAME: pkl
-        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.30.0/pkl-linux-amd64
+        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.31.0/pkl-linux-amd64
       shell: bash
       run: |-
         DIR="$(mktemp -d /tmp/pkl-$PKL_VERSION-XXXXXX)"
@@ -152,7 +152,7 @@ jobs:
   build-pkl-package:
     needs:
     - test-pkl-0-25-3
-    - test-pkl-0-30-0
+    - test-pkl-0-31-0
     - check-hawkeye
     - check-format-pkl
     - check-format-go
@@ -164,9 +164,9 @@ jobs:
     - name: Setup Pkl
       id: setup-pkl
       env:
-        PKL_VERSION: 0.30.0
+        PKL_VERSION: 0.31.0
         PKL_FILENAME: pkl
-        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.30.0/pkl-linux-amd64
+        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.31.0/pkl-linux-amd64
       shell: bash
       run: |-
         DIR="$(mktemp -d /tmp/pkl-$PKL_VERSION-XXXXXX)"
@@ -238,7 +238,7 @@ jobs:
     if: '!cancelled()'
     needs:
     - test-pkl-0-25-3
-    - test-pkl-0-30-0
+    - test-pkl-0-31-0
     - check-format-pkl
     - check-format-go
     - build-pkl-package

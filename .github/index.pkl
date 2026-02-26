@@ -24,14 +24,13 @@ import "@pkl.impl.ghactions/steps/SetupPkl.pkl"
 
 local pklVersionFirst = "0.25.3"
 
-local pklVersionLatest = "0.30.0"
+local pklVersionLatest = "0.31.0"
 
 local pklVersions = List(pklVersionFirst, pklVersionLatest)
 
 local GO_VERSION = "1.26"
 local gofumptVersion = "0.9.2"
 local goJunitReportVersion = "2.1.0"
-local goLicensesVersion = "2.0.1"
 
 local test: Workflow = new {
   jobs {
