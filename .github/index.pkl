@@ -153,9 +153,12 @@ testReports {
     "test-results/**/*.xml"
   }
   excludeJobs {
-    "check-hawkeye"
+    Regex("check-.*")
   }
 }
+
+triggerDocsBuild = "release"
+triggerPackageDocsBuild = "release"
 
 prb = test
 
@@ -172,6 +175,7 @@ release = (buildWorkflow) {
       }
       permissions {
         contents = "write"
+        `pull-requests` = "write"
       }
       steps {
         catalog.`actions/checkout@v6`
