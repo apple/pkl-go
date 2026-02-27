@@ -49,7 +49,7 @@ jobs:
       with:
         name: test-results-xml-test-pkl-0-25-3
         path: test-results/**/*.xml
-  test-pkl-0-30-0:
+  test-pkl-0-31-0:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -62,9 +62,9 @@ jobs:
     - name: Setup Pkl
       id: setup-pkl
       env:
-        PKL_VERSION: 0.30.0
+        PKL_VERSION: 0.31.0
         PKL_FILENAME: pkl
-        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.30.0/pkl-linux-amd64
+        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.31.0/pkl-linux-amd64
       shell: bash
       run: |-
         DIR="$(mktemp -d /tmp/pkl-$PKL_VERSION-XXXXXX)"
@@ -89,7 +89,7 @@ jobs:
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: test-results-xml-test-pkl-0-30-0
+        name: test-results-xml-test-pkl-0-31-0
         path: test-results/**/*.xml
   check-hawkeye:
     name: hawkeye-check
@@ -113,9 +113,9 @@ jobs:
     - name: Setup Pkl
       id: setup-pkl
       env:
-        PKL_VERSION: 0.30.0
+        PKL_VERSION: 0.31.0
         PKL_FILENAME: pkl
-        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.30.0/pkl-linux-amd64
+        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.31.0/pkl-linux-amd64
       shell: bash
       run: |-
         DIR="$(mktemp -d /tmp/pkl-$PKL_VERSION-XXXXXX)"
@@ -156,114 +156,10 @@ jobs:
       with:
         name: test-results-xml-check-format-go
         path: test-results/**/*.xml
-  build-pkl-gen-go:
-    needs:
-    - test-pkl-0-25-3
-    - test-pkl-0-30-0
-    - check-hawkeye
-    - check-format-pkl
-    - check-format-go
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      with:
-        persist-credentials: false
-    - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6
-      with:
-        go-version: '1.26'
-    - name: go build macos amd64
-      env:
-        GOOS: darwin
-        GOARCH: amd64
-        GIT_TAG: ${{ github.ref_name }}
-      run: |-
-        # strip preceding "v"
-        VERSION="${GIT_TAG:1}"
-
-        go build \
-          -o out/pkl-gen-go/pkl-gen-go-macos-amd64.bin \
-          -ldflags="-X 'main.Version=$VERSION'" \
-          cmd/pkl-gen-go/pkl-gen-go.go
-    - name: go build macos aarch64
-      env:
-        GOOS: darwin
-        GOARCH: arm64
-        GIT_TAG: ${{ github.ref_name }}
-      run: |-
-        # strip preceding "v"
-        VERSION="${GIT_TAG:1}"
-
-        go build \
-          -o out/pkl-gen-go/pkl-gen-go-macos-aarch64.bin \
-          -ldflags="-X 'main.Version=$VERSION'" \
-          cmd/pkl-gen-go/pkl-gen-go.go
-    - name: go build linux amd64
-      env:
-        GOOS: linux
-        GOARCH: amd64
-        GIT_TAG: ${{ github.ref_name }}
-      run: |-
-        # strip preceding "v"
-        VERSION="${GIT_TAG:1}"
-
-        go build \
-          -o out/pkl-gen-go/pkl-gen-go-linux-amd64.bin \
-          -ldflags="-X 'main.Version=$VERSION'" \
-          cmd/pkl-gen-go/pkl-gen-go.go
-    - name: go build linux aarch64
-      env:
-        GOOS: linux
-        GOARCH: arm64
-        GIT_TAG: ${{ github.ref_name }}
-      run: |-
-        # strip preceding "v"
-        VERSION="${GIT_TAG:1}"
-
-        go build \
-          -o out/pkl-gen-go/pkl-gen-go-linux-aarch64.bin \
-          -ldflags="-X 'main.Version=$VERSION'" \
-          cmd/pkl-gen-go/pkl-gen-go.go
-    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: pkl-gen-go
-        path: out*/
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-build-pkl-gen-go
-        path: test-results/**/*.xml
-  create-macos-universal-binary:
-    if: github.repository_owner == 'apple'
-    needs: build-pkl-gen-go
-    runs-on:
-    - macos
-    - self-hosted
-    steps:
-    - name: pkl-gen-go
-      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
-      with: {}
-    - run: |-
-        lipo \
-          -create \
-          -output out/pkl-gen-go/pkl-gen-go-macos.bin \
-          out/pkl-gen-go/pkl-gen-go-macos-*.bin
-
-        rm out/pkl-gen-go/pkl-gen-go-macos-*.bin
-    - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: pkl-gen-go-2
-        path: out*/
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-create-macos-universal-binary
-        path: test-results/**/*.xml
   build-pkl-package:
     needs:
     - test-pkl-0-25-3
-    - test-pkl-0-30-0
+    - test-pkl-0-31-0
     - check-hawkeye
     - check-format-pkl
     - check-format-go
@@ -275,9 +171,9 @@ jobs:
     - name: Setup Pkl
       id: setup-pkl
       env:
-        PKL_VERSION: 0.30.0
+        PKL_VERSION: 0.31.0
         PKL_FILENAME: pkl
-        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.30.0/pkl-linux-amd64
+        PKL_DOWNLOAD_URL: https://github.com/apple/pkl/releases/download/0.31.0/pkl-linux-amd64
       shell: bash
       run: |-
         DIR="$(mktemp -d /tmp/pkl-$PKL_VERSION-XXXXXX)"
@@ -301,11 +197,9 @@ jobs:
     if: '!cancelled()'
     needs:
     - test-pkl-0-25-3
-    - test-pkl-0-30-0
+    - test-pkl-0-31-0
     - check-format-pkl
     - check-format-go
-    - build-pkl-gen-go
-    - create-macos-universal-binary
     - build-pkl-package
     permissions:
       checks: write

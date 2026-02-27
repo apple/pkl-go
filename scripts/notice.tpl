@@ -1,6 +1,6 @@
-Copyright © 2024 Apple Inc. and the Pkl project authors
+Copyright © 2024-2026 Apple Inc. and the Pkl project authors
 
-The pkl-gen-go binary includes libraries that may be distributed under a different license.
+This product includes libraries that may be distributed under a different license.
 
 {{ range $index, $value := . }}
 ---

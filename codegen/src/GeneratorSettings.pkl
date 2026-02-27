@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,9 @@
 //===----------------------------------------------------------------------===//
 
 /// Settings to configure Go code generation for Pkl files.
-@go.Package { name = "github.com/apple/pkl-go/cmd/pkl-gen-go/generatorsettings" }
 module pkl.golang.GeneratorSettings
 
-import "pkl:reflect"
-
 import "go.pkl"
-
-local version = read("resources/VERSION.txt").text.trim()
 
 /// Mapping of Pkl module names to their respective Go package name.
 ///
@@ -70,17 +65,28 @@ structTags: go.StructTags
 ///
 /// This is an internal setting that is used for testing purposes when developing the code
 /// generator.
-generatorScriptPath: String =
-  "package://pkg.pkl-lang.org/pkl-go/pkl.golang@\(version)#/Generator.pkl"
+@Deprecated {
+  since = "0.13.0"
+  message = "This setting has no effect."
+}
+generatorScriptPath: String = ""
 
 /// URI patterns that determine which modules can be loaded and evaluated.
 ///
 /// This corresponds to the `--allowed-modules` flag in the Pkl CLI.
+@Deprecated {
+  since = "0.13.0"
+  message = "This setting has no effect."
+}
 allowedModules: Listing<String>
 
 /// URI patterns that determine which external resources can be read.
 ///
 /// This corresponds to the `--allowed-resources` flag in the Pkl CLI.
+@Deprecated {
+  since = "0.13.0"
+  message = "This setting has no effect."
+}
 allowedResources: Listing<String>
 
 /// The project directory to control dependency and evaluator settings during codegen.
@@ -89,6 +95,11 @@ allowedResources: Listing<String>
 /// Relative paths are resolved against the enclosing file.
 ///
 /// Paths must use `/` as the path separator.
+@Deprecated {
+  since = "0.13.0"
+  message =
+    "This setting has no effect. The project dir is determined based on CWD or --project-dir on the CLI."
+}
 projectDir: String?
 
 /// The cache directory for storing packages.
@@ -97,10 +108,11 @@ projectDir: String?
 /// Relative paths are resolved against the enclosing file.
 ///
 /// Paths must use `/` as the path separator.
+@Deprecated {
+  since = "0.13.0"
+  message = "This setting has no effect."
+}
 cacheDir: String?
 
 /// Print out the names of the files that will be generated, but skip writing anything to disk.
 dryRun: Boolean = false
-
-/// The URI of this module, used to resolve [projectDir].
-fixed uri: String = reflect.Module(module).uri

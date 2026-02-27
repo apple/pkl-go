@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+# Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ SNIPPET_TEST_DIR="$SCRIPT_DIR/codegen/snippet-tests"
 
 rm -rf "$SNIPPET_TEST_DIR/output"
 
-go run cmd/internal/gen-snippets/gen-snippets.go
+${PKL_EXEC:-pkl} run --project-dir codegen/src "$SCRIPT_DIR/gen-snippets.pkl"
 
 diff=$(git diff codegen/snippet-tests/)
 

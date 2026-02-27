@@ -1,0 +1,73 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+extends "pkl:Command"
+
+import "pkl:reflect"
+import "pkl:test"
+
+import "../codegen/src/gen.pkl"
+
+local const lineNoRegex = Regex(#"(?m)^(( ║ )*)(\d+) \|"#)
+
+local codegenDir =
+  reflect
+    .Module(gen)
+    .uri
+    .replaceAll(Regex("^file:(//)?"), "")
+    .split("/")
+    .dropLast(2)
+    .add("snippet-tests")
+    .join("/")
+
+local run = (gen) {
+  options {
+    `base-path` = "github.com/apple/pkl-go"
+    pklInputModules {
+      for (_, mod in import*("../codegen/snippet-tests/input/*.pkl")) {
+        mod
+      }
+    }
+  }
+  generateFilesForInput = (input, settings) ->
+    let (inputUri = reflect.Module(input).uri)
+      if (!inputUri.endsWith(".err.pkl"))
+        gen.generateFilesForInput.apply(input, settings)
+      else
+        let (filename = inputUri.split("/").last)
+        let (
+          genError =
+            test.catchOrNull(() -> gen.generateFilesForInput.apply(input, settings).toString())
+        )
+          if (genError == null)
+            throw("Expected \(filename) to error, but it did not")
+          else
+            new Mapping<String, FileOutput> {
+              // drop .pkl so it's just .err
+              ["\(options.`output-path` ?? gen.pwd)/codegen/snippet-tests/output/\(filename.dropLast(4))"] {
+                text =
+                  genError
+                    // replace absolute paths for consistency
+                    .replaceAll(codegenDir, "<codegen_dir>")
+                    // replace line numbers with the same amount of the letter "x" (to preserve formatting).
+                    .replaceAllMapped(lineNoRegex, (match) ->
+                      "x".repeat(match.value.length - 2) + " |"
+                    )
+              }
+            }
+}
+
+output = run.output

@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,9 @@ var PklVersion0_29 = MustParseSemver("0.29.0")
 
 //goland:noinspection GoSnakeCaseUsage
 var PklVersion0_30 = MustParseSemver("0.30.0")
+
+//goland:noinspection GoSnakeCaseUsage
+var PklVersion0_31 = MustParseSemver("0.31.0")
 
 type Semver struct {
 	major                 int

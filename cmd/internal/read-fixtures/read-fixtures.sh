@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
-# Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+#!/bin/bash -e
+# Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# trampoline script so that go run ./read-fixtures.go can be executed in a pkl run shebang with no spaces
 
-#cd cmd/pkl-gen-go || exit 1
+cd "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-go-licenses report ./... --template "$SCRIPT_DIR/notice.tpl" --ignore github.com/apple/pkl-go > "$SCRIPT_DIR"/../NOTICE.txt
+exec go run ./read-fixtures.go

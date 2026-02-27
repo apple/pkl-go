@@ -1,0 +1,145 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+@ModuleInfo { minPklVersion = "0.31.0" }
+module pkl.go.gen
+
+extends "pkl:Command"
+
+import "pkl:platform"
+
+import "Generator.pkl"
+import "GeneratorSettings.pkl"
+
+options: Options
+
+local const goModuleRegex = Regex(#"^module\s+(\S+)\b"#)
+
+hidden const pwd =
+  if (platform.current.operatingSystem == "Windows")
+    read("env:PWD").replaceAll("\\", "/")
+  else
+    read("env:PWD")
+
+class Options {
+  /// The output directory to write generated sources into. (default: .)
+  @Flag { completionCandidates = "paths" }
+  `output-path`: String?
+
+  /// Print the names of the files that will be generated, but don't write any files.
+  @BooleanFlag
+  `dry-run`: Boolean?
+
+  /// The path to a generator settings file. (default: ./generator-settings.pkl if present)
+  @Flag {
+    convert = (it) -> new Import { uri = it }
+    transformAll = (values) ->
+      values.firstOrNull
+        ?? if (read?("\(pwd)/generator-settings.pkl") != null)
+          new Import { uri = "./generator-settings.pkl" }
+        else
+          new GeneratorSettings {}
+    completionCandidates = "paths"
+  }
+  `generator-settings`: GeneratorSettings
+
+  /// The Pkl modules to generate as Go.
+  @Argument {
+    convert = (it) -> new Import { uri = it }
+    completionCandidates = "paths"
+  }
+  pklInputModules: Listing<Module>
+
+  /// The mapping of a Pkl module name to a Go package name.
+  mapping: Mapping<String, String>?
+
+  /// The base path used to determine relative output. (default: `module` from ./go.mod)
+  `base-path`: String? =
+    read?("\(pwd)/go.mod")?.text?.ifNonNull((it) ->
+      goModuleRegex.findMatchesIn(it as String).firstOrNull?.groups?.getOrNull(1)?.value
+    )
+}
+
+local effectiveGeneratorSettings: GeneratorSettings = (options.`generator-settings`) {
+  basePath = options.`base-path` ?? super.basePath
+  dryRun = options.`dry-run` ?? super.dryRun
+  packageMappings = options.mapping ?? super.packageMappings
+}
+
+local basePath =
+  let (bp = effectiveGeneratorSettings.basePath)
+    if (bp.isEmpty || bp.endsWith("/")) bp else bp + "/"
+
+// inputs can overlap if they import the same files, so use List#toMap() instead of building a Mapping
+local rawOutputFiles: Listing<Pair<String, FileOutput?>> = new {
+  for (input in options.pklInputModules) {
+    for (path, file in generateFilesForInput.apply(input, effectiveGeneratorSettings)) {
+      Pair(path, file)
+    }
+  }
+}
+
+hidden generateFilesForInput: (Module, GeneratorSettings) -> Mapping<String, FileOutput?> = (
+  input,
+  settings
+) ->
+  let (
+    files =
+      new Generator {
+        moduleToGenerate = input
+        codegenSettings = settings
+      }
+        .output
+        .files!!
+  )
+    new Mapping {
+      for (path, file in files) {
+        when (basePath.isEmpty) {
+          ["\(options.`output-path` ?? pwd)/\(path)"] = file
+        } else {
+          when (path.startsWith(basePath)) {
+            ["\(options.`output-path` ?? pwd)/\(path.drop(basePath.length))"] = file
+          } else {
+            ["\(options.`output-path` ?? pwd)/\(path)"] = null
+          }
+        }
+      }
+    }
+
+local outputFiles: Map<String, FileOutput> =
+  rawOutputFiles
+    .toList()
+    .filter((it) ->
+      if (it.value != null)
+        true
+      else
+        let (
+          msg =
+            "Skipping codegen for file \(it.key) because it does not exist in base path \(basePath)"
+        )
+        let (_ = trace(msg))
+          false
+    )
+    .toMap((it) -> it.key, (it) -> it.value!!)
+
+output {
+  when (effectiveGeneratorSettings.dryRun) {
+    text =
+      "Dry run; printing filenames but not writing files to disk\n" + outputFiles.keys.join("\n")
+  } else {
+    files = outputFiles.toMapping()
+  }
+}
