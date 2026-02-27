@@ -191,7 +191,6 @@ release = (buildWorkflow) {
           name = "gh release"
           env {
             ["GIT_TAG"] = context.github.refName
-            ["GIT_SHA"] = context.github.sha
             ["GH_REPO"] = context.github.repository
             ["GH_TOKEN"] = context.github.token
           }
@@ -211,7 +210,7 @@ release = (buildWorkflow) {
             fi
 
             echo "Creating release for Pkl package"
-            GH_DEBUG=api gh release create "pkl.golang@${VERSION}" \
+            gh release create "pkl.golang@${VERSION}" \
               --title "pkl.golang@${VERSION}" \
               --verify-tag \
               --notes "This holds the release assets for the pkl.golang Pkl package" \
