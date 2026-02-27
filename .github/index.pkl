@@ -166,6 +166,9 @@ main = buildWorkflow
 
 build = buildWorkflow
 
+releaseIgnoreTags {
+  "pkl.golang@**"
+}
 release = (buildWorkflow) {
   jobs {
     ["do-release"] {

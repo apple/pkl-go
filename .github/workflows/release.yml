@@ -4,8 +4,8 @@ name: Release
   push:
     branches-ignore:
     - '**'
-    tags:
-    - '**'
+    tags-ignore:
+    - pkl.golang@**
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
