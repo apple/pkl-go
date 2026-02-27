@@ -1,7 +1,7 @@
 = Changelog
 
 [[release-0.13.0]]
-== 0.13.0 (TBD)
+== 0.13.0 (2026-02-27)
 
 [IMPORTANT]
 ====
