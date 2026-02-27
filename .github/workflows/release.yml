@@ -224,8 +224,7 @@ jobs:
         fi
 
         echo "Creating release for Pkl package"
-        gh auth status
-        gh release create "pkl.golang@${VERSION}" \
+        GH_DEBUG=api gh release create "pkl.golang@${VERSION}" \
           --title "pkl.golang@${VERSION}" \
           --target "${GIT_SHA}" \
           --verify-tag \
