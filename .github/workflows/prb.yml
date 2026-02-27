@@ -122,13 +122,6 @@ jobs:
         echo "pkl_exec=$PKL_EXEC" >> "$GITHUB_OUTPUT"
     - name: Check Go Formatting
       run: pkl format --grammar-version 1 --diff-name-only .
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-check-format-pkl
-        path: test-results/**/*.xml
-        if-no-files-found: ignore
   check-format-go:
     runs-on: ubuntu-latest
     steps:
@@ -147,13 +140,6 @@ jobs:
         go install github.com/google/go-licenses/v2@v2.0.1
         ./scripts/create_notice.sh
         git diff --exit-code
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-check-format-go
-        path: test-results/**/*.xml
-        if-no-files-found: ignore
   upload-event-file:
     runs-on: ubuntu-latest
     steps:
