@@ -48,7 +48,7 @@ class Options {
     convert = (it) -> new Import { uri = it }
     transformAll = (values) ->
       values.firstOrNull
-        ?? if (read?("\(pwd)/generator-settings.pkl") != null)
+        ?? if (read?("file://\(pwd)/generator-settings.pkl") != null)
           new Import { uri = "./generator-settings.pkl" }
         else
           new GeneratorSettings {}
