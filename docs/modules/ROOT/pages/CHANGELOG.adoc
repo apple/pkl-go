@@ -1,5 +1,16 @@
 = Changelog
 
+[[release-0.13.1]]
+== 0.13.1 (2026-02-27)
+
+=== Fixes
+
+* Fix check for presence of generator-settings.pkl in current working directory (pr:https://github.com/apple/pkl-go/pull/214[]).
+
+=== Contributors ❤️
+
+* https://github.com/HT154[@HT154]
+
 [[release-0.13.0]]
 == 0.13.0 (2026-02-27)
 
