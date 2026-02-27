@@ -207,8 +207,8 @@ jobs:
     - name: gh release
       env:
         GIT_TAG: ${{ github.ref_name }}
-        GH_REPO: ${{ github.repository }}
         GIT_SHA: ${{ github.sha }}
+        GH_REPO: ${{ github.repository }}
         GH_TOKEN: ${{ github.token }}
       run: |-
         # strip preceding "v"
@@ -224,9 +224,11 @@ jobs:
         fi
 
         echo "Creating release for Pkl package"
+        gh auth status
         gh release create "pkl.golang@${VERSION}" \
           --title "pkl.golang@${VERSION}" \
           --target "${GIT_SHA}" \
+          --verify-tag \
           --notes "This holds the release assets for the pkl.golang Pkl package" \
           out/pkl-package/*
 
