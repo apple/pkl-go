@@ -272,18 +272,20 @@ jobs:
     - name: Trigger pkl-lang.org build
       env:
         GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        SOURCE_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |-
         gh workflow run \
           --repo apple/pkl-lang.org \
           --ref main \
-          --field source_run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+          --field source_run="${SOURCE_RUN}" \
           main.yml
     - name: Trigger pkl-package-docs build
       env:
         GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        SOURCE_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |-
         gh workflow run \
           --repo apple/pkl-package-docs \
           --ref main \
-          --field source_run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+          --field source_run="${SOURCE_RUN}" \
           main.yml
