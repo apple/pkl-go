@@ -1,5 +1,16 @@
 = Changelog
 
+[[release-0.13.2]]
+== 0.13.2 (2026-03-03)
+
+=== Fixes
+
+* Fix loading `go.mod` to automatically determine `--base-path` (pr:https://github.com/apple/pkl-go/pull/218[]).
+
+=== Contributors ❤️
+
+* https://github.com/HT154[@HT154]
+
 [[release-0.13.1]]
 == 0.13.1 (2026-02-27)
 
