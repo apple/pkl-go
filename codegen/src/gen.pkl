@@ -68,7 +68,7 @@ class Options {
 
   /// The base path used to determine relative output. (default: `module` from ./go.mod)
   `base-path`: String? =
-    read?("\(pwd)/go.mod")?.text?.ifNonNull((it) ->
+    read?("file://\(pwd)/go.mod")?.text?.ifNonNull((it) ->
       goModuleRegex.findMatchesIn(it as String).firstOrNull?.groups?.getOrNull(1)?.value
     )
 }
