@@ -16,7 +16,7 @@
 
 [IMPORTANT]
 ====
-This release removes the `pkl-gen-go` binary and replaces it with a new xref:main:pkl-cli:index.adoc#cli-tools[`pkl:Command`]-based tool `@pkl.go/gen.pkl` (pr:https://github.com/apple/pkl-go/pull/209[]).
+This release removes the `pkl-gen-go` binary and replaces it with a new xref:main:pkl-cli:index.adoc#cli-tools[`pkl:Command`]-based tool `@pkl.golang/gen.pkl` (pr:https://github.com/apple/pkl-go/pull/209[]).
 This tool requires Pkl 0.31 or later.
 Consult the xref:ROOT:quickstart.adoc#codegen[codegen] section of the quickstart for more information on how to use the new tool.
 ====
