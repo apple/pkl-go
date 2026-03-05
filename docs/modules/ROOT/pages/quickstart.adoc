@@ -45,9 +45,9 @@ Code generation is done via the `gen.pkl` CLI tool inside the `pkl.go` package.
 
 In our example, Go sources can be generated using the following command:
 
-[source,bash]
+[source,bash,subs="+attributes"]
 ----
-pkl run package://pkg.pkl-lang.org/pkl-go/pkl.go@{version}#/gen.pkl pkl/AppConfig.pkl --base-path github.com/myorg/myteam
+pkl run package://pkg.pkl-lang.org/pkl-go/pkl.golang@{version}#/gen.pkl pkl/AppConfig.pkl --base-path github.com/myorg/myteam
 ----
 
 The `--base-path` causes the code generator to place the Go source files in a relative path.
@@ -62,14 +62,14 @@ If using xref:main:language-reference:index.adoc#projects[a `PklProject`] to man
 
 [source,bash]
 ----
-pkl run @pkl.go/gen.pkl pkl/AppConfig.pkl --base-path github.com/myorg/myteam
+pkl run @pkl.golang/gen.pkl pkl/AppConfig.pkl --base-path github.com/myorg/myteam
 ----
 
 For more details on how to control code generation, consult the CLI help:
 
 [source,bash]
 ----
-pkl run @pkl.go/gen.pkl --help
+pkl run @pkl.golang/gen.pkl --help
 ----
 
 == 4. Evaluate Pkl configuration data in Go

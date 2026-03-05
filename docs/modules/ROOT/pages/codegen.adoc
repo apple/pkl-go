@@ -6,14 +6,14 @@ Pkl code may turn into Go code by way of code generation.
 
 == Running code generation
 
-Code generation is done through the `@pkl.go/gen.pkl` tool.
+Code generation is done through the `@pkl.golang/gen.pkl` tool.
 For usage instructions, consult the xref:ROOT:quickstart.adoc#codegen[codegen] section of the quickstart.
 
 Go code may be generated from Pkl:
 
 [source,bash]
 ----
-pkl run @pkl.go/gen.pkl pkl/AppConfig.pkl
+pkl run @pkl.golang/gen.pkl pkl/AppConfig.pkl
 ----
 
 == Configuring the code generator
@@ -37,7 +37,7 @@ as a filter to skip codegen for any modules that are external to the project.
 
 For example, if a Pkl module corresponds to Go package `github.com/myorg/myproject/appconfig`, and the base path is `github.com/myorg/myproject`, the generated files are placed into output directory `appconfig/`.
 
-If a base path is not explicitly set, `@pkl.go/gen.pkl` will also look for a `go.mod` file in the current working directory and use the Go module name as the base path.
+If a base path is not explicitly set, `@pkl.golang/gen.pkl` will also look for a `go.mod` file in the current working directory and use the Go module name as the base path.
 
 If the base path cannot be determined, the full package path is written to the current working directory.
 
