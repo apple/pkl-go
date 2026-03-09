@@ -112,6 +112,61 @@ func TestDecoder_Decode(t *testing.T) {
 			want:        reflect.ValueOf(int64(0)),
 			expectedErr: nil,
 		},
+		"should successfully decode a primitive uint type": {
+			typ: reflect.TypeOf(uint(0)),
+			data: func(t *testing.T) []byte {
+				var buf bytes.Buffer
+				enc := msgpack.NewEncoder(&buf)
+				assert.NoError(t, enc.EncodeUint(uint64(0)))
+				return buf.Bytes()
+			},
+			want:        reflect.ValueOf(uint(0)),
+			expectedErr: nil,
+		},
+		"should successfully decode a primitive uint8 type": {
+			typ: reflect.TypeOf(uint8(0)),
+			data: func(t *testing.T) []byte {
+				var buf bytes.Buffer
+				enc := msgpack.NewEncoder(&buf)
+				assert.NoError(t, enc.EncodeUint8(uint8(0)))
+				return buf.Bytes()
+			},
+			want:        reflect.ValueOf(uint8(0)),
+			expectedErr: nil,
+		},
+		"should successfully decode a primitive uint16 type": {
+			typ: reflect.TypeOf(uint16(0)),
+			data: func(t *testing.T) []byte {
+				var buf bytes.Buffer
+				enc := msgpack.NewEncoder(&buf)
+				assert.NoError(t, enc.EncodeUint16(uint16(0)))
+				return buf.Bytes()
+			},
+			want:        reflect.ValueOf(uint16(0)),
+			expectedErr: nil,
+		},
+		"should successfully decode a primitive uint32 type": {
+			typ: reflect.TypeOf(uint32(0)),
+			data: func(t *testing.T) []byte {
+				var buf bytes.Buffer
+				enc := msgpack.NewEncoder(&buf)
+				assert.NoError(t, enc.EncodeUint32(uint32(0)))
+				return buf.Bytes()
+			},
+			want:        reflect.ValueOf(uint32(0)),
+			expectedErr: nil,
+		},
+		"should successfully decode a primitive uint64 type": {
+			typ: reflect.TypeOf(uint64(0)),
+			data: func(t *testing.T) []byte {
+				var buf bytes.Buffer
+				enc := msgpack.NewEncoder(&buf)
+				assert.NoError(t, enc.EncodeUint64(uint64(0)))
+				return buf.Bytes()
+			},
+			want:        reflect.ValueOf(uint64(0)),
+			expectedErr: nil,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
