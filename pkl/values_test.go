@@ -17,7 +17,9 @@
 package pkl
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -94,4 +96,79 @@ func TestDataSize_ConvertToUnit(t *testing.T) {
 			assert.Equal(t, test.expected, got)
 		})
 	}
+}
+
+func TestDuration_String(t *testing.T) {
+	tests := map[string]struct {
+		d    Duration
+		want string
+	}{
+		"should successfully return valid seconds string": {
+			d: Duration{
+				Unit: Second,
+			},
+			want: "s",
+		},
+		"should successfully return valid milliseconds string": {
+			d: Duration{
+				Unit: Millisecond,
+			},
+			want: "ms",
+		},
+		"should successfully return valid nanoseconds string": {
+			d: Duration{
+				Unit: Nanosecond,
+			},
+			want: "ns",
+		},
+		"should successfully return valid microseconds string": {
+			d: Duration{
+				Unit: Microsecond,
+			},
+			want: "us",
+		},
+		"should successfully return valid minute string": {
+			d: Duration{
+				Unit: Minute,
+			},
+			want: "min",
+		},
+		"should successfully return valid hour string": {
+			d: Duration{
+				Unit: Hour,
+			},
+			want: "h",
+		},
+		"should successfully return valid day string": {
+			d: Duration{
+				Unit: Day,
+			},
+			want: "d",
+		},
+		"should return invalid string when provided unknown DurationUnit": {
+			d: Duration{
+				Unit: DurationUnit(-1),
+			},
+			want: "<invalid>",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tc.want, fmt.Sprintf("%s", tc.d.Unit.String()))
+		})
+	}
+}
+
+func TestDuration_GoDuration(t *testing.T) {
+	t.Run("should successfully convert to GoDuration in seconds", func(t *testing.T) {
+		t.Parallel()
+		d := Duration{
+			Value: 1,
+			Unit:  Second,
+		}
+		assert.Equal(t, d.GoDuration(), 1*time.Second)
+	})
 }
