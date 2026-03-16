@@ -31,7 +31,6 @@ func (w writerMock) Write(_ []byte) (n int, err error) {
 }
 
 func TestLogger(t *testing.T) {
-
 	tests := map[string]struct {
 		writerMock io.Writer
 		msg        string
