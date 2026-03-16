@@ -53,21 +53,21 @@ type ExternalReaderClientOptions struct {
 }
 
 // WithExternalClientResourceReader adds an additional [ResourceReader] to the ExternalReaderClient.
-func WithExternalClientResourceReader(reader ResourceReader) func(*ExternalReaderClientOptions) {
+var WithExternalClientResourceReader = func(reader ResourceReader) func(*ExternalReaderClientOptions) {
 	return func(options *ExternalReaderClientOptions) {
 		options.ResourceReaders = append(options.ResourceReaders, reader)
 	}
 }
 
 // WithExternalClientModuleReader adds an additional [ModuleReader] to the ExternalReaderClient.
-func WithExternalClientModuleReader(reader ModuleReader) func(*ExternalReaderClientOptions) {
+var WithExternalClientModuleReader = func(reader ModuleReader) func(*ExternalReaderClientOptions) {
 	return func(options *ExternalReaderClientOptions) {
 		options.ModuleReaders = append(options.ModuleReaders, reader)
 	}
 }
 
 // WithExternalClientStreams sets the input and output interfaces the ExternalReaderClient will use to communicate with the Pkl evaluator.
-func WithExternalClientStreams(requestReader io.Reader, responseWriter io.Writer) func(*ExternalReaderClientOptions) {
+var WithExternalClientStreams = func(requestReader io.Reader, responseWriter io.Writer) func(*ExternalReaderClientOptions) {
 	return func(options *ExternalReaderClientOptions) {
 		options.RequestReader = requestReader
 		options.ResponseWriter = responseWriter
@@ -78,7 +78,7 @@ func WithExternalClientStreams(requestReader io.Reader, responseWriter io.Writer
 // that associates the provided scheme with files from fs.
 //
 //goland:noinspection GoUnusedGlobalVariable
-func WithExternalClientFs(fs fs.FS, scheme string) func(opts *ExternalReaderClientOptions) {
+var WithExternalClientFs = func(fs fs.FS, scheme string) func(opts *ExternalReaderClientOptions) {
 	return func(opts *ExternalReaderClientOptions) {
 		reader := &fsReader{fs: fs, scheme: scheme}
 		WithExternalClientModuleReader(&fsModuleReader{reader})(opts)
