@@ -61,7 +61,7 @@ var _ Logger = (*logger)(nil)
 // StderrLogger is a logger that writes to standard error.
 //
 //goland:noinspection GoUnusedGlobalVariable
-var StderrLogger = NewLogger(os.Stdout)
+var StderrLogger = NewLogger(os.Stderr)
 
 // NoopLogger is a logger that discards all messages.
 var NoopLogger = NewLogger(io.Discard)
