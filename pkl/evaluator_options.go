@@ -458,7 +458,7 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 		if evaluatorSettings.Http != nil {
 			opts.Http = &Http{}
 			if evaluatorSettings.Http.Proxy != nil {
-				opts.Http.Proxy = &Proxy{NoProxy: opts.Http.Proxy.NoProxy}
+				opts.Http.Proxy = &Proxy{NoProxy: evaluatorSettings.Http.Proxy.NoProxy}
 				if evaluatorSettings.Http.Proxy.Address != nil {
 					opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
 				}
