@@ -457,12 +457,15 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 		opts.RootDir = evaluatorSettings.RootDir
 		if evaluatorSettings.Http != nil {
 			opts.Http = &Http{}
-			if evaluatorSettings.Http.Proxy != nil {
-				opts.Http.Proxy = &Proxy{NoProxy: evaluatorSettings.Http.Proxy.NoProxy}
-				if evaluatorSettings.Http.Proxy.Address != nil {
-					opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
-				}
+		if evaluatorSettings.Http.Proxy != nil {
+			opts.Http.Proxy = &Proxy{}
+			if evaluatorSettings.Http.Proxy.NoProxy != nil {
+				opts.Http.Proxy.NoProxy = *evaluatorSettings.Http.Proxy.NoProxy
 			}
+			if evaluatorSettings.Http.Proxy.Address != nil {
+				opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
+			}
+		}
 			if evaluatorSettings.Http.Rewrites != nil {
 				opts.Http.Rewrites = *evaluatorSettings.Http.Rewrites
 			}
