@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package pkl_test
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"testing"
 
 	"github.com/apple/pkl-go/pkl"
@@ -482,4 +483,19 @@ func TestUnmarshal_Types_Pre_030(t *testing.T) {
 	assert.NoError(t, pkl.Unmarshal(typesPre030Input, &res))
 
 	assert.Equal(t, types.Types{}, res)
+}
+
+func TestUnmarshal_NonPointerTypes(t *testing.T) {
+	var res types.Types
+	err := pkl.Unmarshal([]byte{}, res)
+	assert.NotNil(t, err)
+	assert.EqualError(t, fmt.Errorf("cannot unmarshal non-pointer. Got kind: struct"), err.Error())
+}
+
+func TestUnmarshal_Nil(t *testing.T) {
+	var s *string
+	err := pkl.Unmarshal([]byte{}, s)
+	assert.NotNil(t, err)
+
+	assert.EqualError(t, fmt.Errorf("cannot unmarshal into nil"), err.Error())
 }
