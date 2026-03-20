@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const externalReaderTest1 = `
+const (
+	externalReaderTest1 = `
 import "pkl:test"
 
 fib5 = read("fib:5").text.toInt()
@@ -37,6 +38,13 @@ fibErrA = test.catch(() -> read("fib:%20"))
 fibErrB = test.catch(() -> read("fib:abc"))
 fibErrC = test.catch(() -> read("fib:-10"))
 `
+	externalReaderTest2 = `
+import "pkl:test"
+
+fibNullable0 = read?("fib:0")?.text
+fibErrNotFound = test.catchOrNull(() -> read("fib:0").text)
+`
+)
 
 func TestExternalReaderE2E(t *testing.T) {
 	manager := NewEvaluatorManager()
@@ -75,8 +83,53 @@ func TestExternalReaderE2E(t *testing.T) {
 	assert.Equal(t, output, `fib5 = 5
 fib10 = 55
 fib100 = 6765
-fibErrA = "I/O error reading resource `+"`fib:%20`"+`. IOException: input uri must be in format fib:<positive integer>: non-positive value"
-fibErrB = "I/O error reading resource `+"`fib:abc`"+`. IOException: input uri must be in format fib:<positive integer>: non-positive value"
+fibErrA = "I/O error reading resource `+"`fib:%20`"+`. IOException: input uri must be in format fib:<positive integer>: strconv.Atoi: parsing \"%20\": invalid syntax"
+fibErrB = "I/O error reading resource `+"`fib:abc`"+`. IOException: input uri must be in format fib:<positive integer>: strconv.Atoi: parsing \"abc\": invalid syntax"
 fibErrC = "I/O error reading resource `+"`fib:-10`"+`. IOException: input uri must be in format fib:<positive integer>: non-positive value"
 `)
+}
+
+func TestExternalReaderNotFound(t *testing.T) {
+	manager := NewEvaluatorManager()
+	defer func() { _ = manager.Close() }()
+	version, err := manager.(*evaluatorManager).getVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if internal.PklVersion0_27.IsGreaterThan(version) {
+		t.SkipNow()
+	}
+
+	tempDir := t.TempDir()
+	writeFile(t, tempDir+"/test.pkl", externalReaderTest2)
+
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("can't find caller")
+	}
+	projectRoot := filepath.Join(filepath.Dir(filename), "../cmd/internal/test-external-reader/test-external-reader.go")
+
+	evaluator, err := manager.NewEvaluator(
+		context.Background(),
+		PreconfiguredOptions,
+		WithExternalResourceReader("fib", ExternalReader{
+			Executable: "go",
+			Arguments:  []string{"run", projectRoot},
+		}),
+	)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	output, err := evaluator.EvaluateOutputText(context.Background(), FileSource(tempDir+"/test.pkl"))
+	assert.NoError(t, err)
+	if internal.PklVersion0_31_1.IsGreaterThan(version) {
+		assert.Equal(t, output, `fibNullable0 = ""
+fibErrNotFound = null
+`)
+	} else {
+		assert.Equal(t, output, `fibNullable0 = null
+fibErrNotFound = "Cannot find resource `+"`fib:0`"+`."
+`)
+	}
 }
