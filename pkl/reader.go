@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package pkl
 
 import (
+	"errors"
 	"net/url"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -84,6 +85,12 @@ func NewPathElement(name string, isDirectory bool) PathElement {
 	return &pathElement{name: name, isDirectory: isDirectory}
 }
 
+// ResourceNotFound may be returned as an error by implementers of [ResourceReader.Read] to indicate
+// that no resource was found for the provided URI.
+//
+// This requires Pkl 0.31.1. Prior Pkl versions will interpret this as an empty resource.
+var ResourceNotFound = errors.New("resource not found")
+
 // ResourceReader is a custom resource reader for Pkl.
 //
 // A ResourceReader registers the scheme that it is responsible for reading via Reader.Scheme. For
@@ -105,6 +112,10 @@ type ResourceReader interface {
 	Reader
 
 	// Read reads the byte contents of this resource.
+	//
+	// Implementations may return [ResourceNotFound] as an error to indicate that no resource was
+	// found for the provided `url`.
+	// This requires Pkl 0.31.1. Prior Pkl versions will interpret this as an empty resource.
 	Read(url url.URL) ([]byte, error)
 }
 
