@@ -17,6 +17,7 @@
 package pkl
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -258,9 +259,13 @@ func (r *externalReaderClient) handleReadResource(msg *msgapi.ReadResource) {
 		return
 	}
 	contents, err := reader.Read(*u)
-	response.Contents = contents
-	if err != nil {
+	switch {
+	case errors.Is(err, &ResourceNotFound{}):
+		break
+	case err != nil:
 		response.Error = err.Error()
+	default:
+		response.Contents = &contents
 	}
 	r.out <- response
 }

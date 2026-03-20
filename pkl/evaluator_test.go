@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,6 +88,8 @@ func getOpenPort() int {
 
 func TestEvaluator(t *testing.T) {
 	manager := NewEvaluatorManager()
+	version, err := manager.(*evaluatorManager).getVersion()
+	assert.NoError(t, err)
 
 	projectDir := setupProject(t)
 
@@ -213,19 +215,42 @@ bar: Int = 5
 
 	t.Run("custom resource reader", func(t *testing.T) {
 		reader := &virtualResourceReader{
-			scheme: "flintstone",
+			scheme: "bird",
 			read: func(u url.URL) ([]byte, error) {
-				return []byte("Fred Flintstone"), nil
+				return []byte("caw"), nil
 			},
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read("flintstone:fred").text`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read("bird:crow").text`))
 			assert.NoError(t, err)
-			assert.Equal(t, "foo = \"Fred Flintstone\"\n", out)
+			assert.Equal(t, "foo = \"caw\"\n", out)
 			assert.NoError(t, ev.Close())
 		}
 	})
+
+	// this test NPEs in pkl server before 0.27.0
+	if !version.IsLessThan(internal.PklVersion0_27) {
+		t.Run("custom resource not found", func(t *testing.T) {
+			reader := &virtualResourceReader{
+				scheme: "bird",
+				read: func(u url.URL) ([]byte, error) {
+					return nil, &ResourceNotFound{}
+				},
+			}
+			ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
+			if assert.NoError(t, err) {
+				out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read?("bird:crow")?.text`))
+				assert.NoError(t, err)
+				if internal.PklVersion0_31_1.IsGreaterThan(version) {
+					assert.Equal(t, "foo = \"\"\n", out)
+				} else {
+					assert.Equal(t, "foo = null\n", out)
+				}
+				assert.NoError(t, ev.Close())
+			}
+		})
+	}
 
 	t.Run("custom resource reader with scheme containing regex control characters", func(t *testing.T) {
 		reader := &virtualResourceReader{
@@ -245,14 +270,14 @@ bar: Int = 5
 
 	t.Run("custom resource reader error", func(t *testing.T) {
 		reader := &virtualResourceReader{
-			scheme: "flintstone",
+			scheme: "bird",
 			read: func(url url.URL) ([]byte, error) {
 				return nil, fmt.Errorf("cannot find resource %s", &url)
 			},
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read("flintstone:fred").text`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`foo = read("bird:crow").text`))
 			assert.Empty(t, out)
 			assert.Error(t, err)
 			assert.IsType(t, &EvalError{}, err)
@@ -262,45 +287,45 @@ bar: Int = 5
 
 	t.Run("custom resource reader: globbing", func(t *testing.T) {
 		reader := &virtualResourceReader{
-			scheme: "flintstone",
+			scheme: "bird",
 			read: func(u url.URL) ([]byte, error) {
 				switch u.Opaque {
-				case "barney":
-					return []byte("gumble"), nil
-				case "wilma":
-					return []byte("wilma"), nil
+				case "pigeon":
+					return []byte("coo"), nil
+				case "eagle":
+					return []byte("screech"), nil
 				default:
-					return []byte("something else"), nil
+					return []byte("caw"), nil
 				}
 			},
 			listElements: func(u url.URL) ([]PathElement, error) {
 				return []PathElement{
-					NewPathElement("barney", false),
-					NewPathElement("wilma", false),
-					NewPathElement("fred", false),
+					NewPathElement("pigeon", false),
+					NewPathElement("eagle", false),
+					NewPathElement("crow", false),
 				}, nil
 			},
 			isGlobbable: true,
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`flintstones = read*("flintstone:*")`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`birds = read*("bird:*")`))
 			assert.Nil(t, err)
-			assert.Equal(t, `flintstones {
-  ["flintstone:barney"] {
-    uri = "flintstone:barney"
-    text = "gumble"
-    base64 = "Z3VtYmxl"
+			assert.Equal(t, `birds {
+  ["bird:crow"] {
+    uri = "bird:crow"
+    text = "caw"
+    base64 = "Y2F3"
   }
-  ["flintstone:fred"] {
-    uri = "flintstone:fred"
-    text = "something else"
-    base64 = "c29tZXRoaW5nIGVsc2U="
+  ["bird:eagle"] {
+    uri = "bird:eagle"
+    text = "screech"
+    base64 = "c2NyZWVjaA=="
   }
-  ["flintstone:wilma"] {
-    uri = "flintstone:wilma"
-    text = "wilma"
-    base64 = "d2lsbWE="
+  ["bird:pigeon"] {
+    uri = "bird:pigeon"
+    text = "coo"
+    base64 = "Y29v"
   }
 }
 `, out)
@@ -310,7 +335,7 @@ bar: Int = 5
 
 	t.Run("custom resource reader: glob error", func(t *testing.T) {
 		reader := &virtualResourceReader{
-			scheme: "flintstone",
+			scheme: "bird",
 			read: func(u url.URL) ([]byte, error) {
 				return nil, nil
 			},
@@ -321,7 +346,7 @@ bar: Int = 5
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`flintstones = read*("flintstone:*")`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`birds = read*("bird:*")`))
 			assert.Empty(t, out)
 			assert.Error(t, err, "IOException: something went wrong")
 			assert.Zero(t, out)
@@ -331,14 +356,14 @@ bar: Int = 5
 
 	t.Run("custom module reader", func(t *testing.T) {
 		reader := &virtualModuleReader{
-			scheme: "flintstone",
+			scheme: "bird",
 			read: func(u url.URL) (string, error) {
 				return `foo = 1`, nil
 			},
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`result = import("flintstone:fred").foo`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`result = import("bird:crow").foo`))
 			assert.NoError(t, err)
 			assert.Equal(t, "result = 1\n", out)
 			assert.NoError(t, ev.Close())
@@ -347,24 +372,24 @@ bar: Int = 5
 
 	t.Run("custom module reader error", func(t *testing.T) {
 		reader := &virtualModuleReader{
-			scheme: "flintstone",
+			scheme: "bird",
 			read: func(u url.URL) (string, error) {
 				return "", fmt.Errorf("no idea where %s is", &u)
 			},
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`result = import("flintstone:fred").foo`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`result = import("bird:crow").foo`))
 			assert.Empty(t, out)
 			assert.Error(t, err)
-			assert.Contains(t, err.Error(), "no idea where flintstone:fred is")
+			assert.Contains(t, err.Error(), "no idea where bird:crow is")
 			assert.NoError(t, ev.Close())
 		}
 	})
 
 	t.Run("custom module reader: triple-dot imports", func(t *testing.T) {
 		reader := &virtualModuleReader{
-			scheme:              "flintstone",
+			scheme:              "bird",
 			isGlobbable:         true,
 			hasHierarchicalUris: true,
 			isLocal:             true,
@@ -384,7 +409,7 @@ bar: Int = 5
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), UriSource("flintstone:/foo/bar/baz.pkl"))
+			out, err := ev.EvaluateOutputText(context.Background(), UriSource("bird:/foo/bar/baz.pkl"))
 			assert.NoError(t, err)
 			assert.Equal(t, `res {
   bar = 1
@@ -395,7 +420,7 @@ bar: Int = 5
 
 	t.Run("custom module reader: globbing", func(t *testing.T) {
 		reader := &virtualModuleReader{
-			scheme:              "flintstone",
+			scheme:              "bird",
 			isGlobbable:         true,
 			hasHierarchicalUris: true,
 			read: func(u url.URL) (string, error) {
@@ -419,13 +444,13 @@ bar: Int = 5
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`res = import*("flintstone:/**.pkl")`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`res = import*("bird:/**.pkl")`))
 			assert.NoError(t, err)
 			assert.Equal(t, `res {
-  ["flintstone:/bar.pkl"] {
+  ["bird:/bar.pkl"] {
     res = 2
   }
-  ["flintstone:/foo.pkl"] {
+  ["bird:/foo.pkl"] {
     res = 1
   }
 }
@@ -435,7 +460,7 @@ bar: Int = 5
 
 	t.Run("custom module reader: glob error", func(t *testing.T) {
 		reader := &virtualModuleReader{
-			scheme:              "flintstone",
+			scheme:              "bird",
 			isGlobbable:         true,
 			hasHierarchicalUris: true,
 			read: func(u url.URL) (string, error) {
@@ -448,7 +473,7 @@ bar: Int = 5
 		}
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithModuleReader(reader))
 		if assert.NoError(t, err) {
-			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`res = import*("flintstone:/**.pkl")`))
+			out, err := ev.EvaluateOutputText(context.Background(), TextSource(`res = import*("bird:/**.pkl")`))
 			assert.Error(t, err)
 			assert.Zero(t, out)
 		}
@@ -459,24 +484,24 @@ bar: Int = 5
 		if assert.NoError(t, err) {
 			out, err := ev.EvaluateOutputText(context.Background(), UriSource("testfs:/test_fixtures/testfs/person.pkl"))
 			assert.NoError(t, err)
-			assert.Equal(t, `name = "Barney"
-age = 43
+			assert.Equal(t, `name = "Pidgeon"
+age = 2
 `, out)
 			out, err = ev.EvaluateOutputText(context.Background(), UriSource("testfs:/test_fixtures/testfs/subdir/person.pkl"))
 			assert.NoError(t, err)
-			assert.Equal(t, `name = "Fred"
-age = 43
+			assert.Equal(t, `name = "Hawk"
+age = 2
 `, out)
 			out, err = ev.EvaluateOutputText(context.Background(), TextSource(`result = import*("testfs:/**.pkl")`))
 			assert.NoError(t, err)
 			assert.Equal(t, `result {
   ["testfs:/test_fixtures/testfs/person.pkl"] {
-    name = "Barney"
-    age = 43
+    name = "Pidgeon"
+    age = 2
   }
   ["testfs:/test_fixtures/testfs/subdir/person.pkl"] {
-    name = "Fred"
-    age = 43
+    name = "Hawk"
+    age = 2
   }
 }
 `, out)
@@ -526,7 +551,7 @@ someDuration = 5.min
 
 somePair = Pair("one", "two")
 
-bar = new Bar { name = "Barney" } 
+bar = new Bar { name = "Hawk" } 
 
 class Bar {
   name: String
@@ -537,7 +562,7 @@ class Bar {
 				SomeDuration: &Duration{5, Minute},
 				SomePair:     &Pair[string, string]{"one", "two"},
 				Bar: &TestLegacyBar{
-					Name: "Barney",
+					Name: "Hawk",
 				},
 			}, out)
 		}

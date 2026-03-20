@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,7 @@ import (
 )
 
 func main() {
-	client, err := pkl.NewExternalReaderClient(func(opts *pkl.ExternalReaderClientOptions) {
-		opts.ResourceReaders = append(opts.ResourceReaders, fibReader{})
-	})
+	client, err := pkl.NewExternalReaderClient(pkl.WithExternalClientResourceReader(fibReader{}))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -61,8 +59,12 @@ func (r fibReader) ListElements(baseURI url.URL) ([]pkl.PathElement, error) {
 
 func (r fibReader) Read(uri url.URL) ([]byte, error) {
 	n, err := strconv.Atoi(uri.Opaque)
-	if n <= 0 {
-		err = errors.New("non-positive value")
+	if err == nil {
+		if n == 0 {
+			return nil, &pkl.ResourceNotFound{}
+		} else if n < 0 {
+			err = errors.New("non-positive value")
+		}
 	}
 	if err != nil {
 		return nil, fmt.Errorf("input uri must be in format fib:<positive integer>: %w", err)
