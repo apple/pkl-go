@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -457,15 +457,15 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 		opts.RootDir = evaluatorSettings.RootDir
 		if evaluatorSettings.Http != nil {
 			opts.Http = &Http{}
-		if evaluatorSettings.Http.Proxy != nil {
-			opts.Http.Proxy = &Proxy{}
-			if evaluatorSettings.Http.Proxy.NoProxy != nil {
-				opts.Http.Proxy.NoProxy = *evaluatorSettings.Http.Proxy.NoProxy
+			if evaluatorSettings.Http.Proxy != nil {
+				opts.Http.Proxy = &Proxy{}
+				if evaluatorSettings.Http.Proxy.NoProxy != nil {
+					opts.Http.Proxy.NoProxy = *evaluatorSettings.Http.Proxy.NoProxy
+				}
+				if evaluatorSettings.Http.Proxy.Address != nil {
+					opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
+				}
 			}
-			if evaluatorSettings.Http.Proxy.Address != nil {
-				opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
-			}
-		}
 			if evaluatorSettings.Http.Rewrites != nil {
 				opts.Http.Rewrites = *evaluatorSettings.Http.Rewrites
 			}
