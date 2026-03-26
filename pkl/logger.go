@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ var _ Logger = (*logger)(nil)
 // StderrLogger is a logger that writes to standard error.
 //
 //goland:noinspection GoUnusedGlobalVariable
-var StderrLogger = NewLogger(os.Stdout)
+var StderrLogger = NewLogger(os.Stderr)
 
 // NoopLogger is a logger that discards all messages.
 var NoopLogger = NewLogger(io.Discard)
