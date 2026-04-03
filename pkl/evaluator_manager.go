@@ -114,9 +114,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	m.pendingEvaluators.Store(requestId, ch)
 	interrupt, nevermind := m.interrupted(0)
 	defer nevermind()
-	go func() {
-		m.impl.outChan() <- newEvaluatorRequest
-	}()
+	m.impl.outChan() <- newEvaluatorRequest
 	// sanity check: it's possible that the evaluator has been closed at this point.
 	if m.closed.get() {
 		return nil, nil
