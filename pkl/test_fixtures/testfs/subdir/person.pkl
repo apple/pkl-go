@@ -16,4 +16,4 @@
 
 amends "..."
 
-name = "Fred"
+name = "Hawk"

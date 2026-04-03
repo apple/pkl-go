@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,9 +63,4 @@ func (r *InternalError) Is(err error) bool {
 	var internalError *InternalError
 	ok := errors.As(err, &internalError)
 	return ok
-}
-
-// Unwrap implements the interface expected by errors.Unwrap.
-func (r *InternalError) Unwrap() error {
-	return r.err
 }
