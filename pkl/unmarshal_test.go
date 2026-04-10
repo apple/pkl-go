@@ -455,8 +455,13 @@ func TestUnmarshal_AnyType(t *testing.T) {
 func TestUnmarshal_UnknownType(t *testing.T) {
 	var res unknowntype.UnknownType
 	err := pkl.Unmarshal(unknownType, &res)
-	assert.Error(t, err)
-	assert.Equal(t, "cannot decode Pkl value of type `PcfRenderer` into Go type `interface {}`. Define a custom mapping for this using `pkl.RegisterMapping`", err.Error())
+	// When a typed class instance has no registered Go mapping and the target
+	// type is interface{}, it should be decoded as a pkl.Object (not error).
+	assert.NoError(t, err)
+	obj, ok := res.Res.(pkl.Object)
+	assert.True(t, ok, "expected pkl.Object, got %T", res.Res)
+	assert.Equal(t, "PcfRenderer", obj.Name)
+	assert.Equal(t, "pkl:base", obj.ModuleUri)
 }
 
 func TestUnmarshal_ArraysTooLong(t *testing.T) {
