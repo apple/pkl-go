@@ -16,6 +16,8 @@
 @go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/union" }
 module union
 
+extends "support/OpenModule.pkl"
+
 import ".../src/go.pkl"
 
 /// A city
@@ -30,6 +32,8 @@ noodle: Noodles
 /// Account disposition
 disposition: AccountDisposition
 
+directory: Listing<DirectoryEntry>?
+
 /// City; e.g. where people live
 typealias City = "San Francisco" | "London" | "上海"
 
@@ -40,3 +44,13 @@ typealias County = "San Francisco" | "San Mateo" | "Yolo"
 typealias Noodles = "拉面" | "刀切面" | "面线" | "意大利面"
 
 typealias AccountDisposition = "" | "icloud3" | "prod" | "shared"
+
+typealias DirectoryEntry = *File | Directory
+
+class File {
+  name: String
+}
+
+class Directory {
+  name: String
+}

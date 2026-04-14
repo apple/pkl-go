@@ -4,6 +4,7 @@ package union
 import (
 	"context"
 
+	"github.com/apple/pkl-go/codegen/snippet-tests/output/support/openmodule"
 	"github.com/apple/pkl-go/codegen/snippet-tests/output/union/accountdisposition"
 	"github.com/apple/pkl-go/codegen/snippet-tests/output/union/city"
 	"github.com/apple/pkl-go/codegen/snippet-tests/output/union/county"
@@ -11,7 +12,25 @@ import (
 	"github.com/apple/pkl-go/pkl"
 )
 
-type Union struct {
+type Union interface {
+	openmodule.MyModule
+
+	GetCity() city.City
+
+	GetCounty() county.County
+
+	GetNoodle() noodles.Noodles
+
+	GetDisposition() accountdisposition.AccountDisposition
+
+	GetDirectory() *[]any
+}
+
+var _ Union = UnionImpl{}
+
+type UnionImpl struct {
+	openmodule.MyModuleImpl
+
 	// A city
 	City city.City `pkl:"city"`
 
@@ -23,6 +42,32 @@ type Union struct {
 
 	// Account disposition
 	Disposition accountdisposition.AccountDisposition `pkl:"disposition"`
+
+	Directory *[]any `pkl:"directory"`
+}
+
+// A city
+func (rcv UnionImpl) GetCity() city.City {
+	return rcv.City
+}
+
+// County
+func (rcv UnionImpl) GetCounty() county.County {
+	return rcv.County
+}
+
+// Noodles
+func (rcv UnionImpl) GetNoodle() noodles.Noodles {
+	return rcv.Noodle
+}
+
+// Account disposition
+func (rcv UnionImpl) GetDisposition() accountdisposition.AccountDisposition {
+	return rcv.Disposition
+}
+
+func (rcv UnionImpl) GetDirectory() *[]any {
+	return rcv.Directory
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Union
@@ -43,7 +88,7 @@ func LoadFromPath(ctx context.Context, path string) (ret Union, err error) {
 
 // Load loads the pkl module at the given source and evaluates it with the given evaluator into a Union
 func Load(ctx context.Context, evaluator pkl.Evaluator, source *pkl.ModuleSource) (Union, error) {
-	var ret Union
+	var ret UnionImpl
 	err := evaluator.EvaluateModule(ctx, source, &ret)
 	return ret, err
 }

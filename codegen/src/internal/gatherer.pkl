@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,9 @@ function gatherTypeDeclarations(
         |> gatherModuleTypeAliases(decl)
         |> gatherModule(decl)
   else if (decl is reflect.TypeAlias)
-    seen.add(decl) |> gatherTypeArguments(decl)
+    seen.add(decl)
+      |> gatherTypeArguments(decl)
+      |> (_seen) -> gatherTypeDeclarationsFromType(decl.referent, decl, _seen)
   else
     seen
 
@@ -78,7 +80,7 @@ function gatherTypeDeclarationsFromType(
 
 function gatherPropertiesDeclarations(clazz: reflect.Class) = (seen: List<reflect.TypeDeclaration>) ->
   clazz.properties.values
-    .filter((p) -> !p.modifiers.contains("hidden"))
+    .filter((p) -> !p.allModifiers.contains("hidden"))
     .fold(seen, (acc, p) -> gatherTypeDeclarationsFromType(p.type, clazz, acc))
 
 function gatherSuperDeclarations(clazz: reflect.Class) = (seen: List<reflect.TypeDeclaration>) ->
