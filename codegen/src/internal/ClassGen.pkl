@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -154,7 +154,7 @@ function getFields(clazz: reflect.Class, mappings: List<GoMapping>): Map<String,
       .filter((propName, prop: reflect.Property) ->
         let (superProp = superProperties.findOrNull((it) -> it.name == prop.name))
           // don't render hidden members
-          if (prop.modifiers.contains("hidden"))
+          if (prop.allModifiers.contains("hidden"))
             false
             // Okay if there is no property override, or if the super property has the same type.
           else if (superProp == null || isSameType(superProp.type, prop.type))
