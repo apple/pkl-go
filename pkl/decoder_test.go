@@ -487,6 +487,37 @@ func TestDecoder_Decode(t *testing.T) {
 				err: fmt.Errorf("encountered unknown object code: %#02x", 0x7F),
 			},
 		},
+		"should successfully decode typed class instance into interface{} as Object": {
+			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				// Encode a typed class instance (e.g. authBasic.Config#AuthorizedUser)
+				// Same structure as Dynamic but with a custom class name and module URI
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeString("authBasic.Config#AuthorizedUser"))
+				assert.NoError(t, enc.EncodeString("projectpackage://pkg.pkl-lang.org/authBasic/config@1.0.0#/Config.pkl"))
+				// members array with 2 properties
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				// property: username
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+				assert.NoError(t, enc.EncodeString("username"))
+				assert.NoError(t, enc.EncodeString("alice"))
+				// property: password
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+				assert.NoError(t, enc.EncodeString("password"))
+				assert.NoError(t, enc.EncodeString("$2a$10$hashedpassword"))
+			},
+			want: Object{
+				ModuleUri:  "projectpackage://pkg.pkl-lang.org/authBasic/config@1.0.0#/Config.pkl",
+				Name:       "authBasic.Config#AuthorizedUser",
+				Properties: map[string]any{"username": "alice", "password": "$2a$10$hashedpassword"},
+				Entries:    map[any]any{},
+				Elements:   []any{},
+			},
+			expectedErr: nil,
+		},
 		"should return error for struct with unknown code": {
 			typ: reflect.TypeOf(dummyStruct{}),
 			data: func(t *testing.T, enc *msgpack.Encoder) {

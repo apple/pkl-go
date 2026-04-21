@@ -55,6 +55,16 @@ func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 	if moduleUri == "pkl:base" && name == "Dynamic" || typ.AssignableTo(objectType) {
 		return d.decodeObjectGeneric(moduleUri, name)
 	}
+	// When the target type is an interface (e.g. interface{}) and there is no
+	// registered Go struct for this Pkl class, fall back to decoding as a
+	// generic Object. This allows typed class instances to be deserialized
+	// when they appear as values inside Dynamic objects or other containers
+	// that map to interface{}.
+	if typ.Kind() == reflect.Interface {
+		if _, hasSchema := d.schemas[name]; !hasSchema {
+			return d.decodeObjectGeneric(moduleUri, name)
+		}
+	}
 	return d.decodeTyped(name, typ)
 }
 
