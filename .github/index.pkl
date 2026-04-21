@@ -227,3 +227,18 @@ release = (buildWorkflow) {
     }
   }
 }
+
+dependabot {
+  updates {
+    new {
+      `package-ecosystem` = "gomod"
+      directory = "/"
+      cooldown {
+        `default-days` = 7
+      }
+      schedule {
+        interval = "weekly"
+      }
+    }
+  }
+}
