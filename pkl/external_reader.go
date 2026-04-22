@@ -52,14 +52,14 @@ type ExternalReaderClientOptions struct {
 	ModuleReaders []ModuleReader
 }
 
-// WithExternalClientResourceReader adds an additional [ResourceReader] to the ExternalReaderClient.
+// WithExternalClientResourceReader adds a [ResourceReader] to the ExternalReaderClient.
 var WithExternalClientResourceReader = func(reader ResourceReader) func(*ExternalReaderClientOptions) {
 	return func(options *ExternalReaderClientOptions) {
 		options.ResourceReaders = append(options.ResourceReaders, reader)
 	}
 }
 
-// WithExternalClientModuleReader adds an additional [ModuleReader] to the ExternalReaderClient.
+// WithExternalClientModuleReader adds a [ModuleReader] to the ExternalReaderClient.
 var WithExternalClientModuleReader = func(reader ModuleReader) func(*ExternalReaderClientOptions) {
 	return func(options *ExternalReaderClientOptions) {
 		options.ModuleReaders = append(options.ModuleReaders, reader)
@@ -258,9 +258,13 @@ func (r *externalReaderClient) handleReadResource(msg *msgapi.ReadResource) {
 		return
 	}
 	contents, err := reader.Read(*u)
-	response.Contents = contents
-	if err != nil {
+	switch {
+	case err == ResourceNotFound:
+		break
+	case err != nil:
 		response.Error = err.Error()
+	default:
+		response.Contents = &contents
 	}
 	r.out <- response
 }
