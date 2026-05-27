@@ -4,6 +4,6 @@ package explicitname
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("ExplicitName", ExplicitlyCoolName{})
-	pkl.RegisterStrictMapping("ExplicitName#SomethingFunny", SomethingVeryFunny{})
+	pkl.RegisterMappingFor[ExplicitlyCoolName]("ExplicitName")
+	pkl.RegisterMappingFor[SomethingVeryFunny]("ExplicitName#SomethingFunny")
 }

@@ -84,7 +84,7 @@ local test: Workflow = new {
         new SetupPkl { version = pklVersionLatest }.step
         new {
           name = "Check Go Formatting"
-          run = "pkl format --grammar-version 1 --diff-name-only ."
+          run = "pkl format --diff-name-only ."
         }
       }
     }

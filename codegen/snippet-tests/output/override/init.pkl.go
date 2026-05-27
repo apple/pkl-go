@@ -4,6 +4,6 @@ package override
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("override", Override{})
-	pkl.RegisterStrictMapping("override#Bar", BarImpl{})
+	pkl.RegisterMappingFor[Override]("override")
+	pkl.RegisterMappingFor[BarImpl]("override#Bar")
 }

@@ -4,5 +4,5 @@ package unionnamekeyword
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("UnionNameKeyword", UnionNameKeyword{})
+	pkl.RegisterMappingFor[UnionNameKeyword]("UnionNameKeyword")
 }

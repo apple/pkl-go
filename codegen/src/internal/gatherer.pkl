@@ -29,7 +29,7 @@ import "typegen.pkl"
 /// This omits core built-in types.
 function gatherTypeDeclarations(
   decl: reflect.TypeDeclaration,
-  seen: List<reflect.TypeDeclaration>
+  seen: List<reflect.TypeDeclaration>,
 ): List<reflect.TypeDeclaration> =
   if (seen.contains(decl))
     seen
@@ -59,7 +59,7 @@ function isBuiltinClass(clazz: reflect.Class): Boolean =
 function gatherTypeDeclarationsFromType(
   type: reflect.Type,
   enclosingDeclaration: reflect.TypeDeclaration,
-  seen: List<reflect.TypeDeclaration>
+  seen: List<reflect.TypeDeclaration>,
 ): List<reflect.TypeDeclaration> =
   if (type is reflect.DeclaredType)
     let (referent = type.referent)

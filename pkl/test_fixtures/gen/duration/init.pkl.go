@@ -4,5 +4,5 @@ package duration
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("duration", Duration{})
+	pkl.RegisterMappingFor[Duration]("duration")
 }

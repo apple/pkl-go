@@ -4,5 +4,5 @@ package openmodule
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("MyModule", MyModuleImpl{})
+	pkl.RegisterMappingFor[MyModuleImpl]("MyModule")
 }

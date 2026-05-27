@@ -4,5 +4,5 @@ package pairs
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("Pairs", PairsImpl{})
+	pkl.RegisterMappingFor[PairsImpl]("Pairs")
 }

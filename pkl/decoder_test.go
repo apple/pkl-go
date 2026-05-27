@@ -40,7 +40,7 @@ func TestDecoder_Decode(t *testing.T) {
 		expectedErr error
 	}{
 		"should successfully decode a primitive string type": {
-			typ: reflect.TypeOf(""),
+			typ: reflect.TypeFor[string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeString(""))
 			},
@@ -48,7 +48,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive bool type": {
-			typ: reflect.TypeOf(true),
+			typ: reflect.TypeFor[bool](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeBool(true))
 			},
@@ -56,7 +56,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive go duration type": {
-			typ: reflect.TypeOf(time.Duration(10)),
+			typ: reflect.TypeFor[time.Duration](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeFloat64(10.0))
 				assert.NoError(t, enc.EncodeString("ns"))
@@ -65,7 +65,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive int type": {
-			typ: reflect.TypeOf(0),
+			typ: reflect.TypeFor[int](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeInt(0))
 			},
@@ -73,7 +73,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive int8 type": {
-			typ: reflect.TypeOf(int8(0)),
+			typ: reflect.TypeFor[int8](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeInt8(int8(0)))
 			},
@@ -81,7 +81,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive int16 type": {
-			typ: reflect.TypeOf(int16(0)),
+			typ: reflect.TypeFor[int16](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeInt16(int16(0)))
 			},
@@ -89,7 +89,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive int32 type": {
-			typ: reflect.TypeOf(int32(0)),
+			typ: reflect.TypeFor[int32](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeInt32(int32(0)))
 			},
@@ -97,7 +97,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive int64 type": {
-			typ: reflect.TypeOf(int64(0)),
+			typ: reflect.TypeFor[int64](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeInt64(int64(0)))
 			},
@@ -105,7 +105,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive uint type": {
-			typ: reflect.TypeOf(uint(0)),
+			typ: reflect.TypeFor[uint](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeUint(uint64(0)))
 			},
@@ -113,7 +113,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive uint8 type": {
-			typ: reflect.TypeOf(uint8(0)),
+			typ: reflect.TypeFor[uint8](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeUint8(uint8(0)))
 			},
@@ -121,7 +121,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive uint16 type": {
-			typ: reflect.TypeOf(uint16(0)),
+			typ: reflect.TypeFor[uint16](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeUint16(uint16(0)))
 			},
@@ -129,7 +129,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive uint32 type": {
-			typ: reflect.TypeOf(uint32(0)),
+			typ: reflect.TypeFor[uint32](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeUint32(uint32(0)))
 			},
@@ -137,7 +137,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive uint64 type": {
-			typ: reflect.TypeOf(uint64(0)),
+			typ: reflect.TypeFor[uint64](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeUint64(uint64(0)))
 			},
@@ -145,7 +145,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive float64 type": {
-			typ: reflect.TypeOf(float64(0)),
+			typ: reflect.TypeFor[float64](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeFloat64(float64(0)))
 			},
@@ -153,7 +153,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode slices with one element": {
-			typ: reflect.TypeOf([]string{"1"}),
+			typ: reflect.TypeFor[[]string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeList))
@@ -164,7 +164,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode maps": {
-			typ: reflect.TypeOf(map[string]bool{}),
+			typ: reflect.TypeFor[map[string]bool](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeMap))
@@ -176,7 +176,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode struct": {
-			typ: reflect.TypeOf(dummyStruct{}),
+			typ: reflect.TypeFor[dummyStruct](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(4))
 				assert.NoError(t, enc.EncodeInt(codeObject))
@@ -189,13 +189,13 @@ func TestDecoder_Decode(t *testing.T) {
 				assert.NoError(t, enc.EncodeString("Alice"))
 			},
 			schemas: map[string]reflect.Type{
-				"dummyStruct": reflect.TypeOf(dummyStruct{}),
+				"dummyStruct": reflect.TypeFor[dummyStruct](),
 			},
 			want:        dummyStruct{Name: "Alice"},
 			expectedErr: nil,
 		},
 		"should successfully decode an interface from string value": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeString("hello"))
 			},
@@ -203,7 +203,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a duration type": {
-			typ: reflect.TypeOf(Duration{}),
+			typ: reflect.TypeFor[Duration](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(3))
 				assert.NoError(t, enc.EncodeInt(codeDuration))
@@ -214,7 +214,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a nil as nil pointer": {
-			typ: reflect.TypeOf((*string)(nil)),
+			typ: reflect.TypeFor[*string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeNil())
 			},
@@ -222,7 +222,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a pointer type with non-empty value not nil": {
-			typ: reflect.TypeOf(""),
+			typ: reflect.TypeFor[string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeString("hello"))
 			},
@@ -230,7 +230,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode float64 from int64 encoding": {
-			typ: reflect.TypeOf(float64(0)),
+			typ: reflect.TypeFor[float64](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeInt64(int64(42)))
 			},
@@ -238,7 +238,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a DataSize": {
-			typ: reflect.TypeOf(DataSize{}),
+			typ: reflect.TypeFor[DataSize](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(3))
 				assert.NoError(t, enc.EncodeInt(codeDataSize))
@@ -249,7 +249,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a Pair": {
-			typ: reflect.TypeOf(Pair[string, int]{}),
+			typ: reflect.TypeFor[Pair[string, int]](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(3))
 				assert.NoError(t, enc.EncodeInt(codePair))
@@ -260,7 +260,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a Pair with interface type": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(3))
 				assert.NoError(t, enc.EncodeInt(codePair))
@@ -271,7 +271,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode an IntSeq": {
-			typ: reflect.TypeOf(IntSeq{}),
+			typ: reflect.TypeFor[IntSeq](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(4))
 				assert.NoError(t, enc.EncodeInt(codeIntSeq))
@@ -283,7 +283,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a Regex": {
-			typ: reflect.TypeOf(Regex{}),
+			typ: reflect.TypeFor[Regex](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeRegex))
@@ -293,7 +293,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a Class": {
-			typ: reflect.TypeOf(Class{}),
+			typ: reflect.TypeFor[Class](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(3))
 				assert.NoError(t, enc.EncodeInt(codeClass))
@@ -304,7 +304,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a TypeAlias": {
-			typ: reflect.TypeOf(TypeAlias{}),
+			typ: reflect.TypeFor[TypeAlias](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(3))
 				assert.NoError(t, enc.EncodeInt(codeTypeAlias))
@@ -315,7 +315,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a Set": {
-			typ: reflect.TypeOf(map[string]struct{}{}),
+			typ: reflect.TypeFor[map[string]struct{}](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeSet))
@@ -327,7 +327,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode bytes slice": {
-			typ: reflect.TypeOf([]byte{}),
+			typ: reflect.TypeFor[[]byte](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeBytes))
@@ -337,7 +337,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a Listing via slice": {
-			typ: reflect.TypeOf([]int{}),
+			typ: reflect.TypeFor[[]int](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeListing))
@@ -349,7 +349,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode a Mapping via map": {
-			typ: reflect.TypeOf(map[string]int{}),
+			typ: reflect.TypeFor[map[string]int](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeMapping))
@@ -361,7 +361,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode Dynamic object": {
-			typ: reflect.TypeOf(Object{}),
+			typ: reflect.TypeFor[Object](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(4))
 				assert.NoError(t, enc.EncodeInt(codeObject))
@@ -395,7 +395,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode interface with nil value": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeNil())
 			},
@@ -403,7 +403,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode interface with bool value": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeBool(true))
 			},
@@ -411,7 +411,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode interface with int value": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeInt(42))
 			},
@@ -419,7 +419,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode interface with Pkl List": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeList))
@@ -430,7 +430,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode interface with Pkl Set": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeSet))
@@ -441,7 +441,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should successfully decode interface with Pkl Map": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeMap))
@@ -453,7 +453,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should return error for unsupported float32 type": {
-			typ: reflect.TypeOf(float32(0)),
+			typ: reflect.TypeFor[float32](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeFloat32(float32(0)))
 			},
@@ -462,7 +462,7 @@ func TestDecoder_Decode(t *testing.T) {
 			},
 		},
 		"should return error for invalid slice code": {
-			typ: reflect.TypeOf([]string{}),
+			typ: reflect.TypeFor[[]string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeObject))
@@ -470,7 +470,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid code for slices: %d. Expected %d or %d", codeObject, codeList, codeListing),
 		},
 		"should return error for invalid map code": {
-			typ: reflect.TypeOf(map[string]string{}),
+			typ: reflect.TypeFor[map[string]string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(codeObject))
@@ -478,7 +478,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid code for maps: %d", codeObject),
 		},
 		"should return error for unknown object code on interface": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(0x7F)) // a fake unknown code
@@ -488,7 +488,7 @@ func TestDecoder_Decode(t *testing.T) {
 			},
 		},
 		"should successfully decode typed class instance into interface{} as Object": {
-			typ: reflect.TypeOf((*interface{})(nil)).Elem(),
+			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				// Encode a typed class instance (e.g. authBasic.Config#AuthorizedUser)
 				// Same structure as Dynamic but with a custom class name and module URI
@@ -519,7 +519,7 @@ func TestDecoder_Decode(t *testing.T) {
 			expectedErr: nil,
 		},
 		"should return error for struct with unknown code": {
-			typ: reflect.TypeOf(dummyStruct{}),
+			typ: reflect.TypeFor[dummyStruct](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				assert.NoError(t, enc.EncodeArrayLen(2))
 				assert.NoError(t, enc.EncodeInt(0x7F))
