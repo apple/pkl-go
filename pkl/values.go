@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,10 @@ import (
 	"strconv"
 	"time"
 )
+
+func init() {
+	RegisterMappingFor[ReferenceAccess]("pkl.ref#Access")
+}
 
 // Object is the Go representation of `pkl.base#Object`.
 // It is a container for properties, entries, and elements.
@@ -303,3 +307,32 @@ func ToDataSizeUnit(str string) (DataSizeUnit, error) {
 		return Bytes, fmt.Errorf("unrecognized DataSize unit: `%s`", str)
 	}
 }
+
+// Reference provides a representation for type-checked references to values that may not be set at runtime.
+type Reference[D any] struct {
+	// Reference domain.
+	Domain D
+
+	// Reference data.
+	Data any
+
+	// Reference access path.
+	Path []ReferenceAccess
+}
+
+// ReferenceAccess is an element of a [Reference]'s access path, representing property or subscript access.
+type ReferenceAccess struct {
+	// If this is a property access, this will be a string containing the name of the accessed property.
+	// If this is a subscript access, this will be `nil`.
+	Property *string `pkl:"property"`
+
+	// If this access is a subscript access, this will be the value of the key (which may be `nil`) and [Property] will be `nil`.
+	// If this is a property access, this will be `nil`.
+	Key any `pkl:"key"`
+}
+
+// IsProperty indicates if this represents a property access.
+func (a ReferenceAccess) IsProperty() bool { return a.Property != nil }
+
+// IsSubscript indicates if this represents a subscript access.
+func (a ReferenceAccess) IsSubscript() bool { return a.Property == nil }
