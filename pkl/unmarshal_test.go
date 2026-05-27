@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/apple/pkl-go/pkl"
+	"github.com/apple/pkl-go/pkl/test_fixtures/gen/reference"
 	unknowntype "github.com/apple/pkl-go/pkl/test_fixtures/gen/unknown_type"
 
 	any2 "github.com/apple/pkl-go/pkl/test_fixtures/gen/any"
@@ -93,6 +94,9 @@ var typesInput []byte
 
 //go:embed test_fixtures/manual/types_pre_0.30.pkl.msgpack
 var typesPre030Input []byte
+
+//go:embed test_fixtures/msgpack/reference.pkl.msgpack
+var referenceInput []byte
 
 func TestUnmarshall_Primitives(t *testing.T) {
 	var res primitives.Primitives
@@ -487,4 +491,52 @@ func TestUnmarshal_Types_Pre_030(t *testing.T) {
 	assert.NoError(t, pkl.Unmarshal(typesPre030Input, &res))
 
 	assert.Equal(t, types.Types{}, res)
+}
+
+func TestUnmarshal_Reference(t *testing.T) {
+	var res reference.Reference
+	assert.NoError(t, pkl.Unmarshal(referenceInput, &res))
+
+	foo := "foo"
+	bar := "bar"
+	baz := "baz"
+
+	assert.Equal(t, reference.Reference{
+		Res0: pkl.Reference[reference.D]{
+			Domain: reference.DImpl{},
+			Data:   "hi",
+			Path:   []pkl.ReferenceAccess{},
+		},
+		Res1: pkl.Reference[reference.D]{
+			Domain: reference.DImpl{},
+			Data:   "hi",
+			Path: []pkl.ReferenceAccess{
+				{Property: &foo},
+			},
+		},
+		Res2: pkl.Reference[reference.D]{
+			Domain: reference.DImpl{},
+			Data:   "hi",
+			Path: []pkl.ReferenceAccess{
+				{Property: &bar},
+				{Key: "hi"},
+			},
+		},
+		Res3: pkl.Reference[reference.D]{
+			Domain: reference.DImpl{},
+			Data:   "hi",
+			Path: []pkl.ReferenceAccess{
+				{Property: &bar},
+				{},
+			},
+		},
+		Res4: pkl.Reference[reference.D]{
+			Domain: reference.DImpl{},
+			Data:   "hi",
+			Path: []pkl.ReferenceAccess{
+				{Property: &baz},
+				{Key: reference.MapKey{Key: "foo"}},
+			},
+		},
+	}, res)
 }
