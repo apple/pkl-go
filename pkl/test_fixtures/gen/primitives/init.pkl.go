@@ -4,5 +4,5 @@ package primitives
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("primitives", Primitives{})
+	pkl.RegisterMappingFor[Primitives]("primitives")
 }

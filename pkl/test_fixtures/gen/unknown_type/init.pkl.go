@@ -4,5 +4,5 @@ package unknowntype
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("unknown_type", UnknownType{})
+	pkl.RegisterMappingFor[UnknownType]("unknown_type")
 }

@@ -4,5 +4,5 @@ package extendmodule
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("ExtendModule", ExtendModuleImpl{})
+	pkl.RegisterMappingFor[ExtendModuleImpl]("ExtendModule")
 }

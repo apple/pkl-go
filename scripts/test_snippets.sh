@@ -20,7 +20,10 @@ SNIPPET_TEST_DIR="$SCRIPT_DIR/codegen/snippet-tests"
 
 rm -rf "$SNIPPET_TEST_DIR/output"
 
-${PKL_EXEC:-pkl} run --project-dir codegen/src "$SCRIPT_DIR/gen-snippets.pkl"
+${PKL_EXEC:-pkl} run \
+  --settings pkl:settings \
+  --project-dir codegen/src \
+  "$SCRIPT_DIR/gen-snippets.pkl"
 
 diff=$(git diff codegen/snippet-tests/)
 

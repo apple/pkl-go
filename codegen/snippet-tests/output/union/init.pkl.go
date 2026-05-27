@@ -4,7 +4,7 @@ package union
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("union", UnionImpl{})
-	pkl.RegisterStrictMapping("union#Directory", Directory{})
-	pkl.RegisterStrictMapping("union#File", File{})
+	pkl.RegisterMappingFor[UnionImpl]("union")
+	pkl.RegisterMappingFor[Directory]("union#Directory")
+	pkl.RegisterMappingFor[File]("union#File")
 }

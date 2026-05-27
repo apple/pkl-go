@@ -94,7 +94,7 @@ local rawOutputFiles: Listing<Pair<String, FileOutput?>> = new {
 
 hidden generateFilesForInput: (Module, GeneratorSettings) -> Mapping<String, FileOutput?> = (
   input,
-  settings
+  settings,
 ) ->
   let (
     files =

@@ -4,5 +4,5 @@ package collections
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("collections", Collections{})
+	pkl.RegisterMappingFor[Collections]("collections")
 }

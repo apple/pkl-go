@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import (
 
 // needed for mapping Project.RawDependencies, because the value is defined as any.
 func init() {
-	RegisterStrictMapping("pkl.Project", &Project{})
-	RegisterStrictMapping("pkl.Project#RemoteDependency", &ProjectRemoteDependency{})
+	RegisterMappingFor[*Project]("pkl.Project")
+	RegisterMappingFor[*ProjectRemoteDependency]("pkl.Project#RemoteDependency")
 }
 
 // Project is the go representation of pkl.Project.

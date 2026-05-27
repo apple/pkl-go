@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,21 +29,22 @@ import (
 
 //goland:noinspection GoUnusedConst
 const (
-	codeObject               = 0x01
-	codeMap                  = 0x02
-	codeMapping              = 0x03
-	codeList                 = 0x04
-	codeListing              = 0x05
-	codeSet                  = 0x06
-	codeDuration             = 0x07
-	codeDataSize             = 0x08
-	codePair                 = 0x09
-	codeIntSeq               = 0x0A
-	codeRegex                = 0x0B
-	codeClass                = 0x0C
-	codeTypeAlias            = 0x0D
-	codeFunction             = 0x0E
-	codeBytes                = 0x0F
+	codeObject    = 0x01
+	codeMap       = 0x02
+	codeMapping   = 0x03
+	codeList      = 0x04
+	codeListing   = 0x05
+	codeSet       = 0x06
+	codeDuration  = 0x07
+	codeDataSize  = 0x08
+	codePair      = 0x09
+	codeIntSeq    = 0x0A
+	codeRegex     = 0x0B
+	codeClass     = 0x0C
+	codeTypeAlias = 0x0D
+	codeFunction  = 0x0E
+	codeBytes     = 0x0F
+
 	codeObjectMemberProperty = 0x10
 	codeObjectMemberEntry    = 0x11
 	codeObjectMemberElement  = 0x12
@@ -218,18 +219,18 @@ func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *re
 	case code == codeObject:
 		res, err = d.decodeObject(typ)
 	case !requireStruct && (code == codeMap || code == codeMapping):
-		res, err = d.decodeMapImpl(reflect.TypeOf(map[any]any{}))
+		res, err = d.decodeMapImpl(reflect.TypeFor[map[any]any]())
 	case !requireStruct && (code == codeList || code == codeListing):
-		res, err = d.decodeSliceImpl(reflect.TypeOf([]any{}))
+		res, err = d.decodeSliceImpl(reflect.TypeFor[[]any]())
 	case !requireStruct && code == codeSet:
-		res, err = d.decodeSet(reflect.TypeOf(map[any]any{}))
+		res, err = d.decodeSet(reflect.TypeFor[map[any]any]())
 	case code == codeDataSize:
 		res, err = d.decodeDataSize()
 	case code == codeDuration:
 		res, err = d.decodeDuration()
 	case code == codePair:
 		if typ == emptyInterfaceType {
-			res, err = d.decodePair(reflect.TypeOf(Pair[any, any]{}))
+			res, err = d.decodePair(reflect.TypeFor[Pair[any, any]]())
 		} else {
 			res, err = d.decodePair(typ)
 		}

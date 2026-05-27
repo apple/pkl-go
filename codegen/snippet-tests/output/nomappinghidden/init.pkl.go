@@ -4,5 +4,5 @@ package nomappinghidden
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("NoMappingHidden", NoMappingHidden{})
+	pkl.RegisterMappingFor[NoMappingHidden]("NoMappingHidden")
 }

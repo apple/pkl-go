@@ -36,11 +36,9 @@ type structField struct {
 	structFieldOpts
 }
 
-var objectType = reflect.TypeOf(Object{})
-
 var (
-	sliceOfEmptyInterface []interface{}
-	emptyInterfaceType    = reflect.TypeOf(sliceOfEmptyInterface).Elem()
+	emptyInterfaceType = reflect.TypeFor[any]()
+	objectType         = reflect.TypeFor[Object]()
 )
 
 func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {

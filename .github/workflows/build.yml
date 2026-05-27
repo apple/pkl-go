@@ -125,7 +125,7 @@ jobs:
         echo "$DIR" >> "$GITHUB_PATH"
         echo "pkl_exec=$PKL_EXEC" >> "$GITHUB_OUTPUT"
     - name: Check Go Formatting
-      run: pkl format --grammar-version 1 --diff-name-only .
+      run: pkl format --diff-name-only .
   check-format-go:
     runs-on: ubuntu-latest
     steps:

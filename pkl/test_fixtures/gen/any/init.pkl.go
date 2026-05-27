@@ -4,6 +4,6 @@ package any
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("any", Any{})
-	pkl.RegisterStrictMapping("any#Person", Person{})
+	pkl.RegisterMappingFor[Any]("any")
+	pkl.RegisterMappingFor[Person]("any#Person")
 }

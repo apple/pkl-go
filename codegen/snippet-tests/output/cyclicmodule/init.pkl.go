@@ -4,6 +4,6 @@ package cyclicmodule
 import "github.com/apple/pkl-go/pkl"
 
 func init() {
-	pkl.RegisterStrictMapping("CyclicModule", CyclicModule{})
-	pkl.RegisterStrictMapping("CyclicModule#Cyclic", Cyclic{})
+	pkl.RegisterMappingFor[CyclicModule]("CyclicModule")
+	pkl.RegisterMappingFor[Cyclic]("CyclicModule#Cyclic")
 }
