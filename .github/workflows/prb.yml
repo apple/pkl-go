@@ -140,6 +140,18 @@ jobs:
         go install github.com/google/go-licenses/v2@v2.0.1
         ./scripts/create_notice.sh
         git diff --exit-code
+  verdict:
+    if: '!cancelled() && !failure()'
+    needs:
+    - check-pkl-github-actions
+    - test-pkl-0-25-3
+    - test-pkl-0-31-0
+    - check-hawkeye
+    - check-format-pkl
+    - check-format-go
+    runs-on: ubuntu-latest
+    steps:
+    - run: 'true'
   upload-event-file:
     runs-on: ubuntu-latest
     steps:
