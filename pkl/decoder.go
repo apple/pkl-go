@@ -44,6 +44,7 @@ const (
 	codeTypeAlias = 0x0D
 	codeFunction  = 0x0E
 	codeBytes     = 0x0F
+	codeReference = 0x20
 
 	codeObjectMemberProperty = 0x10
 	codeObjectMemberEntry    = 0x11
@@ -242,6 +243,12 @@ func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *re
 		res, err = d.decodeClass(length)
 	case code == codeTypeAlias:
 		res, err = d.decodeTypeAlias(length)
+	case code == codeReference:
+		if typ == emptyInterfaceType {
+			res, err = d.decodeReference(reflect.TypeFor[Reference[any]]())
+		} else {
+			res, err = d.decodeReference(typ)
+		}
 	default:
 		if requireStruct {
 			return nil, fmt.Errorf("code %#02x cannot be decoded into a struct", code)
@@ -291,6 +298,8 @@ func getDecodedLength(code, length int) int {
 		}
 		// before pkl 0.30 only the type code is present
 		return 0
+	case codeReference:
+		return 3 // domain, data, path
 	default:
 		return 1
 	}

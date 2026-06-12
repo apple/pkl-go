@@ -1,0 +1,25 @@
+@go.Package { name = "github.com/apple/pkl-go/pkl/test_fixtures/gen/reference" }
+module reference
+
+import "pkl:ref"
+
+import ".../codegen/src/go.pkl"
+
+class D extends ref.Domain
+local d: D = new {}
+
+class A {
+  foo: Int
+  bar: Mapping<String?, Int>
+  baz: Mapping<MapKey, String>
+}
+
+class MapKey {
+  key: String
+}
+
+res0: ref.Reference<D, A> = ref.Reference(d, A, "hi")
+res1: ref.Reference<D, Int> = res0.foo
+res2: ref.Reference<D, Int> = res0.bar["hi"]
+res3: ref.Reference<D, Int> = res0.bar[null]
+res4: ref.Reference<D, String> = res0.baz[new MapKey { key = "foo" }]
