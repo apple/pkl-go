@@ -274,7 +274,7 @@ func (m *evaluatorManager) closeEvaluator(ev *evaluator) {
 	}
 	m.impl.outChan() <- &msgapi.CloseEvaluator{EvaluatorId: ev.evaluatorId}
 	m.evaluators.Delete(ev.evaluatorId)
-	ev.closed = true
+	ev.closed.set(true)
 	m.interrupts.Range(func(key, value any) bool {
 		if value.(int64) == ev.evaluatorId {
 			key.(chan error) <- nil
