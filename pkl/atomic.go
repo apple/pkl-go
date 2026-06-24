@@ -17,10 +17,7 @@
 package pkl
 
 import (
-	"math/rand"
-	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type atomicBool struct {
@@ -34,19 +31,3 @@ func (a *atomicBool) get() bool {
 func (a *atomicBool) set(value bool) {
 	a.Store(value)
 }
-
-var randPool = &sync.Pool{
-	New: func() interface{} {
-		return rand.New(rand.NewSource(time.Now().UnixNano()))
-	},
-}
-
-type atomicRandom struct{}
-
-func (a *atomicRandom) Int63() int64 {
-	r := randPool.Get().(*rand.Rand)
-	defer randPool.Put(r)
-	return r.Int63()
-}
-
-var random = &atomicRandom{}
