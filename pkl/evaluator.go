@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand/v2"
 	"net/url"
 	"sync"
 
@@ -128,7 +129,7 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 	if e.Closed() {
 		return nil, fmt.Errorf("evaluator is closed")
 	}
-	requestId := random.Int63()
+	requestId := rand.Int64()
 	ch := make(chan *msgapi.EvaluateResponse)
 	e.pendingRequests.Store(requestId, ch)
 	interrupted, nevermind := e.manager.interrupted(e.evaluatorId)
