@@ -17,10 +17,12 @@
 package pkl
 
 import (
+	"bytes"
 	"context"
 	"path/filepath"
 	"runtime"
 	"testing"
+	"testing/fstest"
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/stretchr/testify/assert"
@@ -45,6 +47,56 @@ fibNullable0 = read?("fib:0")?.text
 fibErrNotFound = test.catchOrNull(() -> read("fib:0").text)
 `
 )
+
+func TestWithExternalClientResourceReader(t *testing.T) {
+	t.Parallel()
+	reader := &fsResourceReader{&fsReader{fs: fstest.MapFS{}, scheme: "test"}}
+	opts := &ExternalReaderClientOptions{}
+	WithExternalClientResourceReader(reader)(opts)
+
+	assert.NotNil(t, opts.ResourceReaders)
+	assert.Len(t, opts.ResourceReaders, 1)
+	assert.Equal(t, "test", opts.ResourceReaders[0].Scheme())
+}
+
+func TestWithExternalClientModuleReader(t *testing.T) {
+	t.Parallel()
+	reader := &fsModuleReader{&fsReader{fs: fstest.MapFS{}, scheme: "test"}}
+	opts := &ExternalReaderClientOptions{}
+	WithExternalClientModuleReader(reader)(opts)
+
+	assert.NotNil(t, opts.ModuleReaders)
+	assert.Len(t, opts.ModuleReaders, 1)
+	assert.Equal(t, "test", opts.ModuleReaders[0].Scheme())
+}
+
+func TestWithExternalClientStreams(t *testing.T) {
+	t.Parallel()
+	requestReader := &bytes.Buffer{}
+	responseWriter := &bytes.Buffer{}
+	opts := &ExternalReaderClientOptions{}
+	WithExternalClientStreams(requestReader, responseWriter)(opts)
+
+	assert.NotNil(t, opts.RequestReader)
+	assert.NotNil(t, opts.ResponseWriter)
+}
+
+func TestWithExternalClientFs(t *testing.T) {
+	t.Parallel()
+	fsTest := fstest.MapFS{
+		"hello.txt": &fstest.MapFile{Data: []byte("hello")},
+	}
+	opts := &ExternalReaderClientOptions{}
+	WithExternalClientFs(fsTest, "fsTest")(opts)
+
+	assert.NotNil(t, opts.ResourceReaders)
+	assert.Len(t, opts.ResourceReaders, 1)
+	assert.Equal(t, "fsTest", opts.ResourceReaders[0].Scheme())
+
+	assert.NotNil(t, opts.ModuleReaders)
+	assert.Len(t, opts.ModuleReaders, 1)
+	assert.Equal(t, "fsTest", opts.ModuleReaders[0].Scheme())
+}
 
 func TestExternalReaderE2E(t *testing.T) {
 	manager := NewEvaluatorManager()
