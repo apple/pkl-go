@@ -321,6 +321,33 @@ func (d *decoder) decodeTypeAlias(length int) (*reflect.Value, error) {
 	return &ret, nil
 }
 
+func (d *decoder) decodeReference(typ reflect.Type) (*reflect.Value, error) {
+	ret := reflect.New(typ).Elem()
+
+	domainField := ret.FieldByName("Domain")
+	domain, err := d.Decode(domainField.Type())
+	if err != nil {
+		return nil, err
+	}
+	domainField.Set(*domain)
+
+	dataField := ret.FieldByName("Data")
+	data, err := d.Decode(dataField.Type())
+	if err != nil {
+		return nil, err
+	}
+	dataField.Set(*data)
+
+	pathField := ret.FieldByName("Path")
+	path, err := d.decodeSliceImpl(pathField.Type())
+	if err != nil {
+		return nil, err
+	}
+	pathField.Set(*path)
+
+	return &ret, nil
+}
+
 func parseStructOpts(field *reflect.StructField) structFieldOpts {
 	ret := structFieldOpts{propertyName: field.Name}
 	tagValue, exists := field.Tag.Lookup(StructTag)
