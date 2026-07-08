@@ -18,6 +18,7 @@ package msgapi
 
 import (
 	"bytes"
+	"net/http"
 
 	"github.com/vmihailenco/msgpack/v5"
 )
@@ -96,9 +97,10 @@ type ProjectOrDependency struct {
 }
 
 type Http struct {
-	CaCertificates []byte            `msgpack:"caCertificates,omitempty"`
-	Proxy          *Proxy            `msgpack:"proxy,omitempty"`
-	Rewrites       map[string]string `msgpack:"rewrites,omitempty"`
+	CaCertificates []byte                 `msgpack:"caCertificates,omitempty"`
+	Proxy          *Proxy                 `msgpack:"proxy,omitempty"`
+	Rewrites       map[string]string      `msgpack:"rewrites,omitempty"`
+	Headers        map[string]http.Header `msgpack:"headers,omitempty"`
 }
 
 type Proxy struct {

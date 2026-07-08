@@ -51,6 +51,9 @@ var PklVersion0_31 = MustParseSemver("0.31.0")
 //goland:noinspection GoSnakeCaseUsage
 var PklVersion0_31_1 = MustParseSemver("0.31.1")
 
+//goland:noinspection GoSnakeCaseUsage
+var PklVersion0_32 = MustParseSemver("0.32.0")
+
 type Semver struct {
 	major                 int
 	minor                 int

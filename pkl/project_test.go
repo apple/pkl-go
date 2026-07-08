@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package pkl
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
@@ -179,6 +180,22 @@ amends "pkl:Project"
 
 evaluatorSettings {
   traceMode = "pretty"
+}`
+
+const project7Contents = `
+amends "pkl:Project"
+
+evaluatorSettings {
+  http {
+    headers {
+      ["**"] {
+        ["x-two-values"] { "foo"; "bar" } 
+      }
+      ["https://*.example.com/foo/*/bar/**"] {
+        ["x-one-value"] = "hello world"
+      }
+    }
+  }
 }`
 
 func writeFile(t *testing.T, filename string, contents string) {
@@ -400,4 +417,48 @@ func TestLoadProjectWithTraceMode(t *testing.T) {
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
 		})
 	}
+}
+
+func TestLoadProjectWithHeaders(t *testing.T) {
+	manager := NewEvaluatorManager()
+	version, err := manager.(*evaluatorManager).getVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if version.IsLessThan(internal.PklVersion0_32) {
+		t.SkipNow()
+	}
+
+	tempDir := t.TempDir()
+	_ = os.Mkdir(tempDir+"/pigeons", 0o777)
+	writeFile(t, tempDir+"/pigeons/PklProject", project7Contents)
+
+	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
+	if assert.NoError(t, err) {
+		t.Run("evaluatorSettings", func(t *testing.T) {
+			expectedSettings := ProjectEvaluatorSettings{
+				Http: &ProjectEvaluatorSettingsHttp{
+					Headers: &map[string]map[string]any{
+						"**":                                 {"x-two-values": []any{"foo", "bar"}},
+						"https://*.example.com/foo/*/bar/**": {"x-one-value": "hello world"},
+					},
+				},
+			}
+			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
+		})
+	}
+
+	opts := &EvaluatorOptions{}
+	WithProjectEvaluatorSettings(project)(opts)
+	t.Run("EvaluatorOptions", func(t *testing.T) {
+		expectedOptions := &EvaluatorOptions{
+			Http: &Http{
+				Headers: map[string]http.Header{
+					"**":                                 {"X-Two-Values": []string{"foo", "bar"}},
+					"https://*.example.com/foo/*/bar/**": {"X-One-Value": []string{"hello world"}},
+				},
+			},
+		}
+		assert.Equal(t, expectedOptions, opts)
+	})
 }

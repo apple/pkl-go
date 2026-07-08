@@ -19,6 +19,7 @@ package pkl
 import (
 	"fmt"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -237,6 +238,17 @@ type Http struct {
 	//			"https://example.com/": "https://my.other.website/"
 	//		}
 	Rewrites map[string]string
+
+	// HTTP headers to add to outbound requests.
+	//
+	// Added in Pkl 0.32.
+	// Each key is a glob pattern, and each value is the collection of headers to add to matching requests.
+	//
+	// Before an HTTP request is made, each key is matched against the request URL.
+	// For all matches, each of their described headers are added to the request.
+	//
+	// To add headers to all HTTP requests, use `**` as the glob pattern.
+	Headers map[string]http.Header
 }
 
 func (http *Http) toMessage() *msgapi.Http {
@@ -247,6 +259,7 @@ func (http *Http) toMessage() *msgapi.Http {
 		CaCertificates: http.CaCertificates,
 		Proxy:          http.Proxy.toMessage(),
 		Rewrites:       http.Rewrites,
+		Headers:        http.Headers,
 	}
 }
 
@@ -469,6 +482,29 @@ var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOp
 			if evaluatorSettings.Http.Rewrites != nil {
 				opts.Http.Rewrites = *evaluatorSettings.Http.Rewrites
 			}
+			if evaluatorSettings.Http.Headers != nil {
+				opts.Http.Headers = make(map[string]http.Header, len(*evaluatorSettings.Http.Headers))
+				for pattern, headers := range *evaluatorSettings.Http.Headers {
+					h := make(http.Header, len(headers))
+					opts.Http.Headers[pattern] = h
+					for header, value := range headers {
+						switch val := value.(type) {
+						case string:
+							h.Add(header, val)
+						case []any:
+							for idx, v := range val {
+								if vv, ok := v.(string); ok {
+									h.Add(header, vv)
+								} else {
+									panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q][%d]", value, pattern, header, idx))
+								}
+							}
+						default:
+							panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q]", value, pattern, header))
+						}
+					}
+				}
+			}
 		}
 		if evaluatorSettings.ExternalModuleReaders != nil {
 			opts.ExternalModuleReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalModuleReaders))
@@ -528,6 +564,24 @@ var WithExternalResourceReader = func(scheme string, spec ExternalReader) func(o
 		}
 		opts.ExternalResourceReaders[scheme] = spec
 		opts.AllowedResources = append(opts.AllowedResources, regexp.QuoteMeta(scheme+":"))
+	}
+}
+
+// WithHttpHeaders configures the evaluator to send additional HTTP headers with requests whose URL matches the specified pattern.
+var WithHttpHeaders = func(pattern string, headers http.Header) func(opts *EvaluatorOptions) {
+	return func(opts *EvaluatorOptions) {
+		if opts.Http.Headers == nil {
+			opts.Http.Headers = make(map[string]http.Header)
+		}
+		if h, ok := opts.Http.Headers[pattern]; ok {
+			for name, values := range headers {
+				for _, v := range values {
+					h.Add(name, v)
+				}
+			}
+		} else {
+			opts.Http.Headers[pattern] = headers
+		}
 	}
 }
 
