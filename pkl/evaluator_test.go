@@ -88,8 +88,11 @@ func getOpenPort() int {
 
 func TestEvaluator(t *testing.T) {
 	manager := NewEvaluatorManager()
+
 	version, err := manager.(*evaluatorManager).getVersion()
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	projectDir := setupProject(t)
 
@@ -118,10 +121,6 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateOutputBytes", func(t *testing.T) {
-		version, err := manager.(*evaluatorManager).getVersion()
-		if err != nil {
-			t.Fatal(err)
-		}
 		if version.IsLessThan(internal.PklVersion0_29) {
 			t.SkipNow()
 		}
@@ -153,10 +152,6 @@ func TestEvaluator(t *testing.T) {
 	})
 
 	t.Run("EvaluateOutputFilesBytes", func(t *testing.T) {
-		version, err := manager.(*evaluatorManager).getVersion()
-		if err != nil {
-			t.Fatal(err)
-		}
 		if version.IsLessThan(internal.PklVersion0_29) {
 			t.SkipNow()
 		}
@@ -644,10 +639,6 @@ class Bar {
 	})
 
 	t.Run("custom proxy options errors on Pkl 0.25", func(t *testing.T) {
-		version, err := manager.(*evaluatorManager).getVersion()
-		if err != nil {
-			t.Fatal(err)
-		}
 		if version.IsGreaterThan(internal.PklVersion0_25) {
 			t.SkipNow()
 		}
@@ -659,6 +650,35 @@ class Bar {
 			}
 		})
 		assert.ErrorContains(t, err, "http options are not supported on Pkl versions lower than 0.26")
+	})
+
+	t.Run("WithProjectEvaluatorSettings refuses to load module past configured root dir", func(t *testing.T) {
+		if version.IsLessThan(internal.PklVersion0_32) {
+			t.SkipNow()
+		}
+
+		tempDir := t.TempDir()
+		projectFile := tempDir + "/PklProject"
+		writeFile(t, projectFile, `amends "pkl:Project"
+
+evaluatorSettings {
+  rootDir = "."
+}
+`)
+		project, err := LoadProject(context.Background(), projectFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		evaluator, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithProjectEvaluatorSettings(project))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = evaluator.EvaluateOutputText(context.Background(), FileSource("/foo.txt"))
+		if err == nil {
+			t.Logf("Expected an error but didn't get any")
+			t.FailNow()
+		}
+		assert.Contains(t, err.Error(), "it is not within the root directory")
 	})
 
 	t.Cleanup(func() {

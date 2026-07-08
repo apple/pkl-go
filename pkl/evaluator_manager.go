@@ -145,6 +145,12 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 
 func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
 	projectEvaluator, err := NewEvaluator(ctx, opts...)
+	defer func() {
+		cerr := projectEvaluator.Close()
+		if err != nil {
+			err = cerr
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
@@ -153,8 +159,15 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseU
 	if err != nil {
 		return nil, err
 	}
-	newOpts := []func(options *EvaluatorOptions){
-		WithProject(project),
+	version, err := m.getVersion()
+	if err != nil {
+		return nil, err
+	}
+	var newOpts []func(options *EvaluatorOptions)
+	if version.IsLessThan(internal.PklVersion0_32) {
+		newOpts = append(newOpts, WithProjectLegacy(project))
+	} else {
+		newOpts = append(newOpts, WithProject(project))
 	}
 	newOpts = append(newOpts, opts...)
 	return NewEvaluator(ctx, newOpts...)

@@ -18,6 +18,7 @@ package pkl
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 
 	"github.com/apple/pkl-go/pkl/internal"
@@ -72,8 +73,19 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectBaseUrl *url.URL
 	if err != nil {
 		return nil, err
 	}
-	newOpts := []func(options *EvaluatorOptions){
-		WithProject(project),
+	version, err := manager.GetVersion()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get version from manager: %w", err)
+	}
+	semver, err := internal.ParseSemver(version)
+	if err != nil {
+		return nil, fmt.Errorf("manager returned an invalid semver string: %s. Parsing error: %w", version, err)
+	}
+	var newOpts []func(options *EvaluatorOptions)
+	if semver.IsLessThan(internal.PklVersion0_32) {
+		newOpts = append(newOpts, WithProjectLegacy(project))
+	} else {
+		newOpts = append(newOpts, WithProject(project))
 	}
 	newOpts = append(newOpts, opts...)
 	ev, err := manager.NewEvaluator(ctx, newOpts...)
