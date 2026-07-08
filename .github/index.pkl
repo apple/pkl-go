@@ -24,7 +24,7 @@ import "@pkl.impl.ghactions/steps/SetupPkl.pkl"
 
 local pklVersionFirst = "0.25.3"
 
-local pklVersionLatest = "0.31.0"
+local pklVersionLatest = "0.32.0"
 
 local pklVersions = List(pklVersionFirst, pklVersionLatest)
 

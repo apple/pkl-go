@@ -14,7 +14,7 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-@ModuleInfo { minPklVersion = "0.31.0" }
+@ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.go.gen
 
 extends "pkl:Command"

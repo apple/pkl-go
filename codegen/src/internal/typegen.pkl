@@ -18,6 +18,7 @@
 @Unlisted
 module pkl.golang.internal.typegen
 
+import "pkl:ref"
 import "pkl:reflect"
 
 import "GoMapping.pkl"
@@ -84,6 +85,8 @@ function generateDeclaredType(
       generateSet(type, enclosing, seenMappings)
     else if (reflectee == Pair)
       generatePair(type, enclosing, seenMappings)
+    else if (reflectee == ref.Reference)
+      generateReference(type, enclosing, seenMappings)
     else
       throw("Cannot generate type \(type.referent.name) as Go.")
 
@@ -147,6 +150,18 @@ function generatePair(
   typeArguments = type.typeArguments.map((t) -> generateType(t, enclosing, seenMappings))
 }
 
+function generateReference(
+  type: reflect.DeclaredType,
+  enclosing: reflect.TypeDeclaration,
+  seenMappings: List<GoMapping>,
+): Type = new Type.Declared {
+  typeName = "Reference"
+  package = "pkl"
+  importPath = "github.com/apple/pkl-go/pkl"
+  // only domain becomes a type argument in go
+  typeArguments = List(generateType(type.typeArguments.first, enclosing, seenMappings))
+}
+
 local function builtInType(typ: String): Type.Declared = new { typeName = typ }
 
 local anyType: Type.Declared = builtInType("any")
@@ -204,5 +219,11 @@ mappedTypes: Mapping<Class | TypeAlias, Type> = new {
   // introduced in Pkl 0.29
   [Bytes] = new Type.Slice {
     elem = new Type.Declared { typeName = "byte" }
+  }
+  // introduced in Pkl 0.32
+  [ref.Access] = new Type.Declared {
+    package = "pkl"
+    typeName = "ReferenceAccess"
+    importPath = "github.com/apple/pkl-go/pkl"
   }
 }
