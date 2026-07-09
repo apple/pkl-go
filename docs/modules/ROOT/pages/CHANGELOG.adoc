@@ -1,5 +1,41 @@
 = Changelog
 
+[[release-0.14.0]]
+== 0.14.0 (2026-07-09)
+
+=== Additions
+
+* Add support for `pkl.ref#Reference` (pr:https://github.com/apple/pkl-go/pull/238[]).
+* Add support for configuring HTTP headers (pr:https://github.com/apple/pkl-go/pull/248[]).
+* Add support for resolved evaluator settings (pr:https://github.com/apple/pkl-go/pull/249[]).
+
+=== Fixes
+
+* Correct `StderrLogger` to log to standard error instead of standard output (pr:https://github.com/apple/pkl-go/pull/226[]).
+* Fix omission of codegen for elements of union types erased to `any` (pr:https://github.com/apple/pkl-go/pull/235[]).
+* Omit hidden properties in parent modules during subclass code generation (pr:https://github.com/apple/pkl-go/pull/235[]).
+* Decoding typed values into struct fields with type `any` as `pkl.Object` when no mapping is present (pr:https://github.com/apple/pkl-go/pull/232[]).
+* Allow custom and external readers to produce "not found" results for nullable reads (`read?()`) (pr:https://github.com/apple/pkl-go/pull/230[]).
+* Fix handling of the no proxy flag when applying evaluator options from a project (pr:https://github.com/apple/pkl-go/pull/228[]).
+* Fix resource leak in `NewProjectEvaluator` (pr:https://github.com/apple/pkl-go/pull/249[])
+
+=== Breaking Changes
+
+* The `WithProjectEvaluatorSettings` method now applies the _resolved_ evaluator settings (introduced in Pkl 0.32). Users that need lower versions of Pkl should use `WithProjectEvaluatorSettingsLegacy`.
+
+=== Miscellaneous
+
+* Improve test coverage (pr:https://github.com/apple/pkl-go/pull/223[]).
+* Reduce memory footprint of reflection operations (pr:https://github.com/apple/pkl-go/pull/237[]).
+
+=== Contributors ❤️
+
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/JeroenSoeters[@JeroenSoeters]
+* https://github.com/kasugamirai[@kasugamirai]
+* https://github.com/NawafSwe[@NawafSwe]
+
 [[release-0.13.2]]
 == 0.13.2 (2026-03-03)
 
