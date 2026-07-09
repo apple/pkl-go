@@ -212,18 +212,20 @@ func TestLoadProject(t *testing.T) {
 	writeFile(t, tempDir+"/hawks/PklProject", project1Contents)
 	writeFile(t, tempDir+"/storks/PklProject", project2Contents)
 	project, err := LoadProject(context.Background(), tempDir+"/hawks/PklProject")
+
+	manager := NewEvaluatorManager()
+	defer func() { _ = manager.Close() }()
+	version, err := manager.(*evaluatorManager).getVersion()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if assert.NoError(t, err) {
 		t.Run("projectFileUri", func(t *testing.T) {
 			assert.Equal(t, fmt.Sprintf("file://%s/hawks/PklProject", tempDir), project.ProjectFileUri)
 		})
 
 		t.Run("annotations", func(t *testing.T) {
-			manager := NewEvaluatorManager()
-			defer func() { _ = manager.Close() }()
-			version, err := manager.(*evaluatorManager).getVersion()
-			if err != nil {
-				t.Fatal(err)
-			}
 			if version.IsLessThan(internal.PklVersion0_27) {
 				t.SkipNow()
 			}
@@ -248,6 +250,28 @@ func TestLoadProject(t *testing.T) {
 				AllowedResources:   &[]string{"baz:", "biz:"},
 			}
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
+		})
+
+		t.Run("resolvedEvaluatorSettings", func(t *testing.T) {
+			if version.IsLessThan(internal.PklVersion0_31) {
+				t.SkipNow()
+			}
+			fals := false
+			expectedSettings := ProjectEvaluatorSettings{
+				Timeout: Duration{
+					Value: 5,
+					Unit:  Minute,
+				},
+				NoCache:            &fals,
+				RootDir:            tempDir + "/hawks",
+				ModuleCacheDir:     tempDir + "/hawks/cache",
+				Env:                map[string]string{"one": "1"},
+				ExternalProperties: map[string]string{"two": "2"},
+				ModulePath:         []string{tempDir + "/hawks/modulepath1", tempDir + "/hawks/modulepath2"},
+				AllowedModules:     &[]string{"foo:", "bar:"},
+				AllowedResources:   &[]string{"baz:", "biz:"},
+			}
+			assert.Equal(t, expectedSettings, project.ResolvedEvaluatorSettings)
 		})
 
 		t.Run("package", func(t *testing.T) {
@@ -421,6 +445,12 @@ func TestLoadProjectWithTraceMode(t *testing.T) {
 
 func TestLoadProjectWithHeaders(t *testing.T) {
 	manager := NewEvaluatorManager()
+	defer func(manager EvaluatorManager) {
+		err := manager.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}(manager)
 	version, err := manager.(*evaluatorManager).getVersion()
 	if err != nil {
 		t.Fatal(err)

@@ -451,84 +451,99 @@ var WithFs = func(fs fs.FS, scheme string) func(opts *EvaluatorOptions) {
 
 // WithProjectEvaluatorSettings configures the evaluator with settings from the given
 // ProjectEvaluatorSettings.
+//
+//goland:noinspection DuplicatedCode
 var WithProjectEvaluatorSettings = func(project *Project) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
-		evaluatorSettings := project.EvaluatorSettings
-		opts.Properties = evaluatorSettings.ExternalProperties
-		opts.Env = evaluatorSettings.Env
-		if evaluatorSettings.AllowedModules != nil {
-			opts.AllowedModules = *evaluatorSettings.AllowedModules
-		}
-		if evaluatorSettings.AllowedResources != nil {
-			opts.AllowedResources = *evaluatorSettings.AllowedResources
-		}
-		if evaluatorSettings.NoCache != nil && *evaluatorSettings.NoCache {
-			opts.CacheDir = ""
-		} else {
-			opts.CacheDir = evaluatorSettings.ModuleCacheDir
-		}
-		opts.RootDir = evaluatorSettings.RootDir
-		if evaluatorSettings.Http != nil {
-			opts.Http = &Http{}
-			if evaluatorSettings.Http.Proxy != nil {
-				opts.Http.Proxy = &Proxy{}
-				if evaluatorSettings.Http.Proxy.NoProxy != nil {
-					opts.Http.Proxy.NoProxy = *evaluatorSettings.Http.Proxy.NoProxy
-				}
-				if evaluatorSettings.Http.Proxy.Address != nil {
-					opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
-				}
+		applyFromProjectEvaluatorSettings(project.ResolvedEvaluatorSettings, opts)
+	}
+}
+
+// WithProjectEvaluatorSettingsLegacy is like WithProjectEvaluatorSettings, but uses the _unresolved_ evaluator
+// settings.
+//
+// This should be avoided when using Pkl 0.32 or newer.
+var WithProjectEvaluatorSettingsLegacy = func(project *Project) func(opts *EvaluatorOptions) {
+	return func(opts *EvaluatorOptions) {
+		applyFromProjectEvaluatorSettings(project.EvaluatorSettings, opts)
+	}
+}
+
+var applyFromProjectEvaluatorSettings = func(evaluatorSettings ProjectEvaluatorSettings, opts *EvaluatorOptions) {
+	opts.Properties = evaluatorSettings.ExternalProperties
+	opts.Env = evaluatorSettings.Env
+	if evaluatorSettings.AllowedModules != nil {
+		opts.AllowedModules = *evaluatorSettings.AllowedModules
+	}
+	if evaluatorSettings.AllowedResources != nil {
+		opts.AllowedResources = *evaluatorSettings.AllowedResources
+	}
+	if evaluatorSettings.NoCache != nil && *evaluatorSettings.NoCache {
+		opts.CacheDir = ""
+	} else {
+		opts.CacheDir = evaluatorSettings.ModuleCacheDir
+	}
+	opts.RootDir = evaluatorSettings.RootDir
+	if evaluatorSettings.Http != nil {
+		opts.Http = &Http{}
+		if evaluatorSettings.Http.Proxy != nil {
+			opts.Http.Proxy = &Proxy{}
+			if evaluatorSettings.Http.Proxy.NoProxy != nil {
+				opts.Http.Proxy.NoProxy = *evaluatorSettings.Http.Proxy.NoProxy
 			}
-			if evaluatorSettings.Http.Rewrites != nil {
-				opts.Http.Rewrites = *evaluatorSettings.Http.Rewrites
+			if evaluatorSettings.Http.Proxy.Address != nil {
+				opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
 			}
-			if evaluatorSettings.Http.Headers != nil {
-				opts.Http.Headers = make(map[string]http.Header, len(*evaluatorSettings.Http.Headers))
-				for pattern, headers := range *evaluatorSettings.Http.Headers {
-					h := make(http.Header, len(headers))
-					opts.Http.Headers[pattern] = h
-					for header, value := range headers {
-						switch val := value.(type) {
-						case string:
-							h.Add(header, val)
-						case []any:
-							for idx, v := range val {
-								if vv, ok := v.(string); ok {
-									h.Add(header, vv)
-								} else {
-									panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q][%d]", value, pattern, header, idx))
-								}
+		}
+		if evaluatorSettings.Http.Rewrites != nil {
+			opts.Http.Rewrites = *evaluatorSettings.Http.Rewrites
+		}
+		if evaluatorSettings.Http.Headers != nil {
+			opts.Http.Headers = make(map[string]http.Header, len(*evaluatorSettings.Http.Headers))
+			for pattern, headers := range *evaluatorSettings.Http.Headers {
+				h := make(http.Header, len(headers))
+				opts.Http.Headers[pattern] = h
+				for header, value := range headers {
+					switch val := value.(type) {
+					case string:
+						h.Add(header, val)
+					case []any:
+						for idx, v := range val {
+							if vv, ok := v.(string); ok {
+								h.Add(header, vv)
+							} else {
+								panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q][%d]", value, pattern, header, idx))
 							}
-						default:
-							panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q]", value, pattern, header))
 						}
+					default:
+						panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q]", value, pattern, header))
 					}
 				}
 			}
 		}
-		if evaluatorSettings.ExternalModuleReaders != nil {
-			opts.ExternalModuleReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalModuleReaders))
-			for scheme, reader := range evaluatorSettings.ExternalModuleReaders {
-				opts.ExternalModuleReaders[scheme] = ExternalReader(reader)
-				if evaluatorSettings.AllowedModules == nil { // if no explicit allowed modules are set in the project, allow declared external module readers
-					WithDefaultAllowedModules(opts)
-					opts.AllowedModules = append(opts.AllowedModules, regexp.QuoteMeta(scheme+":"))
-				}
+	}
+	if evaluatorSettings.ExternalModuleReaders != nil {
+		opts.ExternalModuleReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalModuleReaders))
+		for scheme, reader := range evaluatorSettings.ExternalModuleReaders {
+			opts.ExternalModuleReaders[scheme] = ExternalReader(reader)
+			if evaluatorSettings.AllowedModules == nil { // if no explicit allowed modules are set in the project, allow declared external module readers
+				WithDefaultAllowedModules(opts)
+				opts.AllowedModules = append(opts.AllowedModules, regexp.QuoteMeta(scheme+":"))
 			}
 		}
-		if evaluatorSettings.ExternalResourceReaders != nil {
-			opts.ExternalResourceReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalResourceReaders))
-			for scheme, reader := range evaluatorSettings.ExternalResourceReaders {
-				opts.ExternalResourceReaders[scheme] = ExternalReader(reader)
-				if evaluatorSettings.AllowedResources == nil { // if no explicit allowed resources are set in the project, allow declared external resource readers
-					WithDefaultAllowedResources(opts)
-					opts.AllowedResources = append(opts.AllowedResources, regexp.QuoteMeta(scheme+":"))
-				}
+	}
+	if evaluatorSettings.ExternalResourceReaders != nil {
+		opts.ExternalResourceReaders = make(map[string]ExternalReader, len(evaluatorSettings.ExternalResourceReaders))
+		for scheme, reader := range evaluatorSettings.ExternalResourceReaders {
+			opts.ExternalResourceReaders[scheme] = ExternalReader(reader)
+			if evaluatorSettings.AllowedResources == nil { // if no explicit allowed resources are set in the project, allow declared external resource readers
+				WithDefaultAllowedResources(opts)
+				opts.AllowedResources = append(opts.AllowedResources, regexp.QuoteMeta(scheme+":"))
 			}
 		}
-		if evaluatorSettings.TraceMode != nil {
-			opts.TraceMode = *evaluatorSettings.TraceMode
-		}
+	}
+	if evaluatorSettings.TraceMode != nil {
+		opts.TraceMode = *evaluatorSettings.TraceMode
 	}
 }
 
@@ -540,9 +555,20 @@ var WithProjectDependencies = func(project *Project) func(opts *EvaluatorOptions
 	}
 }
 
+// WithProject configures the options with the dependencies and resolved evaluator settings defined in Project.
 var WithProject = func(project *Project) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
 		WithProjectEvaluatorSettings(project)(opts)
+		WithProjectDependencies(project)(opts)
+	}
+}
+
+// WithProjectLegacy configures the options with the dependencies and unresolved evaluator settings defined in Project.
+//
+// If using Pkl 0.32 or newer, prefer WithProject over this method.
+var WithProjectLegacy = func(project *Project) func(opts *EvaluatorOptions) {
+	return func(opts *EvaluatorOptions) {
+		WithProjectEvaluatorSettingsLegacy(project)(opts)
 		WithProjectDependencies(project)(opts)
 	}
 }

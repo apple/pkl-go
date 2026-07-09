@@ -30,11 +30,12 @@ func init() {
 
 // Project is the go representation of pkl.Project.
 type Project struct {
-	ProjectFileUri    string                   `pkl:"projectFileUri"`
-	Package           *ProjectPackage          `pkl:"package"`
-	EvaluatorSettings ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
-	Tests             []string                 `pkl:"tests"`
-	Annotations       []Object                 `pkl:"annotations"`
+	ProjectFileUri            string                   `pkl:"projectFileUri"`
+	Package                   *ProjectPackage          `pkl:"package"`
+	EvaluatorSettings         ProjectEvaluatorSettings `pkl:"evaluatorSettings"`
+	ResolvedEvaluatorSettings ProjectEvaluatorSettings `pkl:"resolvedEvaluatorSettings"`
+	Tests                     []string                 `pkl:"tests"`
+	Annotations               []Object                 `pkl:"annotations"`
 
 	// internal field; use Project.Dependencies instead.
 	// values are either Project or ProjectRemoteDependency
@@ -132,6 +133,12 @@ func (project *Project) Dependencies() *ProjectDependencies {
 // LoadProject loads a project definition from the specified path directory.
 func LoadProject(context context.Context, path string) (*Project, error) {
 	ev, err := NewEvaluator(context, PreconfiguredOptions)
+	defer func() {
+		cerr := ev.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
