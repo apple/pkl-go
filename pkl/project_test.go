@@ -445,6 +445,12 @@ func TestLoadProjectWithTraceMode(t *testing.T) {
 
 func TestLoadProjectWithHeaders(t *testing.T) {
 	manager := NewEvaluatorManager()
+	defer func(manager EvaluatorManager) {
+		err := manager.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}(manager)
 	version, err := manager.(*evaluatorManager).getVersion()
 	if err != nil {
 		t.Fatal(err)

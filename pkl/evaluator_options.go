@@ -494,32 +494,32 @@ var applyFromProjectEvaluatorSettings = func(evaluatorSettings ProjectEvaluatorS
 			if evaluatorSettings.Http.Proxy.Address != nil {
 				opts.Http.Proxy.Address = *evaluatorSettings.Http.Proxy.Address
 			}
-			if evaluatorSettings.Http.Headers != nil {
-				opts.Http.Headers = make(map[string]http.Header, len(*evaluatorSettings.Http.Headers))
-				for pattern, headers := range *evaluatorSettings.Http.Headers {
-					h := make(http.Header, len(headers))
-					opts.Http.Headers[pattern] = h
-					for header, value := range headers {
-						switch val := value.(type) {
-						case string:
-							h.Add(header, val)
-						case []any:
-							for idx, v := range val {
-								if vv, ok := v.(string); ok {
-									h.Add(header, vv)
-								} else {
-									panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q][%d]", value, pattern, header, idx))
-								}
-							}
-						default:
-							panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q]", value, pattern, header))
-						}
-					}
-				}
-			}
 		}
 		if evaluatorSettings.Http.Rewrites != nil {
 			opts.Http.Rewrites = *evaluatorSettings.Http.Rewrites
+		}
+		if evaluatorSettings.Http.Headers != nil {
+			opts.Http.Headers = make(map[string]http.Header, len(*evaluatorSettings.Http.Headers))
+			for pattern, headers := range *evaluatorSettings.Http.Headers {
+				h := make(http.Header, len(headers))
+				opts.Http.Headers[pattern] = h
+				for header, value := range headers {
+					switch val := value.(type) {
+					case string:
+						h.Add(header, val)
+					case []any:
+						for idx, v := range val {
+							if vv, ok := v.(string); ok {
+								h.Add(header, vv)
+							} else {
+								panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q][%d]", value, pattern, header, idx))
+							}
+						}
+					default:
+						panic(fmt.Sprintf("unexpected value of type %T in project at evaluatorSettings.http.headers[%q][%q]", value, pattern, header))
+					}
+				}
+			}
 		}
 	}
 	if evaluatorSettings.ExternalModuleReaders != nil {
