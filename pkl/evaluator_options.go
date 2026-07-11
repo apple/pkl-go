@@ -315,6 +315,7 @@ func (p *Proxy) toMessage() *msgapi.Proxy {
 type ExternalReader struct {
 	Executable string
 	Arguments  []string
+	WorkingDir string
 }
 
 func (r *ExternalReader) toMessage() *msgapi.ExternalReader {

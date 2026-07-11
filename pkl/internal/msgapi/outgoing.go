@@ -111,6 +111,7 @@ type Proxy struct {
 type ExternalReader struct {
 	Executable string   `msgpack:"executable"`
 	Arguments  []string `msgpack:"arguments,omitempty"`
+	WorkingDir string   `msgpack:"workingDir,omitempty'`
 }
 
 type Checksums struct {
