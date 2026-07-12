@@ -32,6 +32,10 @@ func TestDecoder_Decode(t *testing.T) {
 	type dummyStruct struct {
 		Name string
 	}
+	type namedString string
+	type namedFieldStruct struct {
+		Name namedString
+	}
 	tests := map[string]struct {
 		typ         reflect.Type
 		data        func(t *testing.T, enc *msgpack.Encoder)
@@ -192,6 +196,25 @@ func TestDecoder_Decode(t *testing.T) {
 				"dummyStruct": reflect.TypeOf(dummyStruct{}),
 			},
 			want:        dummyStruct{Name: "Alice"},
+			expectedErr: nil,
+		},
+		"should convert decoded value when struct field has a convertible named type": {
+			typ: reflect.TypeOf(namedFieldStruct{}),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeString("namedFieldStruct"))
+				assert.NoError(t, enc.EncodeString("my.module.namedFieldStruct"))
+				assert.NoError(t, enc.EncodeArrayLen(1)) // 1 member
+				assert.NoError(t, enc.EncodeArrayLen(3)) // for members: code + name + value
+				assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+				assert.NoError(t, enc.EncodeString("Name"))
+				assert.NoError(t, enc.EncodeString("Alice"))
+			},
+			schemas: map[string]reflect.Type{
+				"namedFieldStruct": reflect.TypeOf(namedFieldStruct{}),
+			},
+			want:        namedFieldStruct{Name: "Alice"},
 			expectedErr: nil,
 		},
 		"should successfully decode an interface from string value": {
