@@ -313,8 +313,17 @@ func (p *Proxy) toMessage() *msgapi.Proxy {
 }
 
 type ExternalReader struct {
+	// The absolute path to the executable, or a simple name.
+	//
+	// In the case of a simple name, it is resolved off of the `PATH` environment variable.
 	Executable string
-	Arguments  []string
+
+	// The command line arguments to pass to the process.
+	Arguments []string
+
+	// The working directory to use for the executable process.
+	//
+	// Added in Pkl 0.32.
 	WorkingDir string
 }
 
