@@ -99,6 +99,7 @@ type ProjectEvaluatorSettingsProxy struct {
 type ProjectEvaluatorSettingExternalReader struct {
 	Executable string   `pkl:"executable"`
 	Arguments  []string `pkl:"arguments"`
+	WorkingDir string   `pkl:"workingDir"`
 }
 
 func (project *Project) Dependencies() *ProjectDependencies {
