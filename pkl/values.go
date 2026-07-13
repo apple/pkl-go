@@ -329,10 +329,16 @@ type ReferenceAccess struct {
 	// If this access is a subscript access, this will be the value of the key (which may be `nil`) and [Property] will be `nil`.
 	// If this is a property access, this will be `nil`.
 	Key any `pkl:"key"`
+
+	// Internal; use IsProperty method instead
+	InternalIsProperty bool `pkl:"isProperty"`
+
+	// Internal; use IsSubscript method instead
+	InternalIsSubscript bool `pkl:"isSubscript"`
 }
 
 // IsProperty indicates if this represents a property access.
-func (a ReferenceAccess) IsProperty() bool { return a.Property != nil }
+func (a ReferenceAccess) IsProperty() bool { return a.InternalIsProperty }
 
 // IsSubscript indicates if this represents a subscript access.
-func (a ReferenceAccess) IsSubscript() bool { return a.Property == nil }
+func (a ReferenceAccess) IsSubscript() bool { return a.InternalIsSubscript }

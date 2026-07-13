@@ -511,31 +511,31 @@ func TestUnmarshal_Reference(t *testing.T) {
 			Domain: reference.DImpl{},
 			Data:   "hi",
 			Path: []pkl.ReferenceAccess{
-				{Property: &foo},
+				{Property: &foo, InternalIsProperty: true, InternalIsSubscript: false},
 			},
 		},
 		Res2: pkl.Reference[reference.D]{
 			Domain: reference.DImpl{},
 			Data:   "hi",
 			Path: []pkl.ReferenceAccess{
-				{Property: &bar},
-				{Key: "hi"},
+				{Property: &bar, InternalIsProperty: true, InternalIsSubscript: false},
+				{Key: "hi", InternalIsProperty: false, InternalIsSubscript: true},
 			},
 		},
 		Res3: pkl.Reference[reference.D]{
 			Domain: reference.DImpl{},
 			Data:   "hi",
 			Path: []pkl.ReferenceAccess{
-				{Property: &bar},
-				{},
+				{Property: &bar, InternalIsProperty: true, InternalIsSubscript: false},
+				{InternalIsProperty: false, InternalIsSubscript: true},
 			},
 		},
 		Res4: pkl.Reference[reference.D]{
 			Domain: reference.DImpl{},
 			Data:   "hi",
 			Path: []pkl.ReferenceAccess{
-				{Property: &baz},
-				{Key: reference.MapKey{Key: "foo"}},
+				{Property: &baz, InternalIsProperty: true, InternalIsSubscript: false},
+				{Key: reference.MapKey{Key: "foo"}, InternalIsProperty: false, InternalIsSubscript: true},
 			},
 		},
 	}, res)
