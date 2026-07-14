@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/apple/pkl-go/pkl/internal"
 )
@@ -56,6 +57,17 @@ func NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...f
 // If creating multiple evaluators, prefer using EvaluatorManager.NewProjectEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
 func NewProjectEvaluatorWithCommand(ctx context.Context, projectBaseUrl *url.URL, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	// A relative or otherwise non-absolute file URL (e.g. file://.) makes Pkl
+	// fail deep inside evaluation with an opaque PklBugException. Reject it up
+	// front with an actionable error instead.
+	if projectBaseUrl.Scheme == "file" {
+		if host := projectBaseUrl.Host; (host != "" && host != "localhost") || !strings.HasPrefix(projectBaseUrl.Path, "/") {
+			return nil, fmt.Errorf(
+				"projectBaseUrl %q must be an absolute file URL (e.g. file:///path/to/project); relative file URLs such as file://. are not supported",
+				projectBaseUrl,
+			)
+		}
+	}
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
 	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
