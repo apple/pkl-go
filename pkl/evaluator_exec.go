@@ -57,13 +57,12 @@ func NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...f
 // If creating multiple evaluators, prefer using EvaluatorManager.NewProjectEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
 func NewProjectEvaluatorWithCommand(ctx context.Context, projectBaseUrl *url.URL, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	// A relative or otherwise non-absolute file URL (e.g. file://.) makes Pkl
-	// fail deep inside evaluation with an opaque PklBugException. Reject it up
-	// front with an actionable error instead.
+	// enforced by Pkl: `file` URIs must conform to RFC-8089.
+	// Pkl currently throws PklBugException if passing a file URI without a path
 	if projectBaseUrl.Scheme == "file" {
-		if host := projectBaseUrl.Host; (host != "" && host != "localhost") || !strings.HasPrefix(projectBaseUrl.Path, "/") {
+		if !strings.HasPrefix(projectBaseUrl.Path, "/") {
 			return nil, fmt.Errorf(
-				"projectBaseUrl %q must be an absolute file URL (e.g. file:///path/to/project); relative file URLs such as file://. are not supported",
+				"projectBaseUrl is an invalid file URI: file URIs must have a path component that starts with `/` (e.g. file:///path/to/project). Got: %q",
 				projectBaseUrl,
 			)
 		}

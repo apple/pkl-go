@@ -24,16 +24,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewProjectEvaluatorRejectsNonAbsoluteFileURL(t *testing.T) {
-	for _, raw := range []string{"file://.", "file://./sub", "file://relative/path"} {
+func TestNewProjectEvaluatorRejectsFileURLWithoutPath(t *testing.T) {
+	for _, raw := range []string{"file://.", "file:.", "file://localhost"} {
 		u, err := url.Parse(raw)
 		assert.NoError(t, err)
 
-		// A non-absolute file URL previously reached Pkl and failed with an
+		// A file URI without a path previously reached Pkl and failed with an
 		// opaque PklBugException; it should now fail fast with an actionable
 		// error before any evaluator process is started.
 		ev, err := NewProjectEvaluator(context.Background(), u)
 		assert.Nil(t, ev, "expected no evaluator for %q", raw)
-		assert.ErrorContains(t, err, "absolute file URL", "for %q", raw)
+		assert.ErrorContains(t, err, "invalid file URI", "for %q", raw)
 	}
 }
