@@ -1,5 +1,21 @@
 = Changelog
 
+[[release-0.15.0]]
+== 0.15.0 (2026-07-15)
+
+=== Additions
+
+* Add support for `ExternalReader.WorkingDir` (https://github.com/apple/pkl-go/pull/256[#256]).
+
+=== Fixes
+
+* Add missing Go fields for `ref#Access.isProperty` and `ref#Access.isSubscript` (https://github.com/apple/pkl-go/pull/257[#257]).
+
+=== Contributors ❤️
+
+* https://github.com/bioball[@bioball]
+* https://github.com/stoned[@stoned]
+
 [[release-0.14.0]]
 == 0.14.0 (2026-07-09)
 
