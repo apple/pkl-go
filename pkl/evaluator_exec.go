@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/apple/pkl-go/pkl/internal"
 )
@@ -56,6 +57,16 @@ func NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...f
 // If creating multiple evaluators, prefer using EvaluatorManager.NewProjectEvaluator instead,
 // because it lessens the overhead of each successive evaluator.
 func NewProjectEvaluatorWithCommand(ctx context.Context, projectBaseUrl *url.URL, pklCmd []string, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	// enforced by Pkl: `file` URIs must conform to RFC-8089.
+	// Pkl currently throws PklBugException if passing a file URI without a path
+	if projectBaseUrl.Scheme == "file" {
+		if !strings.HasPrefix(projectBaseUrl.Path, "/") {
+			return nil, fmt.Errorf(
+				"projectBaseUrl is an invalid file URI: file URIs must have a path component that starts with `/` (e.g. file:///path/to/project). Got: %q",
+				projectBaseUrl,
+			)
+		}
+	}
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
 	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
 	if err != nil {
