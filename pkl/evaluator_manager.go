@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"math/rand/v2"
 	"net/url"
 	"sync"
 
@@ -106,7 +107,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 		return nil, err
 	}
 	var newEvaluatorRequest msgapi.OutgoingMessage
-	requestId := random.Int63()
+	requestId := rand.Int64()
 	msg := o.toMessage()
 	msg.RequestId = requestId
 	newEvaluatorRequest = msg
