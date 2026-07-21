@@ -21,6 +21,7 @@ import (
 	"errors"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
 	"github.com/stretchr/testify/assert"
@@ -96,4 +97,72 @@ func TestEvaluatorManager_interrupt_Close(t *testing.T) {
 	evaluator, err := m.NewEvaluator(context.Background())
 	assert.Nil(t, evaluator)
 	assert.Nil(t, err)
+}
+
+// TestEvaluator_EvaluateExpressionRaw_CtxCancel verifies that a cancelled context
+// surfaces as ctx.Err() (not a swallowed (nil, nil)), that the pendingRequests
+// entry is cleaned up, and that a response which arrives after the caller has
+// already given up does not block the manager's shared listen() goroutine -
+// which previously would deadlock every future evaluation on this evaluator.
+func TestEvaluator_EvaluateExpressionRaw_CtxCancel(t *testing.T) {
+	m := newFakeEvalautorManager()
+	go m.listen()
+
+	requestIdCh := make(chan int64, 1)
+	go func() {
+		msg := <-m.impl.outChan()
+		if ev, ok := msg.(*msgapi.Evaluate); ok {
+			requestIdCh <- ev.RequestId
+		}
+	}()
+
+	ev := &evaluator{
+		evaluatorId:     1,
+		manager:         m,
+		pendingRequests: &sync.Map{},
+	}
+	m.evaluators.Store(int64(1), ev)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	result, err := ev.EvaluateExpressionRaw(ctx, TextSource("foo"), "output.text")
+	assert.Nil(t, result)
+	assert.ErrorIs(t, err, context.Canceled)
+
+	var requestId int64
+	select {
+	case requestId = <-requestIdCh:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timed out waiting for the Evaluate request to be sent")
+	}
+
+	_, exists := ev.pendingRequests.Load(requestId)
+	assert.False(t, exists, "pendingRequests entry should be cleaned up after ctx cancellation")
+
+	// Simulate the pkl process finishing the evaluation after the caller already
+	// gave up. Before this fix, handleEvaluateResponse would block forever
+	// sending on the abandoned, unbuffered response channel, wedging listen()
+	// for every other evaluation on this evaluator. A second, unrelated
+	// response is sent afterwards as a sentinel: since the fake inChan is
+	// itself unbuffered, listen() can only receive it once it has returned
+	// from handling the first (proving it didn't get stuck inside it).
+	done := make(chan struct{})
+	go func() {
+		m.impl.inChan() <- &msgapi.EvaluateResponse{
+			RequestId:   requestId,
+			EvaluatorId: 1,
+			Result:      []byte("late response"),
+		}
+		m.impl.inChan() <- &msgapi.EvaluateResponse{
+			RequestId:   requestId + 1, // unknown request id: handled as a harmless no-op
+			EvaluatorId: 1,
+		}
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("listen() appears deadlocked processing a response for an abandoned request")
+	}
 }
