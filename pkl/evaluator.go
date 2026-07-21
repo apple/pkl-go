@@ -129,7 +129,7 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 		return nil, fmt.Errorf("evaluator is closed")
 	}
 	requestId := random.Int63()
-	ch := make(chan *msgapi.EvaluateResponse)
+	ch := make(chan *msgapi.EvaluateResponse, 1)
 	e.pendingRequests.Store(requestId, ch)
 	interrupted, nevermind := e.manager.interrupted(e.evaluatorId)
 	defer nevermind()
@@ -142,8 +142,10 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 	}
 	select {
 	case <-ctx.Done():
-		return nil, nil
+		e.pendingRequests.Delete(requestId)
+		return nil, ctx.Err()
 	case err := <-interrupted:
+		e.pendingRequests.Delete(requestId)
 		return nil, err
 	case resp := <-ch:
 		if resp.Error != "" {

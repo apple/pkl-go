@@ -110,7 +110,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	msg := o.toMessage()
 	msg.RequestId = requestId
 	newEvaluatorRequest = msg
-	ch := make(chan *msgapi.CreateEvaluatorResponse)
+	ch := make(chan *msgapi.CreateEvaluatorResponse, 1)
 	m.pendingEvaluators.Store(requestId, ch)
 	interrupt, nevermind := m.interrupted(0)
 	defer nevermind()
@@ -123,8 +123,10 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	}
 	select {
 	case <-ctx.Done():
-		return nil, nil
+		m.pendingEvaluators.Delete(requestId)
+		return nil, ctx.Err()
 	case err := <-interrupt:
+		m.pendingEvaluators.Delete(requestId)
 		return nil, err
 	case resp := <-ch:
 		if resp.Error != "" {
