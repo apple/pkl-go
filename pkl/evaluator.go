@@ -19,7 +19,6 @@ package pkl
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 	"sync"
 
@@ -142,8 +141,10 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 	}
 	select {
 	case <-ctx.Done():
-		return nil, nil
+		e.pendingRequests.Delete(requestId)
+		return nil, ctx.Err()
 	case err := <-interrupted:
+		e.pendingRequests.Delete(requestId)
 		return nil, err
 	case resp := <-ch:
 		if resp.Error != "" {
@@ -168,13 +169,17 @@ func (e *evaluator) Closed() bool {
 func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
 	c, exists := e.pendingRequests.Load(resp.RequestId)
 	if !exists {
-		log.Default().Printf("warn: received a message for an unknown request id: %d", resp.RequestId)
 		return
 	}
 	ch := c.(chan *msgapi.EvaluateResponse)
-	ch <- resp
-	close(ch)
-	e.pendingRequests.Delete(resp.RequestId)
+	select {
+	case ch <- resp:
+		close(ch)
+		e.pendingRequests.Delete(resp.RequestId)
+	default:
+		// Request was cancelled, nobody is listening
+		e.pendingRequests.Delete(resp.RequestId)
+	}
 }
 
 func (e *evaluator) handleLog(resp *msgapi.Log) {
