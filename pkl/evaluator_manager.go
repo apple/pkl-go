@@ -110,8 +110,9 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	msg := o.toMessage()
 	msg.RequestId = requestId
 	newEvaluatorRequest = msg
-	ch := make(chan *msgapi.CreateEvaluatorResponse)
+	ch := make(chan *msgapi.CreateEvaluatorResponse, 1)
 	m.pendingEvaluators.Store(requestId, ch)
+	defer m.pendingEvaluators.Delete(requestId)
 	interrupt, nevermind := m.interrupted(0)
 	defer nevermind()
 	go func() {
@@ -119,12 +120,15 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	}()
 	// sanity check: it's possible that the evaluator has been closed at this point.
 	if m.closed.get() {
-		return nil, nil
+		return nil, errors.New("EvaluatorManager has been closed")
 	}
 	select {
 	case <-ctx.Done():
-		return nil, nil
+		return nil, ctx.Err()
 	case err := <-interrupt:
+		if err == nil {
+			return nil, errors.New("EvaluatorManager has been closed")
+		}
 		return nil, err
 	case resp := <-ch:
 		if resp.Error != "" {
@@ -204,49 +208,47 @@ func (m *evaluatorManager) listen() {
 		case *msgapi.EvaluateResponse:
 			ev := m.getEvaluator(msg.EvaluatorId)
 			if ev == nil {
-				return
+				continue
 			}
 			ev.handleEvaluateResponse(msg)
 		case *msgapi.Log:
 			ev := m.getEvaluator(msg.EvaluatorId)
 			if ev == nil {
-				return
+				continue
 			}
 			ev.handleLog(msg)
 		case *msgapi.ReadResource:
 			ev := m.getEvaluator(msg.EvaluatorId)
 			if ev == nil {
-				return
+				continue
 			}
 			ev.handleReadResource(msg)
 		case *msgapi.ReadModule:
 			ev := m.getEvaluator(msg.EvaluatorId)
 			if ev == nil {
-				return
+				continue
 			}
 			ev.handleReadModule(msg)
 		case *msgapi.ListResources:
 			ev := m.getEvaluator(msg.EvaluatorId)
 			if ev == nil {
-				return
+				continue
 			}
 			ev.handleListResources(msg)
 		case *msgapi.ListModules:
 			ev := m.getEvaluator(msg.EvaluatorId)
 			if ev == nil {
-				return
+				continue
 			}
 			ev.handleListModules(msg)
 		case *msgapi.CreateEvaluatorResponse:
-			ch, exists := m.pendingEvaluators.Load(msg.RequestId)
+			ch, exists := m.pendingEvaluators.LoadAndDelete(msg.RequestId)
 			if !exists {
 				log.Default().Printf("warn: received a message for an unknown request id: %d", msg.RequestId)
-				return
+				continue
 			}
 			cch := ch.(chan *msgapi.CreateEvaluatorResponse)
 			cch <- msg
-			close(cch)
-			m.pendingEvaluators.Delete(msg.RequestId)
 		}
 	}
 }

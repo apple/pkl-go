@@ -129,8 +129,9 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 		return nil, fmt.Errorf("evaluator is closed")
 	}
 	requestId := random.Int63()
-	ch := make(chan *msgapi.EvaluateResponse)
+	ch := make(chan *msgapi.EvaluateResponse, 1)
 	e.pendingRequests.Store(requestId, ch)
+	defer e.pendingRequests.Delete(requestId)
 	interrupted, nevermind := e.manager.interrupted(e.evaluatorId)
 	defer nevermind()
 	e.manager.impl.outChan() <- &msgapi.Evaluate{
@@ -142,8 +143,11 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 	}
 	select {
 	case <-ctx.Done():
-		return nil, nil
+		return nil, ctx.Err()
 	case err := <-interrupted:
+		if err == nil {
+			return nil, fmt.Errorf("evaluator is closed")
+		}
 		return nil, err
 	case resp := <-ch:
 		if resp.Error != "" {
@@ -166,15 +170,13 @@ func (e *evaluator) Closed() bool {
 }
 
 func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
-	c, exists := e.pendingRequests.Load(resp.RequestId)
+	c, exists := e.pendingRequests.LoadAndDelete(resp.RequestId)
 	if !exists {
 		log.Default().Printf("warn: received a message for an unknown request id: %d", resp.RequestId)
 		return
 	}
 	ch := c.(chan *msgapi.EvaluateResponse)
 	ch <- resp
-	close(ch)
-	e.pendingRequests.Delete(resp.RequestId)
 }
 
 func (e *evaluator) handleLog(resp *msgapi.Log) {
