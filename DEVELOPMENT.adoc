@@ -81,3 +81,13 @@ To run the formatter:
 ----
 pkl format --grammar-version 1 --write .
 ----
+
+== Testing against a local `libpkl` installation
+
+When running locally, configure the `PKG_CONFIG_PATH` environment variable:
+
+[source,bash]
+----
+export PKG_CONFIG_PATH=/path/to/libpkl/lib/pkgconfig
+go test -tags libpkl ./...
+----

@@ -1,9 +1,48 @@
 = Evaluator API
+:fn-executor: footnote:executor[When binding to Pkl as a child process, an "executor" is a child process instance. When binding to libpkl, an "executor" is a thread.]
 
 pkl-go provides a rich API for evaluating Pkl files in Go via https://pkg.go.dev/github.com/apple/pkl-go/pkl#Evaluator[`pkl.Evaluator`]. It can be configured with xref:custom-readers[custom readers], have its own security settings, control
 external property inputs, and more.
 
-Evaluation occurs by spawning the `pkl` cli as a child process, and communicates via message passing.
+== Binding to Pkl
+
+There are two ways to bind to Pkl.
+
+=== Spawning a child process
+
+pkl-go can call into Pkl by spawning the `pkl` CLI as a child process.
+This binding mode requires that the CLI be available on the machine's `PATH`.
+
+This is the default binding for pkl-go.
+
+=== Calling into `libpkl`
+
+pkl-go can call into Pkl's C library, https://pkl-lang.org/main/current/libpkl/index.html[libpkl].
+This means that Go applications call into Pkl as an in-process method call.
+This also means that your application must be built using CGO.
+
+When linking to libpkl, it is possible to link either to the static library, or the dynamic library.
+
+* Linking to the static library means that libpkl will be copied into your final executable, so that your executable can be used standalone without a system dependency.
+However, this affects the binary size of your executable (libpkl is about 100MB).
+* Linking to the dynamic library means that libpkl must be installed on the host machine that runs your executable.
+
+To build against libpkl, your Go application should include build tag `libpkl`.
+
+Example:
+
+[source,shell]
+----
+go build main.go -tags libpkl
+----
+
+By default, this links to the shared library.
+To link to the static library, add tag `libpkl_static`:
+
+[source,shell]
+----
+go build main.go -tags libpkl,libpkl_static
+----
 
 == Initializing an evaluator
 
@@ -12,12 +51,11 @@ There are two methods for initializing a `pkl.Evaluator`:
 1. https://pkg.go.dev/github.com/apple/pkl-go/pkl#NewEvaluator[`pkl.NewEvaluator`]
 2. https://pkg.go.dev/github.com/apple/pkl-go/pkl#EvaluatorManager[`pkl.EvaluatorManager.NewEvaluator`]
 
-These two constructors are distinguished by how they manage the lifecycle of the underlying `pkl` child process.
-`pkl.NewEvaluator` will spawn a child process per-evaluator, whereas `pkl.EvaluatorManager.NewEvalutor` will spawn a
-child process for the lifetime of the evaluator manager.
+These two constructors are distinguished by how they manage the lifecycle of the underlying executor{fn-executor}.
+`pkl.NewEvaluator` will spawn an executor per-evaluator, whereas `pkl.EvaluatorManager.NewEvalutor` will spawn an executor for the lifetime of the evaluator manager.
 
-For most use-cases, it is sufficient to use the `pkl.NewEvaluator` constructor. If multiple evaluators are desired,
-for example, to maintain separate caches or to have different settings, the evaluator manager should be used.
+For most use-cases, it is sufficient to use the `pkl.NewEvaluator` constructor.
+If multiple evaluators are desired, for example, to maintain separate caches or to have different settings, the evaluator manager should be used.
 
 == Evaluating modules
 

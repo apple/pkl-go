@@ -148,16 +148,16 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 }
 
 func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	projectEvaluator, err := NewEvaluator(ctx, opts...)
+	projectEvaluator, err := m.NewEvaluator(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
 	defer func() {
 		cerr := projectEvaluator.Close()
 		if err != nil {
 			err = cerr
 		}
 	}()
-	if err != nil {
-		return nil, err
-	}
 	projectSource := projectBaseUrl.JoinPath("PklProject")
 	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, &ModuleSource{Uri: projectSource})
 	if err != nil {
@@ -174,7 +174,7 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseU
 		newOpts = append(newOpts, WithProject(project))
 	}
 	newOpts = append(newOpts, opts...)
-	return NewEvaluator(ctx, newOpts...)
+	return m.NewEvaluator(ctx, newOpts...)
 }
 
 func (m *evaluatorManager) getVersion() (*internal.Semver, error) {

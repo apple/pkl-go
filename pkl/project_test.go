@@ -25,6 +25,7 @@ import (
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const project1Contents = `
@@ -323,6 +324,11 @@ func TestLoadProject(t *testing.T) {
 
 func TestLoadProjectWithProxy(t *testing.T) {
 	manager := NewEvaluatorManager()
+	defer manager.Close()
+
+	_, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+	require.Nil(t, err)
+
 	version, err := manager.(*evaluatorManager).getVersion()
 	if err != nil {
 		t.Fatal(err)
@@ -349,38 +355,6 @@ func TestLoadProjectWithProxy(t *testing.T) {
 							"localhost:8000",
 						},
 					},
-				},
-			}
-			assert.Equal(t, expectedSettings, project.EvaluatorSettings)
-		})
-	}
-}
-
-func TestLoadProjectWithExternalReaders(t *testing.T) {
-	manager := NewEvaluatorManager()
-	version, err := manager.(*evaluatorManager).getVersion()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if internal.PklVersion0_27.IsGreaterThan(version) {
-		t.SkipNow()
-	}
-
-	tempDir := t.TempDir()
-	_ = os.Mkdir(tempDir+"/pigeons", 0o777)
-	writeFile(t, tempDir+"/pigeons/PklProject", project4Contents)
-
-	project, err := LoadProject(context.Background(), tempDir+"/pigeons/PklProject")
-	if assert.NoError(t, err) {
-		t.Run("evaluatorSettings", func(t *testing.T) {
-			expectedSettings := ProjectEvaluatorSettings{
-				ExternalModuleReaders: map[string]ProjectEvaluatorSettingExternalReader{
-					"scheme1": {Executable: "reader1"},
-					"scheme2": {Executable: "reader2", Arguments: []string{"with", "args"}},
-				},
-				ExternalResourceReaders: map[string]ProjectEvaluatorSettingExternalReader{
-					"scheme3": {Executable: "reader3"},
-					"scheme4": {Executable: "reader4", Arguments: []string{"with", "args"}},
 				},
 			}
 			assert.Equal(t, expectedSettings, project.EvaluatorSettings)

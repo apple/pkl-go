@@ -88,17 +88,16 @@ func getOpenPort() int {
 
 func TestEvaluator(t *testing.T) {
 	manager := NewEvaluatorManager()
-
 	version, err := manager.(*evaluatorManager).getVersion()
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	projectDir := setupProject(t)
 
 	t.Run("EvaluateOutputText", func(t *testing.T) {
 		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 		if assert.NoError(t, err) {
+			defer ev.Close()
 			out, err := ev.EvaluateOutputText(context.Background(), TextSource("foo { bar = 1 }"))
 			assert.NoError(t, err)
 			assert.Equal(t, "foo {\n  bar = 1\n}\n", out)
@@ -505,12 +504,19 @@ age = 2
 
 	t.Run("EvaluatorManager.NewProjectEvaluator", func(t *testing.T) {
 		ev, err := manager.NewProjectEvaluator(context.Background(), projectDir, PreconfiguredOptions)
-		if assert.NoError(t, err) {
-			mainPklFile := &ModuleSource{Uri: projectDir.JoinPath("./main.pkl")}
-			out, err := ev.EvaluateOutputText(context.Background(), mainPklFile)
-			assert.NoError(t, err)
-			assert.Equal(t, "uri = \"https://www.example.com\"\n", out)
+		if err != nil {
+			t.Fatalf("%s", err)
 		}
+		defer func(ev Evaluator) {
+			err := ev.Close()
+			if err != nil {
+				t.Fatalf("%s", err)
+			}
+		}(ev)
+		mainPklFile := &ModuleSource{Uri: projectDir.JoinPath("./main.pkl")}
+		out, err := ev.EvaluateOutputText(context.Background(), mainPklFile)
+		assert.NoError(t, err)
+		assert.Equal(t, "uri = \"https://www.example.com\"\n", out)
 	})
 
 	t.Run("evaluate after close", func(t *testing.T) {
@@ -665,7 +671,12 @@ evaluatorSettings {
   rootDir = "."
 }
 `)
-		project, err := LoadProject(context.Background(), projectFile)
+		projectEvaluator, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer projectEvaluator.Close()
+		project, err := LoadProjectFromEvaluator(context.Background(), projectEvaluator, FileSource(projectFile))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -673,6 +684,7 @@ evaluatorSettings {
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer evaluator.Close()
 		_, err = evaluator.EvaluateOutputText(context.Background(), FileSource("/foo.txt"))
 		if err == nil {
 			t.Logf("Expected an error but didn't get any")

@@ -1,0 +1,86 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+//go:build libpkl
+
+package pkl
+
+import (
+	"context"
+	"fmt"
+	"net/url"
+	"strings"
+)
+
+// NewEvaluator returns an evaluator backed by a single EvaluatorManager.
+// Its manager gets closed when the evaluator is closed.
+//
+// If creating multiple evaluators, prefer using EvaluatorManager.NewEvaluator instead,
+// because it lessens the overhead of each successive evaluator.
+func NewEvaluator(ctx context.Context, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	manager := NewEvaluatorManager()
+	ev, err := manager.NewEvaluator(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &simpleEvaluator{Evaluator: ev, manager: manager}, nil
+}
+
+// NewProjectEvaluator is an easy way to create an evaluator that is configured by the specified
+// projectDir.
+//
+// It is similar to running the `pkl eval` or `pkl test` CLI command with a set `--project-dir`.
+//
+// When using project dependencies, they must first be resolved using the `pkl project resolve`
+// CLI command.
+func NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	// enforced by Pkl: `file` URIs must conform to RFC-8089.
+	// Pkl currently throws PklBugException if passing a file URI without a path
+	if projectBaseUrl.Scheme == "file" {
+		if !strings.HasPrefix(projectBaseUrl.Path, "/") {
+			return nil, fmt.Errorf(
+				"projectBaseUrl is an invalid file URI: file URIs must have a path component that starts with `/` (e.g. file:///path/to/project). Got: %q",
+				projectBaseUrl,
+			)
+		}
+	}
+	manager := NewEvaluatorManager()
+	projectEvaluator, err := manager.NewEvaluator(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		cerr := projectEvaluator.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
+
+	projectPath := projectBaseUrl.JoinPath("PklProject")
+	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, &ModuleSource{Uri: projectPath})
+	if err != nil {
+		return nil, err
+	}
+	newOpts := []func(options *EvaluatorOptions){
+		WithProject(project),
+	}
+	newOpts = append(newOpts, opts...)
+	ev, err := manager.NewEvaluator(ctx, newOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return &simpleEvaluator{Evaluator: ev, manager: manager}, nil
+}
