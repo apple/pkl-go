@@ -33,7 +33,7 @@ local gofumptVersion = "0.9.2"
 local goJunitReportVersion = "2.1.0"
 local goLicensesVersion = "2.0.1"
 
-local test: Workflow = new {
+local function test(cache: Boolean): Workflow = new {
   jobs {
     for (pklVersion in pklVersions) {
       ["test-pkl-\(pklVersion.replaceAll(".", "-"))"] {
@@ -43,6 +43,9 @@ local test: Workflow = new {
           (catalog.`actions/setup-go@v6`) {
             with {
               `go-version` = GO_VERSION
+              when (!cache) {
+                cache = false
+              }
             }
           }
           new {
@@ -95,6 +98,9 @@ local test: Workflow = new {
         (catalog.`actions/setup-go@v6`) {
           with {
             `go-version` = GO_VERSION
+            when (!cache) {
+              cache = false
+            }
           }
         }
         new {
@@ -120,33 +126,35 @@ local test: Workflow = new {
   }
 }
 
-local buildWorkflow: Workflow = (test) {
-  jobs {
-    ["build-pkl-package"] {
-      needs {
-        ...test.jobs.keys
-      }
-      `runs-on` = "ubuntu-latest"
-      steps {
-        catalog.`actions/checkout@v6`
-        new SetupPkl { version = pklVersionLatest }.step
-        new {
-          run =
-            """
-            pkl project package codegen/src/ --output-path out/pkl-package/
-            """
-        }
-        (catalog.`actions/upload-artifact@v5`) {
-          with {
-            name = "pkl-package"
-            // add a wildcard to preserve folder paths in the resulting zip
-            path = "out*/"
+local function buildWorkflow(cache: Boolean): Workflow =
+  let (self = test(cache))
+    (self) {
+      jobs {
+        ["build-pkl-package"] {
+          needs {
+            ...self.jobs.keys
+          }
+          `runs-on` = "ubuntu-latest"
+          steps {
+            catalog.`actions/checkout@v6`
+            new SetupPkl { version = pklVersionLatest }.step
+            new {
+              run =
+                """
+                pkl project package codegen/src/ --output-path out/pkl-package/
+                """
+            }
+            (catalog.`actions/upload-artifact@v5`) {
+              with {
+                name = "pkl-package"
+                // add a wildcard to preserve folder paths in the resulting zip
+                path = "out*/"
+              }
+            }
           }
         }
       }
     }
-  }
-}
 
 testReports {
   junit {
@@ -160,16 +168,16 @@ testReports {
 triggerDocsBuild = "release"
 triggerPackageDocsBuild = "release"
 
-prb = test
+prb = test(true)
 
-main = buildWorkflow
+main = buildWorkflow(true)
 
-build = buildWorkflow
+build = buildWorkflow(true)
 
 releaseIgnoreTags {
   "pkl.golang@**"
 }
-release = (buildWorkflow) {
+release = (buildWorkflow(false)) {
   jobs {
     ["do-release"] {
       `runs-on` = "ubuntu-latest"
