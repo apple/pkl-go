@@ -115,9 +115,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	defer m.pendingEvaluators.Delete(requestId)
 	interrupt, nevermind := m.interrupted(0)
 	defer nevermind()
-	go func() {
-		m.impl.outChan() <- newEvaluatorRequest
-	}()
+	m.impl.outChan() <- newEvaluatorRequest
 	// sanity check: it's possible that the evaluator has been closed at this point.
 	if m.closed.get() {
 		return nil, errors.New("EvaluatorManager has been closed")
