@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/apple/pkl-go/pkl/internal"
@@ -203,6 +204,13 @@ func writeFile(t *testing.T, filename string, contents string) {
 		t.Logf("Failed to write file %s: %s", filename, err)
 		t.FailNow()
 	}
+}
+
+func TestLoadProjectEvaluatorStartupError(t *testing.T) {
+	t.Setenv("PKL_EXEC", filepath.Join(t.TempDir(), "missing-pkl"))
+	project, err := LoadProject(context.Background(), "PklProject")
+	assert.Nil(t, project)
+	assert.ErrorIs(t, err, os.ErrNotExist)
 }
 
 func TestLoadProject(t *testing.T) {

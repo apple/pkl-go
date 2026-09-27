@@ -134,15 +134,15 @@ func (project *Project) Dependencies() *ProjectDependencies {
 // LoadProject loads a project definition from the specified path directory.
 func LoadProject(context context.Context, path string) (*Project, error) {
 	ev, err := NewEvaluator(context, PreconfiguredOptions)
+	if err != nil {
+		return nil, err
+	}
 	defer func() {
 		cerr := ev.Close()
 		if err == nil {
 			err = cerr
 		}
 	}()
-	if err != nil {
-		return nil, err
-	}
 	return LoadProjectFromEvaluator(context, ev, FileSource(path))
 }
 
