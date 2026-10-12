@@ -106,7 +106,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 		return nil, err
 	}
 	var newEvaluatorRequest msgapi.OutgoingMessage
-	requestId := random.Int63()
+	requestId := nextRequestId()
 	msg := o.toMessage()
 	msg.RequestId = requestId
 	newEvaluatorRequest = msg
