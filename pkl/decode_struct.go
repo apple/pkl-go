@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"reflect"
 
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
@@ -39,6 +40,7 @@ type structField struct {
 var (
 	emptyInterfaceType = reflect.TypeFor[any]()
 	objectType         = reflect.TypeFor[Object]()
+	urlType            = reflect.TypeFor[url.URL]()
 )
 
 func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
@@ -53,6 +55,7 @@ func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 	if moduleUri == "pkl:base" && name == "Dynamic" || typ.AssignableTo(objectType) {
 		return d.decodeObjectGeneric(moduleUri, name)
 	}
+	isUrl := moduleUri == "pkl:net" && name == "pkl.net#Url"
 	// When the target type is an interface (e.g. interface{}) and there is no
 	// registered Go struct for this Pkl class, fall back to decoding as a
 	// generic Object. This allows typed class instances to be deserialized
@@ -60,10 +63,44 @@ func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 	// that map to interface{}.
 	if typ.Kind() == reflect.Interface {
 		if _, hasSchema := d.schemas[name]; !hasSchema {
+			if isUrl {
+				return d.decodeUrl(typ, moduleUri, name)
+			}
 			return d.decodeObjectGeneric(moduleUri, name)
 		}
 	}
+	if typ == urlType {
+		if !isUrl {
+			return nil, fmt.Errorf("cannot decode Pkl value of type `%s` into Go type `%s`", name, typ)
+		}
+		return d.decodeUrl(typ, moduleUri, name)
+	}
 	return d.decodeTyped(name, typ)
+}
+
+// Decodes a `pkl.net#Url` by parsing its `stringValue` property.
+//
+// The result is a url.URL if typ is url.URL, and a *url.URL otherwise.
+func (d *decoder) decodeUrl(typ reflect.Type, moduleUri, name string) (*reflect.Value, error) {
+	obj, err := d.decodeObjectGeneric(moduleUri, name)
+	if err != nil {
+		return nil, err
+	}
+	stringValue, ok := obj.Interface().(Object).Properties["stringValue"].(string)
+	if !ok {
+		return nil, &InternalError{
+			err: fmt.Errorf("expected property `stringValue` of type `string` on `%s`", name),
+		}
+	}
+	u, err := url.Parse(stringValue)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode `%s` into `url.URL`: %w", name, err)
+	}
+	ret := reflect.ValueOf(u)
+	if typ == urlType {
+		ret = ret.Elem()
+	}
+	return &ret, nil
 }
 
 // decodeObjectGeneric decodes into Object.

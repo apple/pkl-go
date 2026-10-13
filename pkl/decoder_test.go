@@ -18,7 +18,9 @@ package pkl
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"testing"
 	"time"
@@ -35,6 +37,9 @@ func TestDecoder_Decode(t *testing.T) {
 	type namedString string
 	type namedFieldStruct struct {
 		Name namedString
+	}
+	type urlStruct struct {
+		StringValue string `pkl:"stringValue"`
 	}
 	tests := map[string]struct {
 		typ         reflect.Type
@@ -541,6 +546,79 @@ func TestDecoder_Decode(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		"should successfully decode Url into url.URL": {
+			typ: reflect.TypeFor[url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "https://example.com/a%20b?q=1#f")
+			},
+			want: url.URL{Scheme: "https", Host: "example.com", Path: "/a b", RawQuery: "q=1", Fragment: "f"},
+		},
+		"should successfully decode Url into *url.URL": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "/foo")
+			},
+			want: &url.URL{Path: "/foo"},
+		},
+		"should successfully decode Url into interface as *url.URL": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "mailto:user@example.com")
+			},
+			want: &url.URL{Scheme: "mailto", Opaque: "user@example.com"},
+		},
+		"should successfully decode Url into interface with a registered schema": {
+			typ:     reflect.TypeFor[any](),
+			schemas: map[string]reflect.Type{"pkl.net#Url": reflect.TypeFor[urlStruct]()},
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "https://example.com")
+			},
+			want: urlStruct{StringValue: "https://example.com"},
+		},
+		"should successfully decode Url into Object": {
+			typ: reflect.TypeFor[Object](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "https://example.com")
+			},
+			want: Object{
+				ModuleUri:  "pkl:net",
+				Name:       "pkl.net#Url",
+				Properties: map[string]any{"stringValue": "https://example.com"},
+				Entries:    map[any]any{},
+				Elements:   []any{},
+			},
+		},
+		"should return error for Url that url.Parse rejects": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "http://[v1.fe80::a+en1]/")
+			},
+			expectedErr: errors.New("unable to decode `pkl.net#Url` into `url.URL`: parse \"http://[v1.fe80::a+en1]/\": invalid host: ParseAddr(\"v1.fe80::a+en1\"): unexpected character (at \"v1.fe80::a+en1\")"),
+		},
+		"should return error for Url without stringValue": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeString("pkl.net#Url"))
+				assert.NoError(t, enc.EncodeString("pkl:net"))
+				assert.NoError(t, enc.EncodeArrayLen(0))
+			},
+			expectedErr: &InternalError{
+				err: errors.New("expected property `stringValue` of type `string` on `pkl.net#Url`"),
+			},
+		},
+		"should return error for other object decoded into url.URL": {
+			typ: reflect.TypeFor[url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeString("foo#Bar"))
+				assert.NoError(t, enc.EncodeString("file:///foo.pkl"))
+				assert.NoError(t, enc.EncodeArrayLen(0))
+			},
+			expectedErr: errors.New("cannot decode Pkl value of type `foo#Bar` into Go type `url.URL`"),
+		},
 		"should return error for struct with unknown code": {
 			typ: reflect.TypeFor[dummyStruct](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
@@ -570,4 +648,18 @@ func TestDecoder_Decode(t *testing.T) {
 			assert.Equal(t, tc.want, got.Interface())
 		})
 	}
+}
+
+// encodeUrl encodes a `pkl.net#Url` with only its `stringValue` property, the only one that the
+// decoder reads.
+func encodeUrl(t *testing.T, enc *msgpack.Encoder, stringValue string) {
+	assert.NoError(t, enc.EncodeArrayLen(4))
+	assert.NoError(t, enc.EncodeInt(codeObject))
+	assert.NoError(t, enc.EncodeString("pkl.net#Url"))
+	assert.NoError(t, enc.EncodeString("pkl:net"))
+	assert.NoError(t, enc.EncodeArrayLen(1))
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+	assert.NoError(t, enc.EncodeString("stringValue"))
+	assert.NoError(t, enc.EncodeString(stringValue))
 }

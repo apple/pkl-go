@@ -164,6 +164,9 @@ The below table describes how Pkl types are mapped into Go types.
 |`Duration`
 |`*pkl.Duration`
 
+|`net.Url` footnote:[Introduced in Pkl 0.33.]
+|`*url.URL`
+
 |`IntSeq`
 |`*pkl.IntSeq`
 

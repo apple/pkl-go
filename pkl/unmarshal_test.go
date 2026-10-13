@@ -19,6 +19,7 @@ package pkl_test
 import (
 	"bytes"
 	_ "embed"
+	"net/url"
 	"testing"
 
 	"github.com/apple/pkl-go/pkl"
@@ -37,6 +38,7 @@ import (
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/unions"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/unions/number"
 	"github.com/apple/pkl-go/pkl/test_fixtures/gen/unions/othernumbers"
+	"github.com/apple/pkl-go/pkl/test_fixtures/gen/urls"
 	"github.com/stretchr/testify/assert"
 	"github.com/vmihailenco/msgpack/v5"
 )
@@ -97,6 +99,9 @@ var typesPre030Input []byte
 
 //go:embed test_fixtures/msgpack/reference.pkl.msgpack
 var referenceInput []byte
+
+//go:embed test_fixtures/msgpack/urls.pkl.msgpack
+var urlsInput []byte
 
 func TestUnmarshall_Primitives(t *testing.T) {
 	var res primitives.Primitives
@@ -537,6 +542,37 @@ func TestUnmarshal_Reference(t *testing.T) {
 				{Property: &baz, InternalIsProperty: true, InternalIsSubscript: false},
 				{Key: reference.MapKey{Key: "foo"}, InternalIsProperty: false, InternalIsSubscript: true},
 			},
+		},
+	}, res)
+}
+
+func TestUnmarshal_Urls(t *testing.T) {
+	var res urls.Urls
+	assert.NoError(t, pkl.Unmarshal(urlsInput, &res))
+	assert.Equal(t, urls.Urls{
+		Res1: &url.URL{
+			Scheme:   "https",
+			User:     url.UserPassword("user", "pw"),
+			Host:     "example.com:8080",
+			Path:     "/a/b c",
+			RawQuery: "q=1&q=2",
+			Fragment: "f",
+		},
+		Res2: &url.URL{Path: "/foo/bar"},
+		Res3: &url.URL{Scheme: "mailto", Opaque: "user@example.com"},
+		Res4: nil,
+		Res5: &url.URL{Scheme: "http", Host: "[fe80::1%eth0]", Path: "/p"},
+		Res6: []*url.URL{{Scheme: "https", Host: "example.com", Path: "/a/b", RawPath: "/a%2Fb"}},
+		Res7: map[string]*url.URL{"tmp": {Scheme: "file", Path: "/tmp"}},
+		Res8: &url.URL{Scheme: "https", Host: "example.com"},
+		Res9: pkl.Object{
+			ModuleUri: "pkl:base",
+			Name:      "Dynamic",
+			Properties: map[string]any{
+				"url": &url.URL{Scheme: "https", Host: "example.com", Path: "/dynamic"},
+			},
+			Entries:  map[any]any{},
+			Elements: []any{},
 		},
 	}, res)
 }
