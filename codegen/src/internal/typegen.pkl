@@ -75,6 +75,8 @@ function generateDeclaredType(
       mapped.type
     else if (mappedTypes.containsKey(reflectee))
       mappedTypes[reflectee]
+    else if (isUrl(referent))
+      urlType
     else if (referent is reflect.TypeAlias)
       generateType(referent.referent, enclosing, seenMappings)
     else if (reflectee == List || reflectee == Listing)
@@ -165,6 +167,18 @@ function generateReference(
 local function builtInType(typ: String): Type.Declared = new { typeName = typ }
 
 local anyType: Type.Declared = builtInType("any")
+
+local function isUrl(decl: reflect.TypeDeclaration): Boolean =
+  decl is reflect.Class && decl.enclosingDeclaration.uri == "pkl:net" && decl.name == "Url"
+
+// introduced in Pkl 0.33
+local urlType: Type = new Type.Pointer {
+  elem = new Type.Declared {
+    package = "url"
+    typeName = "URL"
+    importPath = "net/url"
+  }
+}
 
 mappedTypes: Mapping<Class | TypeAlias, Type> = new {
   [Int] = new Type.Declared { typeName = "int" }
