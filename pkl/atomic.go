@@ -31,10 +31,3 @@ func (a *atomicBool) get() bool {
 func (a *atomicBool) set(value bool) {
 	a.Store(value)
 }
-
-var lastRequestId atomic.Int64
-
-// nextRequestId returns a request ID that is unique within this process.
-func nextRequestId() int64 {
-	return lastRequestId.Add(1)
-}

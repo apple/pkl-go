@@ -206,3 +206,31 @@ func TestEvaluatorManager_interrupt_Close(t *testing.T) {
 	assert.Nil(t, evaluator)
 	assert.EqualError(t, err, "EvaluatorManager has been closed")
 }
+
+func TestNextRequestIdIsUniqueAcrossGoroutines(t *testing.T) {
+	const goroutines = 64
+	const idsPerGoroutine = 1000
+	manager := &evaluatorManager{}
+	ids := make(chan int64, goroutines*idsPerGoroutine)
+	var start, done sync.WaitGroup
+	start.Add(1)
+	for range goroutines {
+		done.Add(1)
+		go func() {
+			defer done.Done()
+			start.Wait()
+			for range idsPerGoroutine {
+				ids <- manager.nextRequestId()
+			}
+		}()
+	}
+	start.Done()
+	done.Wait()
+	close(ids)
+
+	seen := make(map[int64]bool, goroutines*idsPerGoroutine)
+	for id := range ids {
+		assert.False(t, seen[id], "duplicate request id %d", id)
+		seen[id] = true
+	}
+}
