@@ -77,7 +77,7 @@ type evaluator struct {
 	logger          Logger
 	manager         *evaluatorManager
 	pendingRequests *sync.Map
-	closed          bool
+	closed          atomicBool
 	resourceReaders []ResourceReader
 	moduleReaders   []ModuleReader
 }
@@ -158,7 +158,7 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 }
 
 func (e *evaluator) Close() error {
-	if e.closed {
+	if e.closed.get() {
 		return nil
 	}
 	e.manager.closeEvaluator(e)
@@ -166,7 +166,7 @@ func (e *evaluator) Close() error {
 }
 
 func (e *evaluator) Closed() bool {
-	return e.closed
+	return e.closed.get()
 }
 
 func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
