@@ -167,6 +167,9 @@ The below table describes how Pkl types are mapped into Go types.
 |`net.Url` footnote:[Introduced in Pkl 0.33.]
 |`*url.URL`
 
+|`Uri`
+|`*url.URL`
+
 |`IntSeq`
 |`*pkl.IntSeq`
 

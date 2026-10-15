@@ -26,6 +26,14 @@ type Urls struct {
 	Res8 any `pkl:"res8"`
 
 	Res9 pkl.Object `pkl:"res9"`
+
+	Res10 *url.URL `pkl:"res10"`
+
+	Res11 *url.URL `pkl:"res11"`
+
+	Res12 []*url.URL `pkl:"res12"`
+
+	Res13 pkl.Object `pkl:"res13"`
 }
 
 // LoadFromPath loads the pkl module at the given path and evaluates it into a Urls
