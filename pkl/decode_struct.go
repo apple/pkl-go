@@ -64,7 +64,7 @@ func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 	if typ.Kind() == reflect.Interface {
 		if _, hasSchema := d.schemas[name]; !hasSchema {
 			if isUrl {
-				return d.decodeUrl(typ, moduleUri, name)
+				return d.decodeUrl(moduleUri, name)
 			}
 			return d.decodeObjectGeneric(moduleUri, name)
 		}
@@ -73,15 +73,13 @@ func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 		if !isUrl {
 			return nil, fmt.Errorf("cannot decode Pkl value of type `%s` into Go type `%s`", name, typ)
 		}
-		return d.decodeUrl(typ, moduleUri, name)
+		return d.decodeUrl(moduleUri, name)
 	}
 	return d.decodeTyped(name, typ)
 }
 
-// Decodes a `pkl.net#Url` by parsing its `stringValue` property.
-//
-// The result is a url.URL if typ is url.URL, and a *url.URL otherwise.
-func (d *decoder) decodeUrl(typ reflect.Type, moduleUri, name string) (*reflect.Value, error) {
+// Decodes a `pkl.net#Url` into a url.URL by parsing its `stringValue` property.
+func (d *decoder) decodeUrl(moduleUri, name string) (*reflect.Value, error) {
 	obj, err := d.decodeObjectGeneric(moduleUri, name)
 	if err != nil {
 		return nil, err
@@ -96,10 +94,7 @@ func (d *decoder) decodeUrl(typ reflect.Type, moduleUri, name string) (*reflect.
 	if err != nil {
 		return nil, err
 	}
-	ret := reflect.ValueOf(u)
-	if typ == urlType {
-		ret = ret.Elem()
-	}
+	ret := reflect.ValueOf(*u)
 	return &ret, nil
 }
 
