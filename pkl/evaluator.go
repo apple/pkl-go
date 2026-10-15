@@ -128,7 +128,7 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 	if e.Closed() {
 		return nil, fmt.Errorf("evaluator is closed")
 	}
-	requestId := random.Int63()
+	requestId := e.manager.nextRequestId()
 	ch := make(chan *msgapi.EvaluateResponse, 1)
 	e.pendingRequests.Store(requestId, ch)
 	defer e.pendingRequests.Delete(requestId)

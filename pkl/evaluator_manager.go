@@ -22,6 +22,7 @@ import (
 	"log"
 	"net/url"
 	"sync"
+	"sync/atomic"
 
 	"github.com/apple/pkl-go/pkl/internal"
 	"github.com/apple/pkl-go/pkl/internal/msgapi"
@@ -68,6 +69,7 @@ type evaluatorManager struct {
 	closed            atomicBool
 	newEvaluatorMutex sync.Mutex
 	initialized       bool
+	lastRequestId     atomic.Int64
 }
 
 // evaluatorManagerImpl is the underlying implementation of the manager. It defines the logic
@@ -106,7 +108,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 		return nil, err
 	}
 	var newEvaluatorRequest msgapi.OutgoingMessage
-	requestId := random.Int63()
+	requestId := m.nextRequestId()
 	msg := o.toMessage()
 	msg.RequestId = requestId
 	newEvaluatorRequest = msg
@@ -191,6 +193,11 @@ func (m *evaluatorManager) GetVersion() (string, error) {
 
 func (m *evaluatorManager) Close() error {
 	return m.closeErr(nil)
+}
+
+// nextRequestId returns a request ID that is unique within this manager.
+func (m *evaluatorManager) nextRequestId() int64 {
+	return m.lastRequestId.Add(1)
 }
 
 func (m *evaluatorManager) getEvaluator(evaluatorId int64) *evaluator {
