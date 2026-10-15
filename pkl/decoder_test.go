@@ -560,12 +560,12 @@ func TestDecoder_Decode(t *testing.T) {
 			},
 			want: &url.URL{Path: "/foo"},
 		},
-		"should successfully decode Url into interface as *url.URL": {
+		"should successfully decode Url into interface as url.URL": {
 			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
 				encodeUrl(t, enc, "mailto:user@example.com")
 			},
-			want: &url.URL{Scheme: "mailto", Opaque: "user@example.com"},
+			want: url.URL{Scheme: "mailto", Opaque: "user@example.com"},
 		},
 		"should successfully decode Url into interface with a registered schema": {
 			typ:     reflect.TypeFor[any](),

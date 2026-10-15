@@ -172,12 +172,10 @@ local function isUrl(decl: reflect.TypeDeclaration): Boolean =
   decl is reflect.Class && decl.enclosingDeclaration.uri == "pkl:net" && decl.name == "Url"
 
 // The Go type of both `pkl.net#Url` (introduced in Pkl 0.33) and the `pkl.base#Uri` typealias.
-local urlType: Type = new Type.Pointer {
-  elem = new Type.Declared {
-    package = "url"
-    typeName = "URL"
-    importPath = "net/url"
-  }
+local urlType: Type = new Type.Declared {
+  package = "url"
+  typeName = "URL"
+  importPath = "net/url"
 }
 
 mappedTypes: Mapping<Class | TypeAlias, Type> = new {

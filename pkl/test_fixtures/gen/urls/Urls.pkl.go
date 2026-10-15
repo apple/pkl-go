@@ -9,29 +9,29 @@ import (
 )
 
 type Urls struct {
-	Res1 *url.URL `pkl:"res1"`
+	Res1 url.URL `pkl:"res1"`
 
-	Res2 *url.URL `pkl:"res2"`
+	Res2 url.URL `pkl:"res2"`
 
-	Res3 *url.URL `pkl:"res3"`
+	Res3 url.URL `pkl:"res3"`
 
 	Res4 *url.URL `pkl:"res4"`
 
 	Res5 *url.URL `pkl:"res5"`
 
-	Res6 []*url.URL `pkl:"res6"`
+	Res6 []url.URL `pkl:"res6"`
 
-	Res7 map[string]*url.URL `pkl:"res7"`
+	Res7 map[string]url.URL `pkl:"res7"`
 
 	Res8 any `pkl:"res8"`
 
 	Res9 pkl.Object `pkl:"res9"`
 
-	Res10 *url.URL `pkl:"res10"`
+	Res10 url.URL `pkl:"res10"`
 
 	Res11 *url.URL `pkl:"res11"`
 
-	Res12 []*url.URL `pkl:"res12"`
+	Res12 []url.URL `pkl:"res12"`
 
 	Res13 pkl.Object `pkl:"res13"`
 }

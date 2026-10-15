@@ -550,7 +550,7 @@ func TestUnmarshal_Urls(t *testing.T) {
 	var res urls.Urls
 	assert.NoError(t, pkl.Unmarshal(urlsInput, &res))
 	assert.Equal(t, urls.Urls{
-		Res1: &url.URL{
+		Res1: url.URL{
 			Scheme:   "https",
 			User:     url.UserPassword("user", "pw"),
 			Host:     "example.com:8080",
@@ -558,25 +558,25 @@ func TestUnmarshal_Urls(t *testing.T) {
 			RawQuery: "q=1&q=2",
 			Fragment: "f",
 		},
-		Res2: &url.URL{Path: "/foo/bar"},
-		Res3: &url.URL{Scheme: "mailto", Opaque: "user@example.com"},
+		Res2: url.URL{Path: "/foo/bar"},
+		Res3: url.URL{Scheme: "mailto", Opaque: "user@example.com"},
 		Res4: nil,
 		Res5: &url.URL{Scheme: "http", Host: "[fe80::1%eth0]", Path: "/p"},
-		Res6: []*url.URL{{Scheme: "https", Host: "example.com", Path: "/a/b", RawPath: "/a%2Fb"}},
-		Res7: map[string]*url.URL{"tmp": {Scheme: "file", Path: "/tmp"}},
-		Res8: &url.URL{Scheme: "https", Host: "example.com"},
+		Res6: []url.URL{{Scheme: "https", Host: "example.com", Path: "/a/b", RawPath: "/a%2Fb"}},
+		Res7: map[string]url.URL{"tmp": {Scheme: "file", Path: "/tmp"}},
+		Res8: url.URL{Scheme: "https", Host: "example.com"},
 		Res9: pkl.Object{
 			ModuleUri: "pkl:base",
 			Name:      "Dynamic",
 			Properties: map[string]any{
-				"url": &url.URL{Scheme: "https", Host: "example.com", Path: "/dynamic"},
+				"url": url.URL{Scheme: "https", Host: "example.com", Path: "/dynamic"},
 			},
 			Entries:  map[any]any{},
 			Elements: []any{},
 		},
-		Res10: &url.URL{Scheme: "https", Host: "example.com", Path: "/uri", RawQuery: "q=1", Fragment: "f"},
+		Res10: url.URL{Scheme: "https", Host: "example.com", Path: "/uri", RawQuery: "q=1", Fragment: "f"},
 		Res11: nil,
-		Res12: []*url.URL{
+		Res12: []url.URL{
 			{Scheme: "https", Host: "example.com", Path: "/a/b", RawPath: "/a%2Fb"},
 			{Scheme: "mailto", Opaque: "user@example.com"},
 		},
