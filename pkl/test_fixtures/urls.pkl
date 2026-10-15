@@ -37,3 +37,11 @@ res7: Mapping<String, net.Url> = new { ["tmp"] = net.Url("file:///tmp") }
 res8: Any = net.Url("https://example.com")
 
 res9: Dynamic = new { url = net.Url("https://example.com/dynamic") }
+
+res10: Uri = "https://example.com/uri?q=1#f"
+
+res11: Uri? = null
+
+res12: Listing<Uri> = new { "https://example.com/a%2Fb"; "mailto:user@example.com" }
+
+res13: Dynamic = new { uri = "https://example.com/dynamic" }

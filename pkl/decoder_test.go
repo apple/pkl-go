@@ -588,6 +588,34 @@ func TestDecoder_Decode(t *testing.T) {
 				Elements:   []any{},
 			},
 		},
+		"should successfully decode Uri into url.URL": {
+			typ: reflect.TypeFor[url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("https://example.com/a%20b?q=1#f"))
+			},
+			want: url.URL{Scheme: "https", Host: "example.com", Path: "/a b", RawQuery: "q=1", Fragment: "f"},
+		},
+		"should successfully decode Uri into *url.URL": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("mailto:user@example.com"))
+			},
+			want: &url.URL{Scheme: "mailto", Opaque: "user@example.com"},
+		},
+		"should not parse a string decoded into an interface": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("https://example.com"))
+			},
+			want: "https://example.com",
+		},
+		"should return error for Uri that url.Parse rejects": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("https://example.com/%zz"))
+			},
+			expectedErr: errors.New("unable to decode `pkl.base#Uri` into `url.URL`: parse \"https://example.com/%zz\": invalid URL escape \"%zz\""),
+		},
 		"should return error for Url that url.Parse rejects": {
 			typ: reflect.TypeFor[*url.URL](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {

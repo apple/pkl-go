@@ -68,8 +68,16 @@ var durationType = reflect.TypeOf(time.Duration(0))
 
 // Decode decodes the next value according to the expected type.
 func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
-	// url.URL implements encoding.BinaryUnmarshaler, but `pkl.net#Url` is encoded as an object.
+	// url.URL implements encoding.BinaryUnmarshaler, but neither of its Pkl counterparts is encoded
+	// as binary: `pkl.base#Uri` is a string, and `pkl.net#Url` is an object.
 	if typ == urlType {
+		code, err := d.dec.PeekCode()
+		if err != nil {
+			return nil, err
+		}
+		if msgpcode.IsString(code) {
+			return d.decodeUri()
+		}
 		return d.decodePklObject(typ, true)
 	}
 	res, isUnmarshalled, err := d.maybeUnmarshal(typ)

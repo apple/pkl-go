@@ -92,15 +92,37 @@ func (d *decoder) decodeUrl(typ reflect.Type, moduleUri, name string) (*reflect.
 			err: fmt.Errorf("expected property `stringValue` of type `string` on `%s`", name),
 		}
 	}
-	u, err := url.Parse(stringValue)
+	u, err := parseUrl(stringValue, name)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode `%s` into `url.URL`: %w", name, err)
+		return nil, err
 	}
 	ret := reflect.ValueOf(u)
 	if typ == urlType {
 		ret = ret.Elem()
 	}
 	return &ret, nil
+}
+
+// decodeUri decodes a `pkl.base#Uri` into a url.URL.
+func (d *decoder) decodeUri() (*reflect.Value, error) {
+	s, err := d.dec.DecodeString()
+	if err != nil {
+		return nil, err
+	}
+	u, err := parseUrl(s, "pkl.base#Uri")
+	if err != nil {
+		return nil, err
+	}
+	ret := reflect.ValueOf(*u)
+	return &ret, nil
+}
+
+func parseUrl(s, name string) (*url.URL, error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode `%s` into `url.URL`: %w", name, err)
+	}
+	return u, nil
 }
 
 // decodeObjectGeneric decodes into Object.

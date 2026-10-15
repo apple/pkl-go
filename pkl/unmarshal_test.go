@@ -574,5 +574,19 @@ func TestUnmarshal_Urls(t *testing.T) {
 			Entries:  map[any]any{},
 			Elements: []any{},
 		},
+		Res10: &url.URL{Scheme: "https", Host: "example.com", Path: "/uri", RawQuery: "q=1", Fragment: "f"},
+		Res11: nil,
+		Res12: []*url.URL{
+			{Scheme: "https", Host: "example.com", Path: "/a/b", RawPath: "/a%2Fb"},
+			{Scheme: "mailto", Opaque: "user@example.com"},
+		},
+		// a `Uri` is just a string without a target type to tell otherwise
+		Res13: pkl.Object{
+			ModuleUri:  "pkl:base",
+			Name:       "Dynamic",
+			Properties: map[string]any{"uri": "https://example.com/dynamic"},
+			Entries:    map[any]any{},
+			Elements:   []any{},
+		},
 	}, res)
 }
