@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,4 +49,26 @@ func TestCompareSemverVersions(t *testing.T) {
 	assert.Equal(t, 0, compareVersions("2.0.0-a.b.3", "2.0.0-a.b.3"))
 	assert.Equal(t, 1, compareVersions("2.0.0-1.2.3.4", "2.0.0-1.2.3"))
 	assert.Equal(t, 0, compareVersions("2.0.0+foo", "2.0.0+bar"))
+	assert.Equal(t, -1, compareVersions("2.0.0-1", "2.0.0-alpha"))
+	assert.Equal(t, -1, compareVersions("2.0.0-0", "2.0.0-alpha"))
+	assert.Equal(t, 1, compareVersions("2.0.0-alpha", "2.0.0-1"))
+	assert.Equal(t, -1, compareVersions("2.0.0-alpha.1", "2.0.0-alpha.beta"))
+}
+
+// Precedence example from https://semver.org/#spec-item-11
+func TestCompareSemverPrereleasePrecedence(t *testing.T) {
+	ordered := []string{
+		"1.0.0-alpha",
+		"1.0.0-alpha.1",
+		"1.0.0-alpha.beta",
+		"1.0.0-beta",
+		"1.0.0-beta.2",
+		"1.0.0-beta.11",
+		"1.0.0-rc.1",
+		"1.0.0",
+	}
+	for i := 0; i < len(ordered)-1; i++ {
+		assert.Equal(t, -1, compareVersions(ordered[i], ordered[i+1]), "%s < %s", ordered[i], ordered[i+1])
+		assert.Equal(t, 1, compareVersions(ordered[i+1], ordered[i]), "%s > %s", ordered[i+1], ordered[i])
+	}
 }
