@@ -225,6 +225,8 @@ func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *re
 		res, err = d.decodeSliceImpl(reflect.TypeFor[[]any]())
 	case !requireStruct && code == codeSet:
 		res, err = d.decodeSet(reflect.TypeFor[map[any]any]())
+	case !requireStruct && code == codeBytes:
+		res, err = d.decodeBytesImpl()
 	case code == codeDataSize:
 		res, err = d.decodeDataSize()
 	case code == codeDuration:

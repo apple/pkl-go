@@ -441,6 +441,16 @@ func TestDecoder_Decode(t *testing.T) {
 			want:        42,
 			expectedErr: nil,
 		},
+		"should successfully decode interface with Pkl Bytes": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeBytes))
+				assert.NoError(t, enc.EncodeBytes([]byte{0x01, 0x02, 0x03}))
+			},
+			want:        []byte{0x01, 0x02, 0x03},
+			expectedErr: nil,
+		},
 		"should successfully decode interface with Pkl List": {
 			typ: reflect.TypeFor[any](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
