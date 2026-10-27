@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,17 +45,19 @@ func NewEvaluatorManager() EvaluatorManager {
 //
 //	NewEvaluatorManagerWithCommand([]string{"/opt/bin/pkl"})
 func NewEvaluatorManagerWithCommand(pklCommand []string) EvaluatorManager {
+	impl := &execEvaluator{
+		in:          make(chan msgapi.IncomingMessage),
+		out:         make(chan msgapi.OutgoingMessage),
+		closed:      make(chan error),
+		pklCommand:  pklCommand,
+		processDone: make(chan struct{}),
+	}
 	m := &evaluatorManager{
-		impl: &execEvaluator{
-			in:          make(chan msgapi.IncomingMessage),
-			out:         make(chan msgapi.OutgoingMessage),
-			closed:      make(chan error),
-			pklCommand:  pklCommand,
-			processDone: make(chan struct{}),
-		},
+		impl:              impl,
 		interrupts:        &sync.Map{},
 		evaluators:        &sync.Map{},
 		pendingEvaluators: &sync.Map{},
+		getVersion:        sync.OnceValues(impl.getVersion),
 	}
 	go m.listen()
 	go m.listenForImplClose()

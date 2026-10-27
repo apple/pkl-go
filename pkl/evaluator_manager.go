@@ -70,6 +70,7 @@ type evaluatorManager struct {
 	newEvaluatorMutex sync.Mutex
 	initialized       bool
 	lastRequestId     atomic.Int64
+	getVersion        func() (*internal.Semver, error)
 }
 
 // evaluatorManagerImpl is the underlying implementation of the manager. It defines the logic
@@ -150,7 +151,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 }
 
 func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
-	projectEvaluator, err := NewEvaluator(ctx, opts...)
+	projectEvaluator, err := m.NewEvaluator(ctx, opts...)
 	defer func() {
 		cerr := projectEvaluator.Close()
 		if err != nil {
@@ -177,10 +178,6 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseU
 	}
 	newOpts = append(newOpts, opts...)
 	return NewEvaluator(ctx, newOpts...)
-}
-
-func (m *evaluatorManager) getVersion() (*internal.Semver, error) {
-	return m.impl.getVersion()
 }
 
 func (m *evaluatorManager) GetVersion() (string, error) {

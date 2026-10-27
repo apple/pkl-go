@@ -65,15 +65,17 @@ func (f *fakeEvaluatorImpl) closedChan() chan error {
 var _ evaluatorManagerImpl = (*fakeEvaluatorImpl)(nil)
 
 func newFakeEvaluatorManager() *evaluatorManager {
+	impl := &fakeEvaluatorImpl{
+		in:     make(chan msgapi.IncomingMessage),
+		out:    make(chan msgapi.OutgoingMessage),
+		closed: make(chan error),
+	}
 	return &evaluatorManager{
-		impl: &fakeEvaluatorImpl{
-			in:     make(chan msgapi.IncomingMessage),
-			out:    make(chan msgapi.OutgoingMessage),
-			closed: make(chan error),
-		},
+		impl:              impl,
 		interrupts:        &sync.Map{},
 		evaluators:        &sync.Map{},
 		pendingEvaluators: &sync.Map{},
+		getVersion:        sync.OnceValues(impl.getVersion),
 	}
 }
 
