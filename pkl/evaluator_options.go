@@ -334,6 +334,7 @@ func (r *ExternalReader) toMessage() *msgapi.ExternalReader {
 	return &msgapi.ExternalReader{
 		Executable: r.Executable,
 		Arguments:  r.Arguments,
+		WorkingDir: r.WorkingDir,
 	}
 }
 
