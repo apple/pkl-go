@@ -296,7 +296,7 @@ func (m *evaluatorManager) closeEvaluator(ev *evaluator) {
 	ev.closed = true
 	m.interrupts.Range(func(key, value any) bool {
 		if value.(int64) == ev.evaluatorId {
-			key.(chan error) <- nil
+			trySend(key.(chan error), nil)
 		}
 		return true
 	})
@@ -304,9 +304,16 @@ func (m *evaluatorManager) closeEvaluator(ev *evaluator) {
 
 func (m *evaluatorManager) interrupt(err error) {
 	m.interrupts.Range(func(ch, _ any) bool {
-		ch.(chan error) <- err
+		trySend(ch.(chan error), err)
 		return true
 	})
+}
+
+// trySend sends a value on ch, recovering from the panic that occurs if ch has
+// been concurrently closed by a deferred nevermind() call.
+func trySend(ch chan error, err error) {
+	defer func() { recover() }()
+	ch <- err
 }
 
 func (m *evaluatorManager) init() error {
