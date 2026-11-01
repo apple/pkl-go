@@ -60,7 +60,7 @@ func (d *decoder) decodeSliceImpl(inType reflect.Type) (*reflect.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		v.Set(*decoded)
+		v.Set(convertTo(*decoded, elemType))
 	}
 	return &ret, nil
 }

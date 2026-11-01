@@ -153,6 +153,16 @@ func (d *decoder) decodePointer(inType reflect.Type) (*reflect.Value, error) {
 	return &ret, nil
 }
 
+// convertTo returns v as a value of type typ, so it can be stored in a slice, map, set, pair, or
+// variable of that type. The decoders for primitive values return Go's predeclared types (string,
+// int, and so on), so a value for a named type such as `type Name string` needs a conversion first.
+func convertTo(v reflect.Value, typ reflect.Type) reflect.Value {
+	if v.Kind() == typ.Kind() && v.Type() != typ && v.Type().ConvertibleTo(typ) {
+		return v.Convert(typ)
+	}
+	return v
+}
+
 // maybeUnmarshal determines if typ implements encoding.BinaryUnmarshaler, and if it does,
 // performs the unmarshalling.
 func (d *decoder) maybeUnmarshal(typ reflect.Type) (*reflect.Value, bool, error) {

@@ -387,6 +387,18 @@ func TestUnmarshal_Strings(t *testing.T) {
 	}
 }
 
+func TestUnmarshal_NamedType(t *testing.T) {
+	type name string
+	buf := bytes.NewBuffer([]byte{})
+	enc := msgpack.NewEncoder(buf)
+	if assert.NoError(t, enc.Encode("hello")) {
+		var res name
+		if assert.NoError(t, pkl.Unmarshal(buf.Bytes(), &res)) {
+			assert.Equal(t, name("hello"), res)
+		}
+	}
+}
+
 func TestUnmarshal_Int(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	enc := msgpack.NewEncoder(buf)
