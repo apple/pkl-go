@@ -27,10 +27,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/apple/pkl-go/pkl/internal"
+	"github.com/apple/pkl-go/pkl/internal/msgapi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //go:embed test_fixtures/testfs/*
@@ -784,4 +788,103 @@ func TestEvaluateAfterClose(t *testing.T) {
 	}
 	_, err = manager.NewEvaluator(context.Background(), PreconfiguredOptions)
 	assert.Error(t, err, "evaluator is closed")
+}
+
+// newBlockingResourceReader returns a resource reader for the "blocked" scheme.
+// Reading from it signals started, and then blocks until release is called.
+func newBlockingResourceReader() (reader ResourceReader, started <-chan struct{}, release func()) {
+	startedCh := make(chan struct{})
+	releaseCh := make(chan struct{})
+	var startOnce, releaseOnce sync.Once
+	reader = virtualResourceReader{
+		scheme: "blocked",
+		read: func(_ url.URL) ([]byte, error) {
+			startOnce.Do(func() { close(startedCh) })
+			<-releaseCh
+			return []byte("done"), nil
+		},
+	}
+	return reader, startedCh, func() { releaseOnce.Do(func() { close(releaseCh) }) }
+}
+
+// startBlockedEvaluation starts an evaluation that does not finish until release is called.
+// The returned channel receives the result of the evaluation.
+func startBlockedEvaluation(t *testing.T, manager EvaluatorManager) (ev Evaluator, started <-chan struct{}, release func(), result <-chan error) {
+	t.Helper()
+	reader, started, release := newBlockingResourceReader()
+	t.Cleanup(release)
+	ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithResourceReader(reader))
+	require.NoError(t, err)
+	errCh := make(chan error, 1)
+	go func() {
+		_, err := ev.EvaluateExpressionRaw(context.Background(), TextSource(`result = read("blocked:x").text`), "result")
+		errCh <- err
+	}()
+	select {
+	case <-started:
+	case err := <-errCh:
+		t.Fatalf("evaluation finished before reading the resource: %v", err)
+	}
+	return ev, started, release, errCh
+}
+
+func waitForEvaluationError(t *testing.T, result <-chan error) error {
+	t.Helper()
+	select {
+	case err := <-result:
+		return err
+	case <-time.After(30 * time.Second):
+		t.Fatal("timed out waiting for the evaluation to return")
+		return nil
+	}
+}
+
+func TestEvaluatorManager_CloseDuringEvaluation(t *testing.T) {
+	manager := NewEvaluatorManager()
+	ev, _, release, result := startBlockedEvaluation(t, manager)
+
+	assert.NoError(t, manager.Close())
+	assert.Error(t, waitForEvaluationError(t, result))
+	assert.True(t, ev.Closed())
+
+	// The reader finishes after the manager is closed. Handling its response must not panic.
+	release()
+	ev.(*evaluator).handleReadResource(&msgapi.ReadResource{EvaluatorId: ev.(*evaluator).evaluatorId, Uri: "blocked:x"})
+}
+
+func TestEvaluatorManager_ChildExitDuringEvaluation(t *testing.T) {
+	manager := NewEvaluatorManager()
+	m := manager.(*evaluatorManager)
+	ev, _, release, result := startBlockedEvaluation(t, manager)
+
+	require.NoError(t, m.impl.(*execEvaluator).cmd.Process.Kill())
+
+	assert.Error(t, waitForEvaluationError(t, result))
+	select {
+	case <-m.done:
+	case <-time.After(30 * time.Second):
+		t.Fatal("timed out waiting for the manager to notice that the child process exited")
+	}
+
+	// The reader finishes after the child process is gone. Handling its response must not panic.
+	release()
+	ev.(*evaluator).handleReadResource(&msgapi.ReadResource{EvaluatorId: ev.(*evaluator).evaluatorId, Uri: "blocked:x"})
+	assert.NoError(t, manager.Close())
+	_, err := ev.EvaluateExpressionRaw(context.Background(), TextSource("1"), "")
+	assert.Error(t, err)
+}
+
+func TestEvaluatorManager_CloseAfterNewEvaluatorWithCanceledContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	for range 5 {
+		manager := NewEvaluatorManager()
+		ev, err := manager.NewEvaluator(ctx, PreconfiguredOptions)
+		assert.Nil(t, ev)
+		assert.ErrorIs(t, err, context.Canceled)
+		assert.NoError(t, manager.Close())
+		// Closing a second time is a no-op.
+		assert.NoError(t, manager.Close())
+		assert.Error(t, manager.(*evaluatorManager).send(&msgapi.CloseEvaluator{}))
+	}
 }
