@@ -606,6 +606,9 @@ var WithExternalResourceReader = func(scheme string, spec ExternalReader) func(o
 // WithHttpHeaders configures the evaluator to send additional HTTP headers with requests whose URL matches the specified pattern.
 var WithHttpHeaders = func(pattern string, headers http.Header) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
+		if opts.Http == nil {
+			opts.Http = &Http{}
+		}
 		if opts.Http.Headers == nil {
 			opts.Http.Headers = make(map[string]http.Header)
 		}
