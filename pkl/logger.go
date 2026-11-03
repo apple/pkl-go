@@ -41,6 +41,9 @@ func NewLogger(out io.Writer) Logger {
 
 // FormatLogMessage returns the default formatter for log messages.
 func FormatLogMessage(level, message, frameUri string) string {
+	if frameUri == "" {
+		return fmt.Sprintf("pkl: %s: %s\n", level, message)
+	}
 	return fmt.Sprintf("pkl: %s: %s (%s)\n", level, message, frameUri)
 }
 

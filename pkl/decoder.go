@@ -54,13 +54,19 @@ const (
 type decoder struct {
 	dec     *msgpack.Decoder
 	schemas map[string]reflect.Type
+	logger  Logger
 }
 
 func newDecoder(b []byte, schemas map[string]reflect.Type) *decoder {
+	return newDecoderWithLogger(b, schemas, nil)
+}
+
+func newDecoderWithLogger(b []byte, schemas map[string]reflect.Type, logger Logger) *decoder {
 	msgpackDecoder := msgpack.NewDecoder(bytes.NewReader(b))
 	return &decoder{
 		dec:     msgpackDecoder,
 		schemas: schemas,
+		logger:  logger,
 	}
 }
 
