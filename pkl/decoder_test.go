@@ -33,6 +33,7 @@ func TestDecoder_Decode(t *testing.T) {
 		Name string
 	}
 	type namedString string
+	type namedInt int
 	type namedFieldStruct struct {
 		Name namedString
 	}
@@ -215,6 +216,51 @@ func TestDecoder_Decode(t *testing.T) {
 				"namedFieldStruct": reflect.TypeOf(namedFieldStruct{}),
 			},
 			want:        namedFieldStruct{Name: "Alice"},
+			expectedErr: nil,
+		},
+		"should convert decoded elements when slice has a named element type": {
+			typ: reflect.TypeFor[[]namedString](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeList))
+				assert.NoError(t, enc.EncodeArrayLen(1))
+				assert.NoError(t, enc.EncodeString("Alice"))
+			},
+			want:        []namedString{"Alice"},
+			expectedErr: nil,
+		},
+		"should convert decoded keys and values when map has named types": {
+			typ: reflect.TypeFor[map[namedString]namedInt](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeMap))
+				assert.NoError(t, enc.EncodeMapLen(1))
+				assert.NoError(t, enc.EncodeString("a"))
+				assert.NoError(t, enc.EncodeInt(1))
+			},
+			want:        map[namedString]namedInt{"a": 1},
+			expectedErr: nil,
+		},
+		"should convert decoded elements when set has a named element type": {
+			typ: reflect.TypeFor[map[namedString]struct{}](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeSet))
+				assert.NoError(t, enc.EncodeArrayLen(1))
+				assert.NoError(t, enc.EncodeString("a"))
+			},
+			want:        map[namedString]struct{}{"a": {}},
+			expectedErr: nil,
+		},
+		"should convert decoded values when Pair has named types": {
+			typ: reflect.TypeFor[Pair[namedString, namedInt]](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codePair))
+				assert.NoError(t, enc.EncodeString("key"))
+				assert.NoError(t, enc.EncodeInt(42))
+			},
+			want:        Pair[namedString, namedInt]{First: "key", Second: 42},
 			expectedErr: nil,
 		},
 		"should successfully decode an interface from string value": {

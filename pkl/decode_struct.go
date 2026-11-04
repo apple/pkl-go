@@ -236,8 +236,8 @@ func (d *decoder) decodePair(typ reflect.Type) (*reflect.Value, error) {
 	}
 	ret := reflect.New(typ)
 	elem := ret.Elem()
-	elem.FieldByName("First").Set(*first)
-	elem.FieldByName("Second").Set(*second)
+	elem.FieldByName("First").Set(convertTo(*first, firstField.Type))
+	elem.FieldByName("Second").Set(convertTo(*second, secondField.Type))
 	return &elem, nil
 }
 
