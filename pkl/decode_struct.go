@@ -421,6 +421,10 @@ func getStructFields(typ reflect.Type) map[string]structField {
 		if field.Anonymous {
 			switch field.Type.Kind() {
 			case reflect.Ptr:
+				// reflect can't allocate an embedded pointer to an unexported struct.
+				if !field.IsExported() {
+					continue
+				}
 				for k, v := range getStructFields(field.Type.Elem()) {
 					ret[k] = v
 				}
@@ -432,6 +436,10 @@ func getStructFields(typ reflect.Type) map[string]structField {
 				panic("pkl: getStructFields: unhandled field kind")
 			}
 		} else {
+			// reflect can't set unexported fields.
+			if !field.IsExported() {
+				continue
+			}
 			opts := parseStructOpts(&field)
 			if opts.propertyName == "-" {
 				continue
@@ -449,7 +457,9 @@ func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 	numFields := typ.NumField()
 	for i := 0; i < numFields; i++ {
 		field := typ.Field(i)
-		if field.Anonymous {
+		// reflect can't set unexported fields. An embedded struct already holds its zero value,
+		// and getStructFields skips embedded pointers to unexported structs.
+		if field.Anonymous && field.IsExported() {
 			var fieldValue reflect.Value
 			switch field.Type.Kind() {
 			case reflect.Ptr:
