@@ -30,6 +30,8 @@ import (
 
 var empty = struct{}{}
 
+var errManagerClosed = errors.New("EvaluatorManager has been closed")
+
 // EvaluatorManager provides a way to minimize the overhead of multiple evaluators.
 // For example, if calling into Pkl as a child process, using the manager will share the same
 // process for all created evaluators. In contrast, constructing multiple evaluators through
@@ -67,10 +69,19 @@ type evaluatorManager struct {
 	evaluators        *sync.Map
 	pendingEvaluators *sync.Map
 	closed            atomicBool
+	closing           atomicBool
+	closeOnce         sync.Once
 	newEvaluatorMutex sync.Mutex
 	initialized       bool
 	lastRequestId     atomic.Int64
 	getVersion        func() (*internal.Semver, error)
+
+	// done is closed once the manager has been closed. It unblocks anything that is waiting to send to
+	// the underlying implementation, and stops the goroutines that listen to it.
+	done chan struct{}
+	// closeCause is the reason the manager was closed. It is written before done is closed, and read
+	// only after done is closed.
+	closeCause error
 }
 
 // evaluatorManagerImpl is the underlying implementation of the manager. It defines the logic
@@ -119,7 +130,7 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	interrupt, nevermind := m.interrupted(0)
 	defer nevermind()
 	go func() {
-		m.impl.outChan() <- newEvaluatorRequest
+		_ = m.send(newEvaluatorRequest)
 	}()
 	// sanity check: it's possible that the evaluator has been closed at this point.
 	if m.closed.get() {
@@ -207,7 +218,17 @@ func (m *evaluatorManager) getEvaluator(evaluatorId int64) *evaluator {
 }
 
 func (m *evaluatorManager) listen() {
-	for msg := range m.impl.inChan() {
+	for {
+		var msg msgapi.IncomingMessage
+		select {
+		case <-m.done:
+			return
+		case in, ok := <-m.impl.inChan():
+			if !ok {
+				return
+			}
+			msg = in
+		}
 		switch msg := msg.(type) {
 		case *msgapi.EvaluateResponse:
 			ev := m.getEvaluator(msg.EvaluatorId)
@@ -263,8 +284,11 @@ func (m *evaluatorManager) listen() {
 // This method will also be called if EvaluatorManager.Close is explicitly called. But it is safe
 // to call `closeErr` multiple times.
 func (m *evaluatorManager) listenForImplClose() {
-	err := <-m.impl.closedChan()
-	_ = m.closeErr(err)
+	select {
+	case err := <-m.impl.closedChan():
+		_ = m.closeErr(err)
+	case <-m.done:
+	}
 }
 
 // interrupted creates a channel that gets published to when an interruption happens, and also
@@ -276,12 +300,45 @@ func (m *evaluatorManager) listenForImplClose() {
 //   - The underlying pkl process died
 //   - The EvaluatorManager was closed
 //   - The Evaluator was closed
+//
+// The channel is buffered and is never closed, so that an interruption racing with the cleanup
+// function can neither block nor panic. Only the first interruption is delivered.
 func (m *evaluatorManager) interrupted(evaluatorId int64) (chan error, func()) {
-	ch := make(chan error)
+	ch := make(chan error, 1)
 	m.interrupts.Store(ch, evaluatorId)
+	// The manager might have been closed before the channel was registered, in which case
+	// m.interrupt has already run and will not see it.
+	select {
+	case <-m.done:
+		ch <- m.closeCause
+	default:
+	}
 	return ch, func() {
 		m.interrupts.Delete(ch)
-		close(ch)
+	}
+}
+
+// send sends msg to the underlying implementation. It fails if the manager is closed, instead of
+// blocking forever or sending on a closed channel.
+func (m *evaluatorManager) send(msg msgapi.OutgoingMessage) error {
+	select {
+	case <-m.done:
+		return errManagerClosed
+	default:
+	}
+	select {
+	case m.impl.outChan() <- msg:
+		return nil
+	case <-m.done:
+		return errManagerClosed
+	}
+}
+
+// notify delivers err to the interrupt channel without blocking.
+func notify(ch chan error, err error) {
+	select {
+	case ch <- err:
+	default:
 	}
 }
 
@@ -291,12 +348,12 @@ func (m *evaluatorManager) closeEvaluator(ev *evaluator) {
 	if m.closed.get() {
 		return
 	}
-	m.impl.outChan() <- &msgapi.CloseEvaluator{EvaluatorId: ev.evaluatorId}
+	_ = m.send(&msgapi.CloseEvaluator{EvaluatorId: ev.evaluatorId})
 	m.evaluators.Delete(ev.evaluatorId)
-	ev.closed = true
+	ev.closed.set(true)
 	m.interrupts.Range(func(key, value any) bool {
 		if value.(int64) == ev.evaluatorId {
-			key.(chan error) <- nil
+			notify(key.(chan error), nil)
 		}
 		return true
 	})
@@ -304,7 +361,7 @@ func (m *evaluatorManager) closeEvaluator(ev *evaluator) {
 
 func (m *evaluatorManager) interrupt(err error) {
 	m.interrupts.Range(func(ch, _ any) bool {
-		ch.(chan error) <- err
+		notify(ch.(chan error), err)
 		return true
 	})
 }
@@ -314,23 +371,30 @@ func (m *evaluatorManager) init() error {
 }
 
 func (m *evaluatorManager) closeErr(e error) error {
-	if m.closed.get() {
-		return nil
+	if e == nil {
+		// On an explicit close, let Pkl close its evaluators before shutting it down. This allows Pkl to
+		// clean up after itself, for example by stopping external reader processes.
+		// If the child process exits in the meantime, closing the evaluators fails fast.
+		if !m.closing.CompareAndSwap(false, true) {
+			return nil
+		}
+		m.interrupt(nil)
+		m.evaluators.Range(func(_, v any) bool {
+			_ = v.(*evaluator).Close()
+			return true
+		})
 	}
 	var err error
-	m.interrupt(e)
-	m.evaluators.Range(func(evaluatorId, v any) bool {
-		ev := v.(*evaluator)
-		// if an error occurs, still try to keep closing.
-		if cerr := ev.Close(); cerr != nil {
-			err = cerr
-		}
-		return true
+	m.closeOnce.Do(func() {
+		m.closed.set(true)
+		m.closeCause = e
+		close(m.done)
+		m.interrupt(e)
+		m.evaluators.Range(func(_, v any) bool {
+			v.(*evaluator).closed.set(true)
+			return true
+		})
+		err = m.impl.deinit()
 	})
-	m.closed.set(true)
-	derr := m.impl.deinit()
-	if err != nil {
-		return err
-	}
-	return derr
+	return err
 }

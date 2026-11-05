@@ -51,12 +51,14 @@ func NewEvaluatorManagerWithCommand(pklCommand []string) EvaluatorManager {
 		closed:      make(chan error),
 		pklCommand:  pklCommand,
 		processDone: make(chan struct{}),
+		stopped:     make(chan struct{}),
 	}
 	m := &evaluatorManager{
 		impl:              impl,
 		interrupts:        &sync.Map{},
 		evaluators:        &sync.Map{},
 		pendingEvaluators: &sync.Map{},
+		done:              make(chan struct{}),
 		getVersion:        sync.OnceValues(impl.getVersion),
 	}
 	go m.listen()
@@ -74,6 +76,9 @@ type execEvaluator struct {
 	version     *internal.Semver
 	pklCommand  []string
 	processDone chan struct{}
+	// stopped is closed when the evaluator is deinitialized. The message channels are never closed,
+	// so that goroutines that send on them can stop instead of panicking.
+	stopped chan struct{}
 }
 
 func (e *execEvaluator) inChan() chan msgapi.IncomingMessage {
@@ -160,7 +165,16 @@ func (e *execEvaluator) listenForProcessClose() {
 	if e.exited.get() {
 		return
 	}
-	e.closed <- err
+	e.notifyClosed(err)
+}
+
+// notifyClosed tells the evaluator manager that the evaluator has closed unexpectedly. It gives up
+// if the evaluator has already been deinitialized.
+func (e *execEvaluator) notifyClosed(err error) {
+	select {
+	case e.closed <- err:
+	case <-e.stopped:
+	}
 }
 
 func (e *execEvaluator) readIncomingMessages(stdout io.Reader) {
@@ -171,11 +185,15 @@ func (e *execEvaluator) readIncomingMessages(stdout io.Reader) {
 			break
 		}
 		if err != nil {
-			e.closed <- &InternalError{err: err}
+			e.notifyClosed(&InternalError{err: err})
 			return
 		}
 		internal.Debug("Received message: %#v", msg)
-		e.in <- msg
+		select {
+		case e.in <- msg:
+		case <-e.stopped:
+			return
+		}
 	}
 }
 
@@ -186,16 +204,22 @@ func (e *execEvaluator) handleSendMessages(stdin io.WriteCloser) {
 		}
 	}()
 
-	for msg := range e.out {
+	for {
+		var msg msgapi.OutgoingMessage
+		select {
+		case msg = <-e.out:
+		case <-e.stopped:
+			return
+		}
 		internal.Debug("Sending message: %#v", msg)
 		b, err := msg.ToMsgPack()
 		if err != nil {
-			e.closed <- &InternalError{err: err}
+			e.notifyClosed(&InternalError{err: err})
 			return
 		}
 		if _, err = stdin.Write(b); err != nil {
 			if !e.exited.get() {
-				e.closed <- &InternalError{err: err}
+				e.notifyClosed(&InternalError{err: err})
 			}
 			return
 		}
@@ -207,9 +231,7 @@ func (e *execEvaluator) deinit() error {
 		return nil
 	}
 	e.exited.set(true)
-	close(e.in)
-	close(e.out)
-	close(e.closed)
+	close(e.stopped)
 
 	return e.enforceKillOnTimeout()
 }
