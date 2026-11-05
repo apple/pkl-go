@@ -37,6 +37,37 @@ func TestDecoder_Decode(t *testing.T) {
 	type namedFieldStruct struct {
 		Name namedString
 	}
+	type unexportedFieldStruct struct {
+		Name string `pkl:"name"`
+		port int
+	}
+	type embeddedBase struct {
+		Name string `pkl:"name"`
+	}
+	type embeddedUnexportedStruct struct {
+		embeddedBase
+		Port int `pkl:"port"`
+	}
+	type embeddedUnexportedPointer struct {
+		*embeddedBase
+		Port int `pkl:"port"`
+	}
+	// an object with `name = "web"` and `port = 8080`
+	encodeNameAndPort := func(t *testing.T, enc *msgpack.Encoder) {
+		assert.NoError(t, enc.EncodeArrayLen(4))
+		assert.NoError(t, enc.EncodeInt(codeObject))
+		assert.NoError(t, enc.EncodeString("Server"))
+		assert.NoError(t, enc.EncodeString("my.module.Server"))
+		assert.NoError(t, enc.EncodeArrayLen(2)) // 2 members
+		assert.NoError(t, enc.EncodeArrayLen(3)) // for members: code + name + value
+		assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+		assert.NoError(t, enc.EncodeString("name"))
+		assert.NoError(t, enc.EncodeString("web"))
+		assert.NoError(t, enc.EncodeArrayLen(3))
+		assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+		assert.NoError(t, enc.EncodeString("port"))
+		assert.NoError(t, enc.EncodeInt(8080))
+	}
 	tests := map[string]struct {
 		typ         reflect.Type
 		data        func(t *testing.T, enc *msgpack.Encoder)
@@ -596,6 +627,21 @@ func TestDecoder_Decode(t *testing.T) {
 				Elements:   []any{},
 			},
 			expectedErr: nil,
+		},
+		"should ignore an unexported field that matches a property name": {
+			typ:  reflect.TypeFor[unexportedFieldStruct](),
+			data: encodeNameAndPort,
+			want: unexportedFieldStruct{Name: "web"},
+		},
+		"should decode the exported fields of an embedded unexported struct": {
+			typ:  reflect.TypeFor[embeddedUnexportedStruct](),
+			data: encodeNameAndPort,
+			want: embeddedUnexportedStruct{embeddedBase: embeddedBase{Name: "web"}, Port: 8080},
+		},
+		"should ignore an embedded pointer to an unexported struct": {
+			typ:  reflect.TypeFor[embeddedUnexportedPointer](),
+			data: encodeNameAndPort,
+			want: embeddedUnexportedPointer{Port: 8080},
 		},
 		"should return error for struct with unknown code": {
 			typ: reflect.TypeFor[dummyStruct](),
