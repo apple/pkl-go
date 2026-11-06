@@ -19,6 +19,8 @@ package pkl
 import (
 	"context"
 	"net/url"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -35,5 +37,43 @@ func TestNewProjectEvaluatorRejectsFileURLWithoutPath(t *testing.T) {
 		ev, err := NewProjectEvaluator(context.Background(), u)
 		assert.Nil(t, ev, "expected no evaluator for %q", raw)
 		assert.ErrorContains(t, err, "invalid file URI", "for %q", raw)
+	}
+}
+
+func TestEvaluatorManager_NewEvaluatorStartFailure(t *testing.T) {
+	manager := NewEvaluatorManagerWithCommand([]string{filepath.Join(t.TempDir(), "missing-pkl")})
+
+	ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+	assert.Nil(t, ev)
+	assert.ErrorIs(t, err, os.ErrNotExist)
+
+	// Closing the manager previously waited for the process that never started, and then
+	// panicked when trying to kill it.
+	assert.NoError(t, manager.Close())
+}
+
+func TestEvaluatorManager_NewEvaluatorAfterStartFailure(t *testing.T) {
+	pklExec, hasPklExec := os.LookupEnv("PKL_EXEC")
+	t.Setenv("PKL_EXEC", filepath.Join(t.TempDir(), "missing-pkl"))
+	manager := NewEvaluatorManager()
+	defer func() {
+		assert.NoError(t, manager.Close())
+	}()
+
+	_, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+	assert.ErrorIs(t, err, os.ErrNotExist)
+
+	if hasPklExec {
+		t.Setenv("PKL_EXEC", pklExec)
+	} else {
+		assert.NoError(t, os.Unsetenv("PKL_EXEC"))
+	}
+
+	// A failed start must not close the manager; it can start Pkl once the executable is available.
+	ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions)
+	if assert.NoError(t, err) {
+		out, err := ev.EvaluateOutputText(context.Background(), TextSource("foo = 1"))
+		assert.NoError(t, err)
+		assert.Equal(t, "foo = 1\n", out)
 	}
 }
