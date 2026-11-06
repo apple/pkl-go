@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding"
 	"fmt"
+	"log"
 	"reflect"
 	"time"
 
@@ -67,6 +68,14 @@ func newDecoderWithLogger(b []byte, schemas map[string]reflect.Type, logger Logg
 		dec:     msgpackDecoder,
 		schemas: schemas,
 		logger:  logger,
+	}
+}
+
+func (d *decoder) warn(msg string) {
+	if d.logger != nil {
+		d.logger.Warn(msg, "")
+	} else {
+		log.Default().Printf("warn: %s", msg)
 	}
 }
 
