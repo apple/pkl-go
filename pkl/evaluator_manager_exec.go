@@ -130,24 +130,27 @@ func (e *execEvaluator) getCommandAndArgStrings() (string, []string) {
 }
 
 func (e *execEvaluator) init() error {
-	e.cmd = e.getStartCommand()
-	e.cmd.Env = os.Environ()
-	e.cmd.Stderr = os.Stderr
-	stdin, err := e.cmd.StdinPipe()
+	cmd := e.getStartCommand()
+	cmd.Env = os.Environ()
+	cmd.Stderr = os.Stderr
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err
 	}
-	stdout, err := e.cmd.StdoutPipe()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
+	internal.Debug("Spawning command: %s", cmd)
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+	// e.cmd is only set once the process has started, so that deinit never tries to kill a process
+	// that doesn't exist, and a later call can try to start it again.
+	e.cmd = cmd
 	go e.readIncomingMessages(stdout)
 	go e.handleSendMessages(stdin)
-	internal.Debug("Spawning command: %s", e.cmd)
-	err = e.cmd.Start()
-	if err != nil {
-		return err
-	}
 	go e.listenForProcessClose()
 	return nil
 }
@@ -203,13 +206,14 @@ func (e *execEvaluator) handleSendMessages(stdin io.WriteCloser) {
 }
 
 func (e *execEvaluator) deinit() error {
-	if e.cmd == nil {
-		return nil
-	}
 	e.exited.set(true)
 	close(e.in)
 	close(e.out)
 	close(e.closed)
+	// The channels are closed even if no process was started, so that the manager's listeners exit.
+	if e.cmd == nil {
+		return nil
+	}
 
 	return e.enforceKillOnTimeout()
 }
