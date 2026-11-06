@@ -111,11 +111,11 @@ type Proxy struct {
 type ExternalReader struct {
 	Executable string   `msgpack:"executable"`
 	Arguments  []string `msgpack:"arguments,omitempty"`
-	WorkingDir string   `msgpack:"workingDir,omitempty'`
+	WorkingDir string   `msgpack:"workingDir,omitempty"`
 }
 
 type Checksums struct {
-	Sha256 string `msgpack:"checksums"`
+	Sha256 string `msgpack:"sha256"`
 }
 
 func (msg *CreateEvaluator) ToMsgPack() ([]byte, error) {

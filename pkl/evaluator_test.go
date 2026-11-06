@@ -24,6 +24,9 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -679,6 +682,41 @@ evaluatorSettings {
 			t.FailNow()
 		}
 		assert.Contains(t, err.Error(), "it is not within the root directory")
+	})
+
+	t.Run("external reader working dir", func(t *testing.T) {
+		if version.IsLessThan(internal.PklVersion0_32) {
+			t.SkipNow()
+		}
+		if runtime.GOOS == "windows" {
+			// Java resolves a relative executable against the parent's working directory on Windows.
+			t.SkipNow()
+		}
+
+		readerDir := t.TempDir()
+		executable := "test-external-reader"
+		_, filename, _, ok := runtime.Caller(0)
+		if !ok {
+			t.Fatal("can't find caller")
+		}
+		readerSource := filepath.Join(filepath.Dir(filename), "../cmd/internal/test-external-reader")
+		build := exec.Command("go", "build", "-o", filepath.Join(readerDir, executable), readerSource)
+		if out, err := build.CombinedOutput(); err != nil {
+			t.Fatalf("failed to build test external reader: %s\n%s", err, out)
+		}
+
+		// The executable is relative, so Pkl can only find it if it honors the working directory.
+		ev, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, WithExternalResourceReader("fib", ExternalReader{
+			Executable: "./" + executable,
+			WorkingDir: readerDir,
+		}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, err := ev.EvaluateOutputText(context.Background(), TextSource(`fib10 = read("fib:10").text.toInt()`))
+		assert.NoError(t, err)
+		assert.Equal(t, "fib10 = 55\n", out)
+		assert.NoError(t, ev.Close())
 	})
 
 	t.Cleanup(func() {
