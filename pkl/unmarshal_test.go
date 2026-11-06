@@ -552,3 +552,66 @@ func TestUnmarshal_Reference(t *testing.T) {
 		},
 	}, res)
 }
+
+type captureLogger struct {
+	traces []string
+	warns  []string
+}
+
+func (l *captureLogger) Trace(message string, frameUri string) {
+	l.traces = append(l.traces, message)
+}
+
+func (l *captureLogger) Warn(message string, frameUri string) {
+	l.warns = append(l.warns, message)
+}
+
+func TestUnmarshalWithLogger_UnmatchedField(t *testing.T) {
+	var buf bytes.Buffer
+	enc := msgpack.NewEncoder(&buf)
+	assert.NoError(t, enc.EncodeArrayLen(4))
+	assert.NoError(t, enc.EncodeInt(0x01)) // codeObject
+	assert.NoError(t, enc.EncodeString("Dummy"))
+	assert.NoError(t, enc.EncodeString("dummy.pkl"))
+	assert.NoError(t, enc.EncodeArrayLen(2))
+	// property: known
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(0x10)) // codeObjectMemberProperty
+	assert.NoError(t, enc.EncodeString("known"))
+	assert.NoError(t, enc.EncodeString("hello"))
+	// property: unknown
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(0x10)) // codeObjectMemberProperty
+	assert.NoError(t, enc.EncodeString("unknown"))
+	assert.NoError(t, enc.EncodeString("world"))
+
+	type Target struct {
+		Known string `pkl:"known"`
+	}
+
+	t.Run("with custom logger captures warning", func(t *testing.T) {
+		logger := &captureLogger{}
+		var res Target
+		err := pkl.UnmarshalWithLogger(buf.Bytes(), &res, logger)
+		assert.NoError(t, err)
+		assert.Equal(t, "hello", res.Known)
+		assert.Len(t, logger.warns, 1)
+		assert.Contains(t, logger.warns[0], "Cannot find field on Go struct")
+		assert.Contains(t, logger.warns[0], "unknown")
+	})
+
+	t.Run("with NoopLogger suppresses warning", func(t *testing.T) {
+		var res Target
+		err := pkl.UnmarshalWithLogger(buf.Bytes(), &res, pkl.NoopLogger)
+		assert.NoError(t, err)
+		assert.Equal(t, "hello", res.Known)
+	})
+}
+
+func TestFormatLogMessage(t *testing.T) {
+	msgWithUri := pkl.FormatLogMessage("WARN", "some warning", "file://foo.pkl")
+	assert.Equal(t, "pkl: WARN: some warning (file://foo.pkl)\n", msgWithUri)
+
+	msgWithoutUri := pkl.FormatLogMessage("WARN", "some warning", "")
+	assert.Equal(t, "pkl: WARN: some warning\n", msgWithoutUri)
+}

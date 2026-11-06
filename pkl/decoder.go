@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding"
 	"fmt"
+	"log"
 	"reflect"
 	"time"
 
@@ -54,13 +55,27 @@ const (
 type decoder struct {
 	dec     *msgpack.Decoder
 	schemas map[string]reflect.Type
+	logger  Logger
 }
 
 func newDecoder(b []byte, schemas map[string]reflect.Type) *decoder {
+	return newDecoderWithLogger(b, schemas, nil)
+}
+
+func newDecoderWithLogger(b []byte, schemas map[string]reflect.Type, logger Logger) *decoder {
 	msgpackDecoder := msgpack.NewDecoder(bytes.NewReader(b))
 	return &decoder{
 		dec:     msgpackDecoder,
 		schemas: schemas,
+		logger:  logger,
+	}
+}
+
+func (d *decoder) warn(msg string) {
+	if d.logger != nil {
+		d.logger.Warn(msg, "")
+	} else {
+		log.Default().Printf("warn: %s", msg)
 	}
 }
 

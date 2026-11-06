@@ -121,7 +121,7 @@ func (e *evaluator) EvaluateExpression(ctx context.Context, source *ModuleSource
 	if err != nil {
 		return err
 	}
-	return Unmarshal(bytes, out)
+	return unmarshal(bytes, out, e.logger)
 }
 
 func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSource, expr string) ([]byte, error) {
@@ -172,7 +172,12 @@ func (e *evaluator) Closed() bool {
 func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
 	c, exists := e.pendingRequests.LoadAndDelete(resp.RequestId)
 	if !exists {
-		log.Default().Printf("warn: received a message for an unknown request id: %d", resp.RequestId)
+		msg := fmt.Sprintf("received a message for an unknown request id: %d", resp.RequestId)
+		if e.logger != nil {
+			e.logger.Warn(msg, "")
+		} else {
+			log.Default().Printf("warn: %s", msg)
+		}
 		return
 	}
 	ch := c.(chan *msgapi.EvaluateResponse)
