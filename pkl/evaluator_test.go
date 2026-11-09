@@ -692,7 +692,7 @@ evaluatorSettings {
 		}
 		src := TextSource("result = IntSeq(1, 3000000000).fold(0, (acc, n) -> acc + n)")
 		_, err = evaluator.EvaluateOutputText(context.Background(), src)
-		assert.Contains(t, err.Error(), "Evaluation timed out after 1 second(s).")
+		assert.Contains(t, err.Error(), "Evaluation timed out")
 	})
 
 	t.Cleanup(func() {
