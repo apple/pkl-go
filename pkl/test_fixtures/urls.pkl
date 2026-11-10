@@ -1,0 +1,47 @@
+// ===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//	https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ===----------------------------------------------------------------------===//
+@go.Package { name = "github.com/apple/pkl-go/pkl/test_fixtures/gen/urls" }
+module urls
+
+import "pkl:net"
+
+import ".../codegen/src/go.pkl"
+
+res1: net.Url = net.Url("https://user:pw@example.com:8080/a/b c?q=1&q=2#f")
+
+res2: net.Url = net.Url("/foo/bar")
+
+res3: net.Url = net.Url("mailto:user@example.com")
+
+res4: net.Url? = null
+
+res5: net.Url? = net.Url("http://[fe80::1%25eth0]/p")
+
+res6: Listing<net.Url> = new { net.Url("https://example.com/a%2Fb") }
+
+res7: Mapping<String, net.Url> = new { ["tmp"] = net.Url("file:///tmp") }
+
+res8: Any = net.Url("https://example.com")
+
+res9: Dynamic = new { url = net.Url("https://example.com/dynamic") }
+
+res10: Uri = "https://example.com/uri?q=1#f"
+
+res11: Uri? = null
+
+res12: Listing<Uri> = new { "https://example.com/a%2Fb"; "mailto:user@example.com" }
+
+res13: Dynamic = new { uri = "https://example.com/dynamic" }
