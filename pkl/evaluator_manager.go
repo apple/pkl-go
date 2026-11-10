@@ -177,7 +177,7 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseU
 		newOpts = append(newOpts, WithProject(project))
 	}
 	newOpts = append(newOpts, opts...)
-	return NewEvaluator(ctx, newOpts...)
+	return m.NewEvaluator(ctx, newOpts...)
 }
 
 func (m *evaluatorManager) GetVersion() (string, error) {
