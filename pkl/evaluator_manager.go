@@ -19,8 +19,10 @@ package pkl
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -151,6 +153,17 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 }
 
 func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+	// enforced by Pkl: `file` URIs must conform to RFC-8089.
+	// Pkl currently throws PklBugException if passing a file URI without a path
+	if projectBaseUrl.Scheme == "file" {
+		if !strings.HasPrefix(projectBaseUrl.Path, "/") {
+			return nil, fmt.Errorf(
+				"projectBaseUrl is an invalid file URI: file URIs must have a path component that starts with `/` (e.g. file:///path/to/project). Got: %q",
+				projectBaseUrl,
+			)
+		}
+	}
+
 	projectEvaluator, err := m.NewEvaluator(ctx, opts...)
 	defer func() {
 		cerr := projectEvaluator.Close()
