@@ -18,6 +18,7 @@ package pkl
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 )
 
@@ -56,6 +57,9 @@ func NewProjectEvaluatorWithCommand(ctx context.Context, projectBaseUrl *url.URL
 	manager := NewEvaluatorManagerWithCommand(pklCmd)
 	ev, err := manager.NewProjectEvaluator(ctx, projectBaseUrl, opts...)
 	if err != nil {
+		if cerr := manager.Close(); cerr != nil {
+			return nil, fmt.Errorf("failed to create evaluator and close evaluator\ncreate failed with: %w\nclose failed with %w", err, cerr)
+		}
 		return nil, err
 	}
 	return &simpleEvaluator{Evaluator: ev, manager: manager}, nil

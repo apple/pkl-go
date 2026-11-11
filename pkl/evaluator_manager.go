@@ -152,36 +152,36 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 	}
 }
 
-func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (Evaluator, error) {
+func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseUrl *url.URL, opts ...func(options *EvaluatorOptions)) (evaluator Evaluator, err error) {
 	// enforced by Pkl: `file` URIs must conform to RFC-8089.
 	// Pkl currently throws PklBugException if passing a file URI without a path
 	if projectBaseUrl.Scheme == "file" {
 		if !strings.HasPrefix(projectBaseUrl.Path, "/") {
-			return nil, fmt.Errorf(
+			err = fmt.Errorf(
 				"projectBaseUrl is an invalid file URI: file URIs must have a path component that starts with `/` (e.g. file:///path/to/project). Got: %q",
 				projectBaseUrl,
 			)
+			return
 		}
 	}
 
 	projectEvaluator, err := m.NewEvaluator(ctx, opts...)
+	if err != nil {
+		return
+	}
 	defer func() {
-		cerr := projectEvaluator.Close()
-		if err != nil {
+		if cerr := projectEvaluator.Close(); err == nil {
 			err = cerr
 		}
 	}()
-	if err != nil {
-		return nil, err
-	}
 	projectSource := projectBaseUrl.JoinPath("PklProject")
 	project, err := LoadProjectFromEvaluator(ctx, projectEvaluator, &ModuleSource{Uri: projectSource})
 	if err != nil {
-		return nil, err
+		return
 	}
 	version, err := m.getVersion()
 	if err != nil {
-		return nil, err
+		return
 	}
 	var newOpts []func(options *EvaluatorOptions)
 	if version.IsLessThan(internal.PklVersion0_32) {
@@ -190,7 +190,8 @@ func (m *evaluatorManager) NewProjectEvaluator(ctx context.Context, projectBaseU
 		newOpts = append(newOpts, WithProject(project))
 	}
 	newOpts = append(newOpts, opts...)
-	return m.NewEvaluator(ctx, newOpts...)
+	evaluator, err = m.NewEvaluator(ctx, newOpts...)
+	return
 }
 
 func (m *evaluatorManager) GetVersion() (string, error) {
