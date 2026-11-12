@@ -19,6 +19,10 @@ package pkl
 import (
 	"context"
 	"errors"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -235,4 +239,27 @@ func TestNextRequestIdIsUniqueAcrossGoroutines(t *testing.T) {
 		assert.False(t, seen[id], "duplicate request id %d", id)
 		seen[id] = true
 	}
+}
+
+func TestNewProjectEvaluatorDoesNotSpawnExtraProcesses(t *testing.T) {
+	dir := t.TempDir()
+	assert.NoError(t, os.WriteFile(filepath.Join(dir, "PklProject"), []byte(`amends "pkl:project"`), 0o644))
+	output := &strings.Builder{}
+	internal.DebugEnabled = true
+	internal.DebugOutput = output
+	defer func() {
+		internal.DebugEnabled = false
+		internal.DebugOutput = os.Stderr
+	}()
+
+	manager := NewEvaluatorManager()
+	var evs []Evaluator
+	for i := 0; i < 3; i++ {
+		ev, err := manager.NewProjectEvaluator(t.Context(), &url.URL{Scheme: "file", Path: dir}, PreconfiguredOptions)
+		assert.NoError(t, err)
+		evs = append(evs, ev)
+	}
+	assert.NoError(t, manager.Close())
+
+	assert.Equal(t, strings.Count(output.String(), "Spawning command"), 2)
 }
