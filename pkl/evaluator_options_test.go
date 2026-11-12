@@ -71,3 +71,38 @@ func TestWithHttpHeaders(t *testing.T) {
 		}, opts.Http.Headers)
 	})
 }
+
+func TestWithProjectEvaluatorSettings(t *testing.T) {
+	t.Parallel()
+	t.Run("applies modulePath and timeout", func(t *testing.T) {
+		t.Parallel()
+		project := &Project{
+			ResolvedEvaluatorSettings: ProjectEvaluatorSettings{
+				ModulePath: []string{"/project/lib", "/project/vendor.zip"},
+				Timeout:    Duration{Value: 5, Unit: Minute},
+			},
+		}
+		opts := EvaluatorOptions{}
+		WithProjectEvaluatorSettings(project)(&opts)
+		assert.Equal(t, []string{"/project/lib", "/project/vendor.zip"}, opts.ModulePaths)
+		assert.Equal(t, int64(300), opts.TimeoutSeconds)
+	})
+	t.Run("rounds a sub-second timeout up", func(t *testing.T) {
+		t.Parallel()
+		project := &Project{
+			ResolvedEvaluatorSettings: ProjectEvaluatorSettings{
+				Timeout: Duration{Value: 1500, Unit: Millisecond},
+			},
+		}
+		opts := EvaluatorOptions{}
+		WithProjectEvaluatorSettings(project)(&opts)
+		assert.Equal(t, int64(2), opts.TimeoutSeconds)
+	})
+	t.Run("keeps existing options when the project doesn't set them", func(t *testing.T) {
+		t.Parallel()
+		opts := EvaluatorOptions{ModulePaths: []string{"/existing"}, TimeoutSeconds: 10}
+		WithProjectEvaluatorSettings(&Project{})(&opts)
+		assert.Equal(t, []string{"/existing"}, opts.ModulePaths)
+		assert.Equal(t, int64(10), opts.TimeoutSeconds)
+	})
+}

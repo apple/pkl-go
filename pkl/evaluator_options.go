@@ -19,6 +19,7 @@ package pkl
 import (
 	"fmt"
 	"io/fs"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -558,6 +559,12 @@ var applyFromProjectEvaluatorSettings = func(evaluatorSettings ProjectEvaluatorS
 	}
 	if evaluatorSettings.TraceMode != nil {
 		opts.TraceMode = *evaluatorSettings.TraceMode
+	}
+	if evaluatorSettings.ModulePath != nil {
+		opts.ModulePaths = evaluatorSettings.ModulePath
+	}
+	if evaluatorSettings.Timeout.Unit != 0 {
+		opts.TimeoutSeconds = int64(math.Ceil(evaluatorSettings.Timeout.GoDuration().Seconds()))
 	}
 }
 
