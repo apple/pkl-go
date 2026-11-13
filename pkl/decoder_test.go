@@ -99,10 +99,23 @@ func TestDecoder_Decode(t *testing.T) {
 		"should successfully decode a primitive go duration type": {
 			typ: reflect.TypeFor[time.Duration](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeDuration))
 				assert.NoError(t, enc.EncodeFloat64(10.0))
 				assert.NoError(t, enc.EncodeString("ns"))
 			},
-			want:        Duration{Value: 10.0, Unit: Nanosecond},
+			want:        10 * time.Nanosecond,
+			expectedErr: nil,
+		},
+		"should successfully decode a fractional go duration type": {
+			typ: reflect.TypeFor[time.Duration](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeDuration))
+				assert.NoError(t, enc.EncodeFloat64(1.5))
+				assert.NoError(t, enc.EncodeString("min"))
+			},
+			want:        90 * time.Second,
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive int type": {
@@ -792,4 +805,34 @@ func encodeUrl(t *testing.T, enc *msgpack.Encoder, stringValue string) {
 	assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
 	assert.NoError(t, enc.EncodeString("stringValue"))
 	assert.NoError(t, enc.EncodeString(stringValue))
+}
+
+func TestUnmarshalTimeDurationField(t *testing.T) {
+	// `timeout = 5.s` in module `Config`, encoded the way the Pkl server sends it.
+	var buf bytes.Buffer
+	enc := msgpack.NewEncoder(&buf)
+	assert.NoError(t, enc.EncodeArrayLen(4))
+	assert.NoError(t, enc.EncodeInt(codeObject))
+	assert.NoError(t, enc.EncodeString("Config"))
+	assert.NoError(t, enc.EncodeString("file:///config.pkl"))
+	assert.NoError(t, enc.EncodeArrayLen(1))
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+	assert.NoError(t, enc.EncodeString("timeout"))
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeDuration))
+	assert.NoError(t, enc.EncodeFloat64(5))
+	assert.NoError(t, enc.EncodeString("s"))
+
+	var pklDuration struct {
+		Timeout Duration `pkl:"timeout"`
+	}
+	assert.NoError(t, Unmarshal(buf.Bytes(), &pklDuration))
+	assert.Equal(t, Duration{Value: 5, Unit: Second}, pklDuration.Timeout)
+
+	var goDuration struct {
+		Timeout time.Duration `pkl:"timeout"`
+	}
+	assert.NoError(t, Unmarshal(buf.Bytes(), &goDuration))
+	assert.Equal(t, 5*time.Second, goDuration.Timeout)
 }
