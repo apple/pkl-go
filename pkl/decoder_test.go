@@ -118,6 +118,17 @@ func TestDecoder_Decode(t *testing.T) {
 			want:        90 * time.Second,
 			expectedErr: nil,
 		},
+		"should round a fractional go duration type to the nearest nanosecond": {
+			typ: reflect.TypeFor[time.Duration](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeDuration))
+				assert.NoError(t, enc.EncodeFloat64(1.005))
+				assert.NoError(t, enc.EncodeString("s"))
+			},
+			want:        1005 * time.Millisecond,
+			expectedErr: nil,
+		},
 		"should successfully decode a primitive int type": {
 			typ: reflect.TypeFor[int](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
