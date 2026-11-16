@@ -224,8 +224,8 @@ var _ encoding.BinaryUnmarshaler = new(DataSizeUnit)
 
 const (
 	Bytes     DataSizeUnit = 1
-	Kilobytes              = 1000
-	Kibibytes              = 1024
+	Kilobytes DataSizeUnit = 1000
+	Kibibytes DataSizeUnit = 1024
 	Megabytes              = Kilobytes * 1000
 	Mebibytes              = Kibibytes * 1024
 	Gigabytes              = Megabytes * 1000

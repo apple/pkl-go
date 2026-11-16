@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package pkl
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -55,6 +56,31 @@ func TestDataSize_String(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			assert.Equal(t, test.expected, test.input.String())
+		})
+	}
+}
+
+func TestDataSizeUnit_Constants(t *testing.T) {
+	tests := []struct {
+		unit     any
+		expected string
+	}{
+		{Bytes, "b"},
+		{Kilobytes, "kb"},
+		{Kibibytes, "kib"},
+		{Megabytes, "mb"},
+		{Mebibytes, "mib"},
+		{Gigabytes, "gb"},
+		{Gibibytes, "gib"},
+		{Terabytes, "tb"},
+		{Tebibytes, "tib"},
+		{Petabytes, "pb"},
+		{Pebibytes, "pib"},
+	}
+	for _, test := range tests {
+		t.Run(test.expected, func(t *testing.T) {
+			assert.IsType(t, DataSizeUnit(0), test.unit)
+			assert.Equal(t, test.expected, fmt.Sprint(test.unit))
 		})
 	}
 }
