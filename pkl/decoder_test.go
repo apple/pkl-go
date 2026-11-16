@@ -18,7 +18,9 @@ package pkl
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"testing"
 	"time"
@@ -36,6 +38,40 @@ func TestDecoder_Decode(t *testing.T) {
 	type namedInt int
 	type namedFieldStruct struct {
 		Name namedString
+	}
+	type urlStruct struct {
+		StringValue string `pkl:"stringValue"`
+	}
+	type unexportedFieldStruct struct {
+		Name string `pkl:"name"`
+		port int
+	}
+	type embeddedBase struct {
+		Name string `pkl:"name"`
+	}
+	type embeddedUnexportedStruct struct {
+		embeddedBase
+		Port int `pkl:"port"`
+	}
+	type embeddedUnexportedPointer struct {
+		*embeddedBase
+		Port int `pkl:"port"`
+	}
+	// an object with `name = "web"` and `port = 8080`
+	encodeNameAndPort := func(t *testing.T, enc *msgpack.Encoder) {
+		assert.NoError(t, enc.EncodeArrayLen(4))
+		assert.NoError(t, enc.EncodeInt(codeObject))
+		assert.NoError(t, enc.EncodeString("Server"))
+		assert.NoError(t, enc.EncodeString("my.module.Server"))
+		assert.NoError(t, enc.EncodeArrayLen(2)) // 2 members
+		assert.NoError(t, enc.EncodeArrayLen(3)) // for members: code + name + value
+		assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+		assert.NoError(t, enc.EncodeString("name"))
+		assert.NoError(t, enc.EncodeString("web"))
+		assert.NoError(t, enc.EncodeArrayLen(3))
+		assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+		assert.NoError(t, enc.EncodeString("port"))
+		assert.NoError(t, enc.EncodeInt(8080))
 	}
 	tests := map[string]struct {
 		typ         reflect.Type
@@ -63,10 +99,34 @@ func TestDecoder_Decode(t *testing.T) {
 		"should successfully decode a primitive go duration type": {
 			typ: reflect.TypeFor[time.Duration](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeDuration))
 				assert.NoError(t, enc.EncodeFloat64(10.0))
 				assert.NoError(t, enc.EncodeString("ns"))
 			},
-			want:        Duration{Value: 10.0, Unit: Nanosecond},
+			want:        10 * time.Nanosecond,
+			expectedErr: nil,
+		},
+		"should successfully decode a fractional go duration type": {
+			typ: reflect.TypeFor[time.Duration](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeDuration))
+				assert.NoError(t, enc.EncodeFloat64(1.5))
+				assert.NoError(t, enc.EncodeString("min"))
+			},
+			want:        90 * time.Second,
+			expectedErr: nil,
+		},
+		"should round a fractional go duration type to the nearest nanosecond": {
+			typ: reflect.TypeFor[time.Duration](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeDuration))
+				assert.NoError(t, enc.EncodeFloat64(1.005))
+				assert.NoError(t, enc.EncodeString("s"))
+			},
+			want:        1005 * time.Millisecond,
 			expectedErr: nil,
 		},
 		"should successfully decode a primitive int type": {
@@ -597,6 +657,122 @@ func TestDecoder_Decode(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		"should successfully decode Url into url.URL": {
+			typ: reflect.TypeFor[url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "https://example.com/a%20b?q=1#f")
+			},
+			want: url.URL{Scheme: "https", Host: "example.com", Path: "/a b", RawQuery: "q=1", Fragment: "f"},
+		},
+		"should successfully decode Url into *url.URL": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "/foo")
+			},
+			want: &url.URL{Path: "/foo"},
+		},
+		"should successfully decode Url into interface as url.URL": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "mailto:user@example.com")
+			},
+			want: url.URL{Scheme: "mailto", Opaque: "user@example.com"},
+		},
+		"should successfully decode Url into interface with a registered schema": {
+			typ:     reflect.TypeFor[any](),
+			schemas: map[string]reflect.Type{"pkl.net#Url": reflect.TypeFor[urlStruct]()},
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "https://example.com")
+			},
+			want: urlStruct{StringValue: "https://example.com"},
+		},
+		"should successfully decode Url into Object": {
+			typ: reflect.TypeFor[Object](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "https://example.com")
+			},
+			want: Object{
+				ModuleUri:  "pkl:net",
+				Name:       "pkl.net#Url",
+				Properties: map[string]any{"stringValue": "https://example.com"},
+				Entries:    map[any]any{},
+				Elements:   []any{},
+			},
+		},
+		"should successfully decode Uri into url.URL": {
+			typ: reflect.TypeFor[url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("https://example.com/a%20b?q=1#f"))
+			},
+			want: url.URL{Scheme: "https", Host: "example.com", Path: "/a b", RawQuery: "q=1", Fragment: "f"},
+		},
+		"should successfully decode Uri into *url.URL": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("mailto:user@example.com"))
+			},
+			want: &url.URL{Scheme: "mailto", Opaque: "user@example.com"},
+		},
+		"should not parse a string decoded into an interface": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("https://example.com"))
+			},
+			want: "https://example.com",
+		},
+		"should return error for Uri that url.Parse rejects": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeString("https://example.com/%zz"))
+			},
+			expectedErr: errors.New("unable to decode `pkl.base#Uri` into `url.URL`: parse \"https://example.com/%zz\": invalid URL escape \"%zz\""),
+		},
+		"should return error for Url that url.Parse rejects": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeUrl(t, enc, "http://[v1.fe80::a+en1]/")
+			},
+			expectedErr: errors.New("unable to decode `pkl.net#Url` into `url.URL`: parse \"http://[v1.fe80::a+en1]/\": invalid host: ParseAddr(\"v1.fe80::a+en1\"): unexpected character (at \"v1.fe80::a+en1\")"),
+		},
+		"should return error for Url without stringValue": {
+			typ: reflect.TypeFor[*url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeString("pkl.net#Url"))
+				assert.NoError(t, enc.EncodeString("pkl:net"))
+				assert.NoError(t, enc.EncodeArrayLen(0))
+			},
+			expectedErr: &InternalError{
+				err: errors.New("expected property `stringValue` of type `string` on `pkl.net#Url`"),
+			},
+		},
+		"should return error for other object decoded into url.URL": {
+			typ: reflect.TypeFor[url.URL](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeString("foo#Bar"))
+				assert.NoError(t, enc.EncodeString("file:///foo.pkl"))
+				assert.NoError(t, enc.EncodeArrayLen(0))
+			},
+			expectedErr: errors.New("cannot decode Pkl value of type `foo#Bar` into Go type `url.URL`"),
+		},
+		"should ignore an unexported field that matches a property name": {
+			typ:  reflect.TypeFor[unexportedFieldStruct](),
+			data: encodeNameAndPort,
+			want: unexportedFieldStruct{Name: "web"},
+		},
+		"should decode the exported fields of an embedded unexported struct": {
+			typ:  reflect.TypeFor[embeddedUnexportedStruct](),
+			data: encodeNameAndPort,
+			want: embeddedUnexportedStruct{embeddedBase: embeddedBase{Name: "web"}, Port: 8080},
+		},
+		"should ignore an embedded pointer to an unexported struct": {
+			typ:  reflect.TypeFor[embeddedUnexportedPointer](),
+			data: encodeNameAndPort,
+			want: embeddedUnexportedPointer{Port: 8080},
+		},
 		"should return error for struct with unknown code": {
 			typ: reflect.TypeFor[dummyStruct](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
@@ -626,4 +802,48 @@ func TestDecoder_Decode(t *testing.T) {
 			assert.Equal(t, tc.want, got.Interface())
 		})
 	}
+}
+
+// encodeUrl encodes a `pkl.net#Url` with only its `stringValue` property, the only one that the
+// decoder reads.
+func encodeUrl(t *testing.T, enc *msgpack.Encoder, stringValue string) {
+	assert.NoError(t, enc.EncodeArrayLen(4))
+	assert.NoError(t, enc.EncodeInt(codeObject))
+	assert.NoError(t, enc.EncodeString("pkl.net#Url"))
+	assert.NoError(t, enc.EncodeString("pkl:net"))
+	assert.NoError(t, enc.EncodeArrayLen(1))
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+	assert.NoError(t, enc.EncodeString("stringValue"))
+	assert.NoError(t, enc.EncodeString(stringValue))
+}
+
+func TestUnmarshalTimeDurationField(t *testing.T) {
+	// `timeout = 5.s` in module `Config`, encoded the way the Pkl server sends it.
+	var buf bytes.Buffer
+	enc := msgpack.NewEncoder(&buf)
+	assert.NoError(t, enc.EncodeArrayLen(4))
+	assert.NoError(t, enc.EncodeInt(codeObject))
+	assert.NoError(t, enc.EncodeString("Config"))
+	assert.NoError(t, enc.EncodeString("file:///config.pkl"))
+	assert.NoError(t, enc.EncodeArrayLen(1))
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+	assert.NoError(t, enc.EncodeString("timeout"))
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeDuration))
+	assert.NoError(t, enc.EncodeFloat64(5))
+	assert.NoError(t, enc.EncodeString("s"))
+
+	var pklDuration struct {
+		Timeout Duration `pkl:"timeout"`
+	}
+	assert.NoError(t, Unmarshal(buf.Bytes(), &pklDuration))
+	assert.Equal(t, Duration{Value: 5, Unit: Second}, pklDuration.Timeout)
+
+	var goDuration struct {
+		Timeout time.Duration `pkl:"timeout"`
+	}
+	assert.NoError(t, Unmarshal(buf.Bytes(), &goDuration))
+	assert.Equal(t, 5*time.Second, goDuration.Timeout)
 }

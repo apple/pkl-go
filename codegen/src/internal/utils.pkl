@@ -143,7 +143,12 @@ function renderImports(imports: List<String>): String =
     else
       let (
         groupedImports =
-          distinctImports.sort().groupBy((it) -> if (it.contains("/")) "3rdparty" else "stdlib")
+          distinctImports
+            .sort()
+            // like goimports, an import path whose first element has no dot is in the standard library
+            .groupBy((it) ->
+              if (it.takeWhile((c) -> c != "/").contains(".")) "3rdparty" else "stdlib"
+            )
       )
         new Listing {
           "import ("

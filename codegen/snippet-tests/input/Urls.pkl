@@ -1,0 +1,32 @@
+@go.Package { name = "github.com/apple/pkl-go/codegen/snippet-tests/output/urls" }
+module Urls
+
+import "pkl:net"
+
+import ".../src/go.pkl"
+
+url: net.Url
+
+optionalUrl: net.Url?
+
+urls: Listing<net.Url>
+
+urlsByName: Mapping<String, net.Url>
+
+aliasedUrl: MyUrl
+
+uri: Uri
+
+optionalUri: Uri?
+
+uris: Listing<Uri>
+
+endpoint: Endpoint
+
+class Endpoint {
+  url: net.Url
+  fallback: net.Url?
+  uri: Uri
+}
+
+typealias MyUrl = net.Url

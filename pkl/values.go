@@ -19,6 +19,7 @@ package pkl
 import (
 	"encoding"
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
@@ -113,9 +114,11 @@ type Duration struct {
 	Unit DurationUnit
 }
 
-// GoDuration returns the duration as a time.Duration.
+// GoDuration returns the duration as a time.Duration, rounded to the nearest nanosecond.
 func (d *Duration) GoDuration() time.Duration {
-	return time.Duration(d.Value * float64(d.Unit))
+	// Round instead of truncating: a value such as 1.005 is not exactly representable as a float64,
+	// so the product can land just below a whole number of nanoseconds (1004999999.9999999).
+	return time.Duration(math.Round(d.Value * float64(d.Unit)))
 }
 
 // DurationUnit represents unit of a Duration.
@@ -224,8 +227,8 @@ var _ encoding.BinaryUnmarshaler = new(DataSizeUnit)
 
 const (
 	Bytes     DataSizeUnit = 1
-	Kilobytes              = 1000
-	Kibibytes              = 1024
+	Kilobytes DataSizeUnit = 1000
+	Kibibytes DataSizeUnit = 1024
 	Megabytes              = Kilobytes * 1000
 	Mebibytes              = Kibibytes * 1024
 	Gigabytes              = Megabytes * 1000

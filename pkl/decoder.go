@@ -83,6 +83,18 @@ var durationType = reflect.TypeOf(time.Duration(0))
 
 // Decode decodes the next value according to the expected type.
 func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
+	// url.URL implements encoding.BinaryUnmarshaler, but neither of its Pkl counterparts is encoded
+	// as binary: `pkl.base#Uri` is a string, and `pkl.net#Url` is an object.
+	if typ == urlType {
+		code, err := d.dec.PeekCode()
+		if err != nil {
+			return nil, err
+		}
+		if msgpcode.IsString(code) {
+			return d.decodeUri()
+		}
+		return d.decodePklObject(typ, true)
+	}
 	res, isUnmarshalled, err := d.maybeUnmarshal(typ)
 	if isUnmarshalled {
 		return res, err
@@ -107,7 +119,7 @@ func (d *decoder) Decode(typ reflect.Type) (res *reflect.Value, err error) {
 	case reflect.Int64:
 		switch typ {
 		case durationType:
-			return d.decodeDuration()
+			return d.decodeGoDuration()
 		default:
 			return d.decodeInt64()
 		}
@@ -289,6 +301,21 @@ func (d *decoder) decodePklObject(typ reflect.Type, requireStruct bool) (res *re
 		return nil, err
 	}
 	return res, d.skip(length - getDecodedLength(code, length) - 1) // -1 is from the code field
+}
+
+// decodeGoDuration decodes a Pkl Duration, encoded as [codeDuration, value, unit],
+// into a time.Duration.
+func (d *decoder) decodeGoDuration() (*reflect.Value, error) {
+	res, err := d.decodePklObject(reflect.TypeFor[Duration](), false)
+	if err != nil {
+		return nil, err
+	}
+	dur, ok := res.Interface().(Duration)
+	if !ok {
+		return nil, fmt.Errorf("cannot decode %s into time.Duration", res.Type())
+	}
+	ret := reflect.ValueOf(dur.GoDuration())
+	return &ret, nil
 }
 
 // decodeObjectPreamble decodes the preamble for Pkl objects.

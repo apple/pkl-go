@@ -19,6 +19,7 @@ package pkl
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 
 	"github.com/vmihailenco/msgpack/v5/msgpcode"
@@ -38,6 +39,7 @@ type structField struct {
 var (
 	emptyInterfaceType = reflect.TypeFor[any]()
 	objectType         = reflect.TypeFor[Object]()
+	urlType            = reflect.TypeFor[url.URL]()
 )
 
 func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
@@ -52,6 +54,7 @@ func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 	if moduleUri == "pkl:base" && name == "Dynamic" || typ.AssignableTo(objectType) {
 		return d.decodeObjectGeneric(moduleUri, name)
 	}
+	isUrl := moduleUri == "pkl:net" && name == "pkl.net#Url"
 	// When the target type is an interface (e.g. interface{}) and there is no
 	// registered Go struct for this Pkl class, fall back to decoding as a
 	// generic Object. This allows typed class instances to be deserialized
@@ -59,10 +62,61 @@ func (d *decoder) decodeObject(typ reflect.Type) (*reflect.Value, error) {
 	// that map to interface{}.
 	if typ.Kind() == reflect.Interface {
 		if _, hasSchema := d.schemas[name]; !hasSchema {
+			if isUrl {
+				return d.decodeUrl(moduleUri, name)
+			}
 			return d.decodeObjectGeneric(moduleUri, name)
 		}
 	}
+	if typ == urlType {
+		if !isUrl {
+			return nil, fmt.Errorf("cannot decode Pkl value of type `%s` into Go type `%s`", name, typ)
+		}
+		return d.decodeUrl(moduleUri, name)
+	}
 	return d.decodeTyped(name, typ)
+}
+
+// Decodes a `pkl.net#Url` into a url.URL by parsing its `stringValue` property.
+func (d *decoder) decodeUrl(moduleUri, name string) (*reflect.Value, error) {
+	obj, err := d.decodeObjectGeneric(moduleUri, name)
+	if err != nil {
+		return nil, err
+	}
+	stringValue, ok := obj.Interface().(Object).Properties["stringValue"].(string)
+	if !ok {
+		return nil, &InternalError{
+			err: fmt.Errorf("expected property `stringValue` of type `string` on `%s`", name),
+		}
+	}
+	u, err := parseUrl(stringValue, name)
+	if err != nil {
+		return nil, err
+	}
+	ret := reflect.ValueOf(*u)
+	return &ret, nil
+}
+
+// decodeUri decodes a `pkl.base#Uri` into a url.URL.
+func (d *decoder) decodeUri() (*reflect.Value, error) {
+	s, err := d.dec.DecodeString()
+	if err != nil {
+		return nil, err
+	}
+	u, err := parseUrl(s, "pkl.base#Uri")
+	if err != nil {
+		return nil, err
+	}
+	ret := reflect.ValueOf(*u)
+	return &ret, nil
+}
+
+func parseUrl(s, name string) (*url.URL, error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode `%s` into `url.URL`: %w", name, err)
+	}
+	return u, nil
 }
 
 // decodeObjectGeneric decodes into Object.
@@ -366,6 +420,10 @@ func getStructFields(typ reflect.Type) map[string]structField {
 		if field.Anonymous {
 			switch field.Type.Kind() {
 			case reflect.Ptr:
+				// reflect can't allocate an embedded pointer to an unexported struct.
+				if !field.IsExported() {
+					continue
+				}
 				for k, v := range getStructFields(field.Type.Elem()) {
 					ret[k] = v
 				}
@@ -377,6 +435,10 @@ func getStructFields(typ reflect.Type) map[string]structField {
 				panic("pkl: getStructFields: unhandled field kind")
 			}
 		} else {
+			// reflect can't set unexported fields.
+			if !field.IsExported() {
+				continue
+			}
 			opts := parseStructOpts(&field)
 			if opts.propertyName == "-" {
 				continue
@@ -394,7 +456,9 @@ func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 	numFields := typ.NumField()
 	for i := 0; i < numFields; i++ {
 		field := typ.Field(i)
-		if field.Anonymous {
+		// reflect can't set unexported fields. An embedded struct already holds its zero value,
+		// and getStructFields skips embedded pointers to unexported structs.
+		if field.Anonymous && field.IsExported() {
 			var fieldValue reflect.Value
 			switch field.Type.Kind() {
 			case reflect.Ptr:

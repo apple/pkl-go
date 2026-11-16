@@ -69,10 +69,18 @@ type prereleaseIdentifier struct {
 }
 
 func (i prereleaseIdentifier) compareTo(other prereleaseIdentifier) int {
-	if i.alphaNumericId != "" {
+	iNumeric, otherNumeric := i.alphaNumericId == "", other.alphaNumericId == ""
+	switch {
+	case iNumeric && otherNumeric:
+		return compareInt(i.numericId, other.numericId)
+	case iNumeric:
+		// numeric identifiers always have lower precedence than alphanumeric identifiers
+		return -1
+	case otherNumeric:
+		return 1
+	default:
 		return strings.Compare(i.alphaNumericId, other.alphaNumericId)
 	}
-	return compareInt(i.numericId, other.numericId)
 }
 
 func (s *Semver) getPrereleaseIdentifiers() []prereleaseIdentifier {

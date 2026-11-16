@@ -96,6 +96,7 @@ func (e *execEvaluator) getVersion() (*internal.Semver, error) {
 	}
 	cmd, args := e.getCommandAndArgStrings()
 	command := exec.Command(cmd, append(args, "--version")...)
+	internal.Debug("Spawning command: %s", command)
 	versionCmdOut, err := command.Output()
 	if err != nil {
 		return nil, err

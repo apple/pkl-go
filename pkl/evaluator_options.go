@@ -19,6 +19,7 @@ package pkl
 import (
 	"fmt"
 	"io/fs"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -559,6 +560,12 @@ var applyFromProjectEvaluatorSettings = func(evaluatorSettings ProjectEvaluatorS
 	if evaluatorSettings.TraceMode != nil {
 		opts.TraceMode = *evaluatorSettings.TraceMode
 	}
+	if evaluatorSettings.ModulePath != nil {
+		opts.ModulePaths = evaluatorSettings.ModulePath
+	}
+	if evaluatorSettings.Timeout.Unit != 0 {
+		opts.TimeoutSeconds = int64(math.Ceil(evaluatorSettings.Timeout.GoDuration().Seconds()))
+	}
 }
 
 // WithProjectDependencies configures the evaluator with dependencies from the specified project.
@@ -610,6 +617,9 @@ var WithExternalResourceReader = func(scheme string, spec ExternalReader) func(o
 // WithHttpHeaders configures the evaluator to send additional HTTP headers with requests whose URL matches the specified pattern.
 var WithHttpHeaders = func(pattern string, headers http.Header) func(opts *EvaluatorOptions) {
 	return func(opts *EvaluatorOptions) {
+		if opts.Http == nil {
+			opts.Http = &Http{}
+		}
 		if opts.Http.Headers == nil {
 			opts.Http.Headers = make(map[string]http.Header)
 		}
