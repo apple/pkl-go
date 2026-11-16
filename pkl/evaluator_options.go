@@ -139,6 +139,9 @@ type EvaluatorOptions struct {
 	// Added in Pkl 0.30.
 	// If the underlying Pkl does not support trace modes, this option will be ignored.
 	TraceMode TraceMode
+
+	// TimeoutSeconds is the number of seconds before an evaluation should be cancelled with a timeout.
+	TimeoutSeconds int64
 }
 
 type TraceMode string
@@ -354,6 +357,7 @@ func (e *EvaluatorOptions) toMessage() *msgapi.CreateEvaluator {
 		ExternalModuleReaders:   externalReadersToMessage(e.ExternalModuleReaders),
 		ExternalResourceReaders: externalReadersToMessage(e.ExternalResourceReaders),
 		TraceMode:               string(e.TraceMode),
+		TimeoutSeconds:          e.TimeoutSeconds,
 	}
 }
 

@@ -54,6 +54,6 @@ func unmarshal(data []byte, v any, logger Logger) error {
 	if err != nil {
 		return err
 	}
-	value.Elem().Set(*res)
+	value.Elem().Set(convertTo(*res, value.Elem().Type()))
 	return nil
 }

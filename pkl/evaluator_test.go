@@ -681,6 +681,20 @@ evaluatorSettings {
 		assert.Contains(t, err.Error(), "it is not within the root directory")
 	})
 
+	t.Run("Evaluation with timeout", func(t *testing.T) {
+		evaluator, err := manager.NewEvaluator(context.Background(), PreconfiguredOptions, func(options *EvaluatorOptions) {
+			options.TimeoutSeconds = 1
+		})
+		//goland:noinspection GoUnhandledErrorResult
+		defer evaluator.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		src := TextSource("result = IntSeq(1, 3000000000).fold(0, (acc, n) -> acc + n)")
+		_, err = evaluator.EvaluateOutputText(context.Background(), src)
+		assert.Contains(t, err.Error(), "Evaluation timed out")
+	})
+
 	t.Cleanup(func() {
 		assert.NoError(t, manager.Close())
 	})
