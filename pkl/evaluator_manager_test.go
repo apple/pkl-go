@@ -159,6 +159,7 @@ func TestEvaluator_EvaluateExpressionRawWithCanceledContext(t *testing.T) {
 		evaluatorId:     1,
 		manager:         m,
 		pendingRequests: &sync.Map{},
+		logger:          NoopLogger,
 	}
 	m.evaluators.Store(e.evaluatorId, e)
 

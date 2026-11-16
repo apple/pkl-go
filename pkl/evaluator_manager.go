@@ -145,6 +145,9 @@ func (m *evaluatorManager) NewEvaluator(ctx context.Context, opts ...func(option
 			resourceReaders: o.ResourceReaders,
 			moduleReaders:   o.ModuleReaders,
 		}
+		if ev.logger == nil {
+			ev.logger = NoopLogger
+		}
 		m.evaluators.Store(resp.EvaluatorId, ev)
 		return ev, nil
 	}

@@ -71,11 +71,11 @@ func newDecoderWithLogger(b []byte, schemas map[string]reflect.Type, logger Logg
 	}
 }
 
-func (d *decoder) warn(msg string) {
+func (d *decoder) warnf(msg string, args ...any) {
 	if d.logger != nil {
-		d.logger.Warn(msg, "")
+		d.logger.Warn(fmt.Sprintf(msg, args...), "")
 	} else {
-		log.Default().Printf("warn: %s", msg)
+		log.Default().Printf("warn: "+msg, args...)
 	}
 }
 

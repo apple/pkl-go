@@ -19,7 +19,6 @@ package pkl
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 	"sync"
 
@@ -172,12 +171,7 @@ func (e *evaluator) Closed() bool {
 func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
 	c, exists := e.pendingRequests.LoadAndDelete(resp.RequestId)
 	if !exists {
-		msg := fmt.Sprintf("received a message for an unknown request id: %d", resp.RequestId)
-		if e.logger != nil {
-			e.logger.Warn(msg, "")
-		} else {
-			log.Default().Printf("warn: %s", msg)
-		}
+		e.logger.Warn(fmt.Sprintf("received a message for an unknown request id: %d", resp.RequestId), "")
 		return
 	}
 	ch := c.(chan *msgapi.EvaluateResponse)
