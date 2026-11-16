@@ -33,6 +33,16 @@ import (
 //
 //goland:noinspection GoUnusedExportedFunction
 func Unmarshal(data []byte, v any) error {
+	return unmarshal(data, v, nil)
+}
+
+// UnmarshalWithLogger parses Pkl-encoded data and stores the result into
+// the value pointed by v, using the provided Logger for any warning messages.
+func UnmarshalWithLogger(data []byte, v any, logger Logger) error {
+	return unmarshal(data, v, logger)
+}
+
+func unmarshal(data []byte, v any, logger Logger) error {
 	value := reflect.ValueOf(v)
 	if value.Kind() != reflect.Ptr {
 		return fmt.Errorf("cannot unmarshal non-pointer. Got kind: %v", value.Kind())
@@ -40,7 +50,7 @@ func Unmarshal(data []byte, v any) error {
 	if value.IsNil() {
 		return errors.New("cannot unmarshal into nil")
 	}
-	res, err := newDecoder(data, schemas).Decode(value.Elem().Type())
+	res, err := newDecoderWithLogger(data, schemas, logger).Decode(value.Elem().Type())
 	if err != nil {
 		return err
 	}
