@@ -19,6 +19,7 @@ package pkl
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -118,6 +119,50 @@ func TestDataSize_ConvertToUnit(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			got := test.input.ToUnit(test.expected.Unit)
 			assert.Equal(t, test.expected, got)
+		})
+	}
+}
+
+func TestDuration_GoDuration(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    Duration
+		expected time.Duration
+	}{
+		{
+			name:     "whole_seconds",
+			input:    Duration{Value: 5, Unit: Second},
+			expected: 5 * time.Second,
+		},
+		{
+			name:     "fractional_minutes",
+			input:    Duration{Value: 1.5, Unit: Minute},
+			expected: 90 * time.Second,
+		},
+		{
+			name:     "fractional_seconds",
+			input:    Duration{Value: 1.005, Unit: Second},
+			expected: 1005 * time.Millisecond,
+		},
+		{
+			name:     "fractional_milliseconds",
+			input:    Duration{Value: 33.3, Unit: Millisecond},
+			expected: 33300 * time.Microsecond,
+		},
+		{
+			name:     "fractional_microseconds",
+			input:    Duration{Value: 1.001, Unit: Microsecond},
+			expected: 1001 * time.Nanosecond,
+		},
+		{
+			name:     "negative_fractional_seconds",
+			input:    Duration{Value: -1.005, Unit: Second},
+			expected: -1005 * time.Millisecond,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, test.input.GoDuration())
 		})
 	}
 }
