@@ -163,3 +163,17 @@ function renderImports(imports: List<String>): String =
           }
           ")"
         }.join("\n")
+
+/// Converts an absolute, slash-separated filesystem path to a file URI.
+function toFileUri(path: String): String =
+  let (
+    encoded =
+      path.replaceAllMapped(Regex("[^A-Za-z0-9/._~:-]"), (match) ->
+        match.value
+          .encodeToBytes("UTF-8")
+          .toList()
+          .map((byte) -> "%" + byte.toRadixString(16).padStart(2, "0"))
+          .join("")
+      )
+  )
+    "file://" + (if (encoded.startsWith("/")) encoded else "/" + encoded)
