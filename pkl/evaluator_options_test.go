@@ -70,6 +70,22 @@ func TestWithHttpHeaders(t *testing.T) {
 			"https://example.com/**": {"X-Other": {"value"}},
 		}, opts.Http.Headers)
 	})
+	t.Run("can be reused for more evaluators", func(t *testing.T) {
+		t.Parallel()
+		headers := http.Header{"X-Test": {"one"}}
+		withHeaders := []func(*EvaluatorOptions){
+			WithHttpHeaders("**", headers),
+			WithHttpHeaders("**", http.Header{"X-New": {"value"}}),
+		}
+		for range 2 {
+			var opts EvaluatorOptions
+			for _, f := range withHeaders {
+				f(&opts)
+			}
+			assert.Equal(t, http.Header{"X-Test": {"one"}, "X-New": {"value"}}, opts.Http.Headers["**"])
+		}
+		assert.Equal(t, http.Header{"X-Test": {"one"}}, headers)
+	})
 }
 
 func TestWithProjectEvaluatorSettings(t *testing.T) {

@@ -630,7 +630,9 @@ var WithHttpHeaders = func(pattern string, headers http.Header) func(opts *Evalu
 				}
 			}
 		} else {
-			opts.Http.Headers[pattern] = headers
+			// Store a copy, so that a later call for the same pattern doesn't add to the caller's
+			// headers.
+			opts.Http.Headers[pattern] = headers.Clone()
 		}
 	}
 }
