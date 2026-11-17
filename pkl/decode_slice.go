@@ -55,12 +55,15 @@ func (d *decoder) decodeSliceImpl(inType reflect.Type) (*reflect.Value, error) {
 	elemType := inType.Elem()
 	ret := reflect.MakeSlice(reflect.SliceOf(elemType), sliceLen, sliceLen)
 	for i := 0; i < sliceLen; i++ {
-		v := ret.Index(i)
 		decoded, err := d.Decode(elemType)
 		if err != nil {
 			return nil, err
 		}
-		v.Set(convertTo(*decoded, elemType))
+		v, err := convertTo(*decoded, elemType)
+		if err != nil {
+			return nil, err
+		}
+		ret.Index(i).Set(v)
 	}
 	return &ret, nil
 }

@@ -781,6 +781,61 @@ func TestDecoder_Decode(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("code %#02x cannot be decoded into a struct", 0x7F),
 		},
+		"should return error for Dynamic object in a slice of structs": {
+			typ: reflect.TypeFor[[]dummyStruct](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeListing))
+				assert.NoError(t, enc.EncodeArrayLen(1))
+				encodeDynamic(t, enc)
+			},
+			expectedErr: errors.New("unable to assign or convert value of type `pkl.Object` to type `pkl.dummyStruct`"),
+		},
+		"should return error for Dynamic object in a map of structs": {
+			typ: reflect.TypeFor[map[string]dummyStruct](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeMapping))
+				assert.NoError(t, enc.EncodeMapLen(1))
+				assert.NoError(t, enc.EncodeString("web"))
+				encodeDynamic(t, enc)
+			},
+			expectedErr: errors.New("unable to assign or convert value of type `pkl.Object` to type `pkl.dummyStruct`"),
+		},
+		"should return error for Dynamic object in a set of structs": {
+			typ: reflect.TypeFor[map[dummyStruct]struct{}](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeSet))
+				assert.NoError(t, enc.EncodeArrayLen(1))
+				encodeDynamic(t, enc)
+			},
+			expectedErr: errors.New("unable to assign or convert value of type `pkl.Object` to type `pkl.dummyStruct`"),
+		},
+		"should return error for Duration in a pair of structs": {
+			typ: reflect.TypeFor[Pair[string, dummyStruct]](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codePair))
+				assert.NoError(t, enc.EncodeString("web"))
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeDuration))
+				assert.NoError(t, enc.EncodeFloat64(5))
+				assert.NoError(t, enc.EncodeString("s"))
+			},
+			expectedErr: errors.New("unable to assign or convert value of type `pkl.Duration` to type `pkl.dummyStruct`"),
+		},
+		"should return error for Dynamic object as the domain of a Reference to a struct": {
+			typ: reflect.TypeFor[Reference[dummyStruct]](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeReference))
+				encodeDynamic(t, enc)
+				assert.NoError(t, enc.EncodeNil())
+				assert.NoError(t, enc.EncodeArrayLen(0))
+			},
+			expectedErr: errors.New("unable to assign or convert value of type `pkl.Object` to type `pkl.dummyStruct`"),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -818,6 +873,19 @@ func encodeUrl(t *testing.T, enc *msgpack.Encoder, stringValue string) {
 	assert.NoError(t, enc.EncodeString(stringValue))
 }
 
+// encodeDynamic encodes `new Dynamic { name = "web" }`.
+func encodeDynamic(t *testing.T, enc *msgpack.Encoder) {
+	assert.NoError(t, enc.EncodeArrayLen(4))
+	assert.NoError(t, enc.EncodeInt(codeObject))
+	assert.NoError(t, enc.EncodeString("Dynamic"))
+	assert.NoError(t, enc.EncodeString("pkl:base"))
+	assert.NoError(t, enc.EncodeArrayLen(1))
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
+	assert.NoError(t, enc.EncodeString("name"))
+	assert.NoError(t, enc.EncodeString("web"))
+}
+
 func TestUnmarshalTimeDurationField(t *testing.T) {
 	// `timeout = 5.s` in module `Config`, encoded the way the Pkl server sends it.
 	var buf bytes.Buffer
@@ -846,4 +914,24 @@ func TestUnmarshalTimeDurationField(t *testing.T) {
 	}
 	assert.NoError(t, Unmarshal(buf.Bytes(), &goDuration))
 	assert.Equal(t, 5*time.Second, goDuration.Timeout)
+}
+
+func TestUnmarshalMismatchedType(t *testing.T) {
+	type server struct {
+		Name string `pkl:"name"`
+	}
+
+	var dynamic bytes.Buffer
+	encodeDynamic(t, msgpack.NewEncoder(&dynamic))
+	var res server
+	assert.EqualError(t, Unmarshal(dynamic.Bytes(), &res), "unable to assign or convert value of type `pkl.Object` to type `pkl.server`")
+
+	// `5.s`
+	var duration bytes.Buffer
+	enc := msgpack.NewEncoder(&duration)
+	assert.NoError(t, enc.EncodeArrayLen(3))
+	assert.NoError(t, enc.EncodeInt(codeDuration))
+	assert.NoError(t, enc.EncodeFloat64(5))
+	assert.NoError(t, enc.EncodeString("s"))
+	assert.EqualError(t, Unmarshal(duration.Bytes(), &res), "unable to assign or convert value of type `pkl.Duration` to type `pkl.server`")
 }
