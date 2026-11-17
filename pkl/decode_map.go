@@ -55,7 +55,15 @@ func (d *decoder) decodeMapImpl(inType reflect.Type) (*reflect.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		ret.SetMapIndex(convertTo(*key, keyType), convertTo(*value, valueType))
+		k, err := convertTo(*key, keyType)
+		if err != nil {
+			return nil, err
+		}
+		v, err := convertTo(*value, valueType)
+		if err != nil {
+			return nil, err
+		}
+		ret.SetMapIndex(k, v)
 	}
 	return &ret, nil
 }
@@ -75,7 +83,11 @@ func (d *decoder) decodeSet(inType reflect.Type) (*reflect.Value, error) {
 		if err != nil {
 			return nil, err
 		}
-		ret.SetMapIndex(convertTo(*elem, keyType), emptyMirror)
+		k, err := convertTo(*elem, keyType)
+		if err != nil {
+			return nil, err
+		}
+		ret.SetMapIndex(k, emptyMirror)
 	}
 	return &ret, nil
 }

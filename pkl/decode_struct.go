@@ -277,6 +277,10 @@ func (d *decoder) decodePair(typ reflect.Type) (*reflect.Value, error) {
 	if err != nil {
 		return nil, err
 	}
+	firstValue, err := convertTo(*first, firstField.Type)
+	if err != nil {
+		return nil, err
+	}
 	secondField, exists := typ.FieldByName("Second")
 	if !exists {
 		return nil, &InternalError{
@@ -287,10 +291,14 @@ func (d *decoder) decodePair(typ reflect.Type) (*reflect.Value, error) {
 	if err != nil {
 		return nil, err
 	}
+	secondValue, err := convertTo(*second, secondField.Type)
+	if err != nil {
+		return nil, err
+	}
 	ret := reflect.New(typ)
 	elem := ret.Elem()
-	elem.FieldByName("First").Set(convertTo(*first, firstField.Type))
-	elem.FieldByName("Second").Set(convertTo(*second, secondField.Type))
+	elem.FieldByName("First").Set(firstValue)
+	elem.FieldByName("Second").Set(secondValue)
 	return &elem, nil
 }
 
@@ -382,7 +390,11 @@ func (d *decoder) decodeReference(typ reflect.Type) (*reflect.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	domainField.Set(*domain)
+	domainValue, err := convertTo(*domain, domainField.Type())
+	if err != nil {
+		return nil, err
+	}
+	domainField.Set(domainValue)
 
 	dataField := ret.FieldByName("Data")
 	data, err := d.Decode(dataField.Type())
