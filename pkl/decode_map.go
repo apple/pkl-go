@@ -63,6 +63,9 @@ func (d *decoder) decodeMapImpl(inType reflect.Type) (*reflect.Value, error) {
 		if err != nil {
 			return nil, err
 		}
+		if err = checkMapKey(k); err != nil {
+			return nil, err
+		}
 		ret.SetMapIndex(k, v)
 	}
 	return &ret, nil
@@ -87,7 +90,19 @@ func (d *decoder) decodeSet(inType reflect.Type) (*reflect.Value, error) {
 		if err != nil {
 			return nil, err
 		}
+		if err = checkMapKey(k); err != nil {
+			return nil, err
+		}
 		ret.SetMapIndex(k, emptyMirror)
 	}
 	return &ret, nil
+}
+
+// checkMapKey returns an error if k can't be used as a Go map key. Any Pkl value can be a key, but
+// a Go map panics when it is given a key that it can't hash, such as a slice or an Object.
+func checkMapKey(k reflect.Value) error {
+	if !k.Comparable() {
+		return fmt.Errorf("cannot use value of type `%s` as a map key", k.Type())
+	}
+	return nil
 }

@@ -164,6 +164,9 @@ func (d *decoder) decodeObjectGeneric(moduleUri, name string) (*reflect.Value, e
 			if err != nil {
 				return nil, err
 			}
+			if err = checkMapKey(*key); err != nil {
+				return nil, err
+			}
 			obj.Entries[key.Interface()] = value.Interface()
 		case codeObjectMemberElement:
 			memberLength -= 2
