@@ -57,6 +57,23 @@ func TestDecoder_Decode(t *testing.T) {
 		*embeddedBase
 		Port int `pkl:"port"`
 	}
+	type EmbeddedBase struct {
+		Name string `pkl:"name"`
+	}
+	type EmbeddedPointerHolder struct {
+		*EmbeddedBase
+	}
+	type embeddedPointerHolder struct {
+		*EmbeddedBase
+	}
+	type nestedEmbeddedPointer struct {
+		EmbeddedPointerHolder
+		Port int `pkl:"port"`
+	}
+	type nestedEmbeddedPointerInUnexported struct {
+		embeddedPointerHolder
+		Port int `pkl:"port"`
+	}
 	// an object with `name = "web"` and `port = 8080`
 	encodeNameAndPort := func(t *testing.T, enc *msgpack.Encoder) {
 		assert.NoError(t, enc.EncodeArrayLen(4))
@@ -772,6 +789,22 @@ func TestDecoder_Decode(t *testing.T) {
 			typ:  reflect.TypeFor[embeddedUnexportedPointer](),
 			data: encodeNameAndPort,
 			want: embeddedUnexportedPointer{Port: 8080},
+		},
+		"should decode into a pointer embedded in an embedded struct": {
+			typ:  reflect.TypeFor[nestedEmbeddedPointer](),
+			data: encodeNameAndPort,
+			want: nestedEmbeddedPointer{
+				EmbeddedPointerHolder: EmbeddedPointerHolder{EmbeddedBase: &EmbeddedBase{Name: "web"}},
+				Port:                  8080,
+			},
+		},
+		"should decode into a pointer embedded in an embedded unexported struct": {
+			typ:  reflect.TypeFor[nestedEmbeddedPointerInUnexported](),
+			data: encodeNameAndPort,
+			want: nestedEmbeddedPointerInUnexported{
+				embeddedPointerHolder: embeddedPointerHolder{EmbeddedBase: &EmbeddedBase{Name: "web"}},
+				Port:                  8080,
+			},
 		},
 		"should return error for struct with unknown code": {
 			typ: reflect.TypeFor[dummyStruct](),

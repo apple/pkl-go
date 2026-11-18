@@ -464,35 +464,39 @@ func getStructFields(typ reflect.Type) map[string]structField {
 // Returns the output value to write into.
 func (d *decoder) getOutputValue(typ reflect.Type) (*reflect.Value, error) {
 	ret := reflect.New(typ).Elem()
-	// initialize all embedded structs.
+	initEmbeddedStructs(ret)
+	return &ret, nil
+}
+
+// initEmbeddedStructs allocates the embedded struct pointers in v, including the ones inside
+// embedded structs, so that their promoted fields can be set.
+func initEmbeddedStructs(v reflect.Value) {
+	typ := v.Type()
 	numFields := typ.NumField()
 	for i := 0; i < numFields; i++ {
 		field := typ.Field(i)
-		// reflect can't set unexported fields. An embedded struct already holds its zero value,
-		// and getStructFields skips embedded pointers to unexported structs.
-		if field.Anonymous && field.IsExported() {
-			var fieldValue reflect.Value
-			switch field.Type.Kind() {
-			case reflect.Ptr:
-				{
-					fieldValue = reflect.New(field.Type.Elem())
-					structValue, err := d.getOutputValue(field.Type.Elem())
-					if err != nil {
-						return nil, err
-					}
-					fieldValue.Elem().Set(*structValue)
-				}
-			case reflect.Struct:
-				{
-					fieldValue = reflect.New(field.Type).Elem()
-				}
-			default:
+		if !field.Anonymous {
+			continue
+		}
+		switch field.Type.Kind() {
+		case reflect.Ptr:
+			// reflect can't allocate an embedded pointer to an unexported struct, and
+			// getStructFields skips those.
+			if !field.IsExported() {
+				continue
+			}
+			ptr := reflect.New(field.Type.Elem())
+			initEmbeddedStructs(ptr.Elem())
+			v.Field(i).Set(ptr)
+		case reflect.Struct:
+			// An embedded struct already holds its zero value, but it can embed pointers of its own.
+			initEmbeddedStructs(v.Field(i))
+		default:
+			if field.IsExported() {
 				panic("pkl: getOutputValue: unhandled field kind")
 			}
-			ret.FieldByName(field.Name).Set(fieldValue)
 		}
 	}
-	return &ret, nil
 }
 
 func (d *decoder) decodeIntSeq() (*reflect.Value, error) {
