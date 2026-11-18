@@ -836,6 +836,53 @@ func TestDecoder_Decode(t *testing.T) {
 			},
 			expectedErr: errors.New("unable to assign or convert value of type `pkl.Object` to type `pkl.dummyStruct`"),
 		},
+		"should return error for a List key in a Map": {
+			typ: reflect.TypeFor[map[any]string](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeMap))
+				assert.NoError(t, enc.EncodeMapLen(1))
+				encodeList(t, enc, codeList)
+				assert.NoError(t, enc.EncodeString("a"))
+			},
+			expectedErr: errors.New("cannot use value of type `[]interface {}` as a map key"),
+		},
+		"should return error for a List key in a Map decoded into interface": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeMap))
+				assert.NoError(t, enc.EncodeMapLen(1))
+				encodeList(t, enc, codeList)
+				assert.NoError(t, enc.EncodeString("a"))
+			},
+			expectedErr: errors.New("cannot use value of type `[]interface {}` as a map key"),
+		},
+		"should return error for a List in a Set decoded into interface": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(2))
+				assert.NoError(t, enc.EncodeInt(codeSet))
+				assert.NoError(t, enc.EncodeArrayLen(1))
+				encodeList(t, enc, codeList)
+			},
+			expectedErr: errors.New("cannot use value of type `[]interface {}` as a map key"),
+		},
+		"should return error for a Listing key in a Dynamic object": {
+			typ: reflect.TypeFor[any](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				assert.NoError(t, enc.EncodeArrayLen(4))
+				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeString("Dynamic"))
+				assert.NoError(t, enc.EncodeString("pkl:base"))
+				assert.NoError(t, enc.EncodeArrayLen(1))
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codeObjectMemberEntry))
+				encodeList(t, enc, codeListing)
+				assert.NoError(t, enc.EncodeString("a"))
+			},
+			expectedErr: errors.New("cannot use value of type `[]interface {}` as a map key"),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -871,6 +918,14 @@ func encodeUrl(t *testing.T, enc *msgpack.Encoder, stringValue string) {
 	assert.NoError(t, enc.EncodeInt(codeObjectMemberProperty))
 	assert.NoError(t, enc.EncodeString("stringValue"))
 	assert.NoError(t, enc.EncodeString(stringValue))
+}
+
+// encodeList encodes `List(1)`, or `new Listing { 1 }` when code is codeListing.
+func encodeList(t *testing.T, enc *msgpack.Encoder, code int) {
+	assert.NoError(t, enc.EncodeArrayLen(2))
+	assert.NoError(t, enc.EncodeInt(int64(code)))
+	assert.NoError(t, enc.EncodeArrayLen(1))
+	assert.NoError(t, enc.EncodeInt(1))
 }
 
 // encodeDynamic encodes `new Dynamic { name = "web" }`.
