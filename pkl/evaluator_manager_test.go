@@ -79,6 +79,7 @@ func newFakeEvaluatorManager() *evaluatorManager {
 		interrupts:        &sync.Map{},
 		evaluators:        &sync.Map{},
 		pendingEvaluators: &sync.Map{},
+		done:              make(chan struct{}),
 		getVersion:        sync.OnceValues(impl.getVersion),
 	}
 }

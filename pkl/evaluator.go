@@ -76,7 +76,7 @@ type evaluator struct {
 	logger          Logger
 	manager         *evaluatorManager
 	pendingRequests *sync.Map
-	closed          bool
+	closed          atomicBool
 	resourceReaders []ResourceReader
 	moduleReaders   []ModuleReader
 }
@@ -133,13 +133,14 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 	defer e.pendingRequests.Delete(requestId)
 	interrupted, nevermind := e.manager.interrupted(e.evaluatorId)
 	defer nevermind()
-	e.manager.impl.outChan() <- &msgapi.Evaluate{
+	// If the manager is closed, the send fails and the interruption below reports why.
+	_ = e.manager.send(&msgapi.Evaluate{
 		RequestId:   requestId,
 		ModuleUri:   source.Uri.String(),
 		ModuleText:  source.Contents,
 		Expr:        expr,
 		EvaluatorId: e.evaluatorId,
-	}
+	})
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -157,7 +158,7 @@ func (e *evaluator) EvaluateExpressionRaw(ctx context.Context, source *ModuleSou
 }
 
 func (e *evaluator) Close() error {
-	if e.closed {
+	if e.closed.get() {
 		return nil
 	}
 	e.manager.closeEvaluator(e)
@@ -165,7 +166,7 @@ func (e *evaluator) Close() error {
 }
 
 func (e *evaluator) Closed() bool {
-	return e.closed
+	return e.closed.get()
 }
 
 func (e *evaluator) handleEvaluateResponse(resp *msgapi.EvaluateResponse) {
@@ -195,13 +196,13 @@ func (e *evaluator) handleReadResource(msg *msgapi.ReadResource) {
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 	reader := e.findResourceReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No resource reader found for scheme `%s`", u.Scheme)
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 	contents, err := reader.Read(*u)
@@ -213,7 +214,7 @@ func (e *evaluator) handleReadResource(msg *msgapi.ReadResource) {
 	default:
 		response.Contents = &contents
 	}
-	e.manager.impl.outChan() <- response
+	_ = e.manager.send(response)
 }
 
 func (e *evaluator) handleReadModule(msg *msgapi.ReadModule) {
@@ -221,20 +222,20 @@ func (e *evaluator) handleReadModule(msg *msgapi.ReadModule) {
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 	reader := e.findModuleReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No module reader found for scheme `%s`", u.Scheme)
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 	response.Contents, err = reader.Read(*u)
 	if err != nil {
 		response.Error = err.Error()
 	}
-	e.manager.impl.outChan() <- response
+	_ = e.manager.send(response)
 }
 
 func (e *evaluator) handleListResources(msg *msgapi.ListResources) {
@@ -246,14 +247,14 @@ func (e *evaluator) handleListResources(msg *msgapi.ListResources) {
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 
 	reader := e.findResourceReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No resource reader found for scheme `%s`", u.Scheme)
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 
@@ -270,7 +271,7 @@ func (e *evaluator) handleListResources(msg *msgapi.ListResources) {
 		}
 	}
 
-	e.manager.impl.outChan() <- response
+	_ = e.manager.send(response)
 }
 
 func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
@@ -278,13 +279,13 @@ func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 	u, err := url.Parse(msg.Uri)
 	if err != nil {
 		response.Error = fmt.Errorf("internal error: failed to parse resource url: %w", err).Error()
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 	reader := e.findModuleReader(u.Scheme)
 	if reader == nil {
 		response.Error = fmt.Sprintf("No module reader found for scheme `%s`", u.Scheme)
-		e.manager.impl.outChan() <- response
+		_ = e.manager.send(response)
 		return
 	}
 	pathElements, err := reader.ListElements(*u)
@@ -298,7 +299,7 @@ func (e *evaluator) handleListModules(msg *msgapi.ListModules) {
 			})
 		}
 	}
-	e.manager.impl.outChan() <- response
+	_ = e.manager.send(response)
 }
 
 func (e *evaluator) findModuleReader(scheme string) ModuleReader {
