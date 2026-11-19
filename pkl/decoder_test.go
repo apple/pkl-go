@@ -603,18 +603,34 @@ func TestDecoder_Decode(t *testing.T) {
 		"should return error for invalid slice code": {
 			typ: reflect.TypeFor[[]string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
-				assert.NoError(t, enc.EncodeArrayLen(2))
-				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codePair))
+				assert.NoError(t, enc.EncodeString("key"))
+				assert.NoError(t, enc.EncodeString("value"))
 			},
-			expectedErr: fmt.Errorf("invalid code for slices: %d. Expected %d or %d", codeObject, codeList, codeListing),
+			expectedErr: fmt.Errorf("invalid code for slices: %d. Expected %d or %d", codePair, codeList, codeListing),
 		},
 		"should return error for invalid map code": {
 			typ: reflect.TypeFor[map[string]string](),
 			data: func(t *testing.T, enc *msgpack.Encoder) {
-				assert.NoError(t, enc.EncodeArrayLen(2))
-				assert.NoError(t, enc.EncodeInt(codeObject))
+				assert.NoError(t, enc.EncodeArrayLen(3))
+				assert.NoError(t, enc.EncodeInt(codePair))
+				assert.NoError(t, enc.EncodeString("key"))
+				assert.NoError(t, enc.EncodeString("value"))
 			},
-			expectedErr: fmt.Errorf("invalid code for maps: %d", codeObject),
+			expectedErr: fmt.Errorf("invalid code for maps: %d", codePair),
+		},
+		"should return error when decoding an object into a slice": {
+			typ: reflect.TypeFor[[]string](),
+			data: func(t *testing.T, enc *msgpack.Encoder) {
+				encodeDynamic(t, enc)
+			},
+			expectedErr: errors.New("cannot decode Pkl value of type `Dynamic` into Go type `[]string`"),
+		},
+		"should return error when decoding an object into a map": {
+			typ:         reflect.TypeFor[map[string]string](),
+			data:        encodeNameAndPort,
+			expectedErr: errors.New("cannot decode Pkl value of type `Server` into Go type `map[string]string`"),
 		},
 		"should return error for unknown object code on interface": {
 			typ: reflect.TypeFor[any](),
