@@ -340,6 +340,17 @@ func (d *decoder) decodeObjectPreamble() (int, int, error) {
 	return arrLen, code, err
 }
 
+// objectTypeError returns the error for a Pkl object that can't be decoded into typ, such as a
+// Dynamic object where a Listing or Mapping was expected. It reads the object's class name, which
+// follows the preamble.
+func (d *decoder) objectTypeError(typ reflect.Type) error {
+	name, err := d.dec.DecodeString()
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("cannot decode Pkl value of type `%s` into Go type `%s`", name, typ)
+}
+
 // getDecodedLength returns the number of array fields a specific type code is expected to yield
 func getDecodedLength(code, length int) int {
 	switch code {

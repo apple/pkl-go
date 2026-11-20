@@ -26,14 +26,17 @@ func (d *decoder) decodeSlice(inType reflect.Type) (*reflect.Value, error) {
 	if err != nil {
 		return nil, err
 	}
+	if code == codeObject {
+		return nil, d.objectTypeError(inType)
+	}
+	if code != codeList && code != codeListing && code != codeBytes {
+		return nil, fmt.Errorf("invalid code for slices: %d. Expected %d or %d", code, codeList, codeListing)
+	}
 	if length != 2 {
 		return nil, fmt.Errorf("expected array length 2 but got %d", length)
 	}
 	if code == codeBytes {
 		return d.decodeBytesImpl()
-	}
-	if code != codeList && code != codeListing {
-		return nil, fmt.Errorf("invalid code for slices: %d. Expected %d or %d", code, codeList, codeListing)
 	}
 	return d.decodeSliceImpl(inType)
 }

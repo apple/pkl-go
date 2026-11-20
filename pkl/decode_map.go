@@ -26,14 +26,17 @@ func (d *decoder) decodeMap(inType reflect.Type) (*reflect.Value, error) {
 	if err != nil {
 		return nil, err
 	}
+	if code == codeObject {
+		return nil, d.objectTypeError(inType)
+	}
+	if code != codeMap && code != codeMapping && code != codeSet {
+		return nil, fmt.Errorf("invalid code for maps: %d", code)
+	}
 	if length != 2 {
 		return nil, fmt.Errorf("expected array length 2 but got %d", length)
 	}
 	if code == codeSet {
 		return d.decodeSet(inType)
-	}
-	if code != codeMap && code != codeMapping {
-		return nil, fmt.Errorf("invalid code for maps: %d", code)
 	}
 	return d.decodeMapImpl(inType)
 }
